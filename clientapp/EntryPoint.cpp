@@ -162,7 +162,8 @@ int main(int argc, char * argv[])
 		("nointro,i", "skips intro movies")
 		("donotstartserver,d","do not attempt to start server and just connect to it instead server")
 		("serverport", po::value<si64>(), "override port specified in config file")
-		("savefrequency", po::value<si64>(), "limit auto save creation to each N days");
+		("savefrequency", po::value<si64>(), "limit auto save creation to each N days")
+		("longplay-load-save", po::value<std::string>(), "path to save file to load"); // __longplay__ loadgame launch parameter
 
 	if(argc > 1)
 	{
@@ -279,6 +280,11 @@ int main(int argc, char * argv[])
 	setSettingInteger("session/serverport", "serverport", 0);
 	setSettingInteger("general/saveFrequency", "savefrequency", 1);
 
+	// __longplay__ read launch parameter for save file path
+	std::string longplaySavePath;
+	if(vm.count("longplay-load-save"))
+		longplaySavePath = vm["longplay-load-save"].as<std::string>();
+
 	// Initialize logging based on settings
 	logConfigurator.configure();
 	logGlobal->debug("settings = %s", settings.toJsonNode().toString());
@@ -368,6 +374,24 @@ int main(int argc, char * argv[])
 		session["testsave"].String() = vm["testsave"].as<std::string>();
 		session["onlyai"].Bool() = true;
 		GAME->server().debugStartTest(session["testsave"].String(), true);
+	}
+	// __longplay__ handle save loading
+	else if(longplaySavePath.size() > 0){
+		logGlobal->info("initializing longplay from savefile...");
+		GAME->mainmenu()->makeActiveInterface();
+
+		session["donotstartserver"].Bool() = false;
+		GAME->server().resetStateForLobby(EStartMode::LOAD_GAME, ESelectionScreen::loadGame, EServerMode::LOCAL, {"Player1", "Player2", "Player3"}); //hotseat players
+		GAME->server().screenType = ESelectionScreen::loadGame;
+		GAME->server().loadMode = ELoadMode::MULTI;
+		GAME->server().hotseatMode = true;
+		GAME->server().startLocalServerAndConnect(false);
+		session["longplayLoadSave"].String() = longplaySavePath;
+
+		GAME->mainmenu()->playMusic();
+
+		//GAME->server().sendStartGame(false);
+		//GAME->server().quickLoadGame(longplaySavePath);
 	}
 	else if (!settings["session"]["headless"].Bool())
 	{

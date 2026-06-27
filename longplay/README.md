@@ -63,3 +63,16 @@ docker run --rm --name vcmi_host -p 3000:3000 -p 3001:3001 vcmi-host
 ### Connecting
 
 https://localhost:3000/
+
+
+## vcmiclient modifications
+
+Listed some changes to vcmiclient
+
+### Loading a save
+
+Modified source to accept loading of a savefile using a custom launch parameter: --longplay-load-save
+
+Usage:
+
+./vcmiclient --longplay-load-save="/home/path/to/savefile"
