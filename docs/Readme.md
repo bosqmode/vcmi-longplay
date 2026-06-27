@@ -1,3 +1,18 @@
+# Longplay -fork
+
+The aim of this project is to introduce a long living campaign (months, maybe years) with multiple players without needing every player to be online at the same time.
+Plan is the following:
+- Remote host machine runs the client and allows web based desktop access
+- Only the player with their turn can access the host (username/password auth) (admin account for maintenance)
+- Rinse & repeat until game is over
+
+Things to consider:
+- Copying savefiles from the host for backup
+- Host shutdown/boot for cost optimization (imagine we host this on AWS and the server just keeps running for a week without anybody playing their turn?)
+- WebUI for login & RDP, display who's turn it is, maybe a Telegram -bot?
+
+All of the longplay code should exist under /longplay -directory, except when/if we need to modify the source for hooks etc.
+
 # VCMI - Open Heroes 3
 
 [![VCMI](https://github.com/vcmi/vcmi/actions/workflows/github.yml/badge.svg?branch=develop&event=push)](https://github.com/vcmi/vcmi/actions/workflows/github.yml?query=branch%3Adevelop+event%3Apush)
