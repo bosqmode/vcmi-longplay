@@ -29,9 +29,13 @@ docker build -f longplay/builder/Dockerfile -t vcmi-builder ..
 ### Compile source within the container
 
 docker run --rm -it -v "${PWD}:/src" vcmi-builder
+
 cd src/longplay/builder/build
+
 cmake -S ../../../ -DENABLE_CCACHE=OFF -DENABLE_TEST=OFF -DENABLE_MMAI=OFF -DENABLE_LAUNCHER=OFF -DCMAKE_BUILD_TYPE=Release -DENABLE_STATIC=ON
+
 cmake --build . -j8
+
 exit
 
 Compiled binaries can be found in longplay/builder/build/bin/
