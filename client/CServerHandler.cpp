@@ -661,6 +661,7 @@ void CServerHandler::enableLagCompensation(bool on)
 
 void CServerHandler::startGameplay(std::shared_ptr<CGameState> gameState)
 {
+	logGlobal->info("CServerHandler: startGameplay");
 	if(GAME->mainmenu())
 		GAME->mainmenu()->disable();
 
@@ -776,6 +777,7 @@ std::optional<std::string> CServerHandler::canQuickLoadGame(const std::string & 
 
 void CServerHandler::quickLoadGame(const std::string & path)
 {
+	logGlobal->info("CServerHandler: quickLoadGame");
 	LobbyQuickLoadGame pack;
 	pack.saveFilePath = path;
 	sendLobbyPack(pack);

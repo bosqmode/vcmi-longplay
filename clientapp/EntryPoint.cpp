@@ -390,8 +390,14 @@ int main(int argc, char * argv[])
 
 		GAME->mainmenu()->playMusic();
 
-		//GAME->server().sendStartGame(false);
-		//GAME->server().quickLoadGame(longplaySavePath);
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+		auto mapInfo = std::make_shared<CMapInfo>();
+		mapInfo->saveInit(ResourcePath(longplaySavePath, EResType::SAVEGAME));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		GAME->server().setMapInfo(mapInfo);
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		GAME->server().sendStartGame(false);
 	}
 	else if (!settings["session"]["headless"].Bool())
 	{

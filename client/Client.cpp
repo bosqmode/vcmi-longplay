@@ -114,6 +114,7 @@ void CClient::newGame(std::shared_ptr<CGameState> initializedGameState)
 
 void CClient::loadGame(std::shared_ptr<CGameState> initializedGameState)
 {
+	logGlobal->info("CClient: loadGame");
 	logNetwork->info("Loading procedure started!");
 
 	logNetwork->info("Game state was transferred over network, loading.");

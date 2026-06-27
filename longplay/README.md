@@ -76,3 +76,17 @@ Modified source to accept loading of a savefile using a custom launch parameter:
 Usage:
 
 ./vcmiclient --longplay-load-save="/home/path/to/savefile"
+
+NOTE!: Paths are not absolute, here's an example: ./vcmiclient --longplay-load-save="Saves/Autosave/2026-06-27_21-39_Carpe_Diem_(Al/1"
+
+the path in the previous one is read (in docker environment) at: /home/{USERNAME}/.local/share/vcmi/Saves/Autosave/2026-06-27_21-39_Carpe_Diem_(Al/1.vsgm1 ($XDG_DATA_HOME ?)
+
+### Saving game on turn START
+
+Default saving happens right before turn ends, therefor there is a modification to the autosave logic to happen right when next player's turn starts.
+The reason being, that if player A ends his turn -> save happens here -> player B turn -> quit -> load -> it will still be player A turn
+
+### Automatically skipping all dialogues
+
+When player's turn starts, he is prompted with a dialogue of something like: "Player red's turn" with an accept button (sometimes some random events). 
+We cannot have that, because in order to save the game right at next player's start -> we need to skip all these dialogues -> and perform a save.
