@@ -156,7 +156,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
@@ -167,7 +167,7 @@ jobs:
     - name: APT cache restore
       if: contains(matrix.os, 'ubuntu')
       id: aptcache
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: ${{ runner.temp }}/apt-cache
         key: ${{ matrix.platform }}-apt-${{ matrix.os }}
@@ -212,7 +212,7 @@ jobs:
     # Save only on cache miss, GitHub caches are immutable per key
     - name: APT cache save
       if: contains(matrix.os, 'ubuntu') && steps.aptcache.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
+      uses: actions/cache/save@v6
       with:
         path: ${{ runner.temp }}/apt-cache
         key: ${{ steps.aptcache.outputs.cache-primary-key }}
@@ -507,7 +507,7 @@ jobs:
       run:
         shell: bash
     steps:
-        - uses: actions/checkout@v6
+        - uses: actions/checkout@v7
           with:
             submodules: recursive
 
@@ -586,7 +586,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
@@ -597,7 +597,7 @@ jobs:
     - name: APT cache restore
       if: contains(matrix.os, 'ubuntu')
       id: aptcache
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: ${{ runner.temp }}/apt-cache
         key: ${{ matrix.platform }}-apt-${{ matrix.os }}
@@ -609,7 +609,7 @@ jobs:
 
     - name: APT cache save
       if: contains(matrix.os, 'ubuntu') && steps.aptcache.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
+      uses: actions/cache/save@v6
       with:
         path: ${{ runner.temp }}/apt-cache
         key: ${{ steps.aptcache.outputs.cache-primary-key }}
@@ -678,7 +678,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Prepare CI
       run: sudo apt update && sudo apt install devscripts debhelper build-essential cmake zlib1g-dev libboost-dev libboost-date-time-dev libboost-program-options-dev libboost-filesystem-dev libboost-iostreams-dev libminizip-dev libsqlite3-dev 
@@ -736,7 +736,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
@@ -836,7 +836,7 @@ jobs:
         shell: bash
 
     steps:
-        - uses: actions/checkout@v6
+        - uses: actions/checkout@v7
         - name: Ensure LF line endings
           run: |
             find . -path ./.git -prune -o -path ./AI/FuzzyLite -prune -o -path ./test/googletest \
@@ -869,7 +869,7 @@ jobs:
       actions: write                   # Partial JSON artifacts can't be deleted in PRs
     steps:
       - name: Checkout (for script path)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download all partial JSON artifacts
         continue-on-error: true
@@ -896,7 +896,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Extract version
         id: version
