@@ -44,11 +44,10 @@ Compiled binaries can be found in longplay/builder/build/bin/
 
 ### Copy gamedata to /longplay/host/gamedata
 
-Copy the installed game data (config/, Data/, Maps/ and Mp3/) to /longplay/host/gamedata/
+Copy the installed game data (Data/, Maps/ and Mp3/) to /longplay/host/gamedata/
 
 Like this:
 - /longplay/host/gamedata
-    - /config
     - /Data
     - /Maps
     - /Mp3
