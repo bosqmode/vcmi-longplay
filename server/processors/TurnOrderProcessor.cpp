@@ -272,6 +272,7 @@ void TurnOrderProcessor::doStartNewDay()
 
 void TurnOrderProcessor::doStartPlayerTurn(PlayerColor which)
 {
+	logGlobal->info("(TurnOrderProcessor) Player turn started %s", which);
 	assert(gameHandler->gameInfo().getPlayerState(which));
 	assert(gameHandler->gameInfo().getPlayerState(which)->status == EPlayerStatus::INGAME);
 
@@ -301,6 +302,7 @@ void TurnOrderProcessor::doStartPlayerTurn(PlayerColor which)
 
 void TurnOrderProcessor::doEndPlayerTurn(PlayerColor which)
 {
+	logGlobal->info("(TurnOrderProcessor) Player turn ended %s", which);
 	assert(isPlayerMakingTurn(which));
 	assert(gameHandler->gameInfo().getPlayerStatus(which) == EPlayerStatus::INGAME);
 

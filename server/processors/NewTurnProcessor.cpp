@@ -144,6 +144,7 @@ void NewTurnProcessor::handleTownEvents(const CGTownInstance * town)
 
 void NewTurnProcessor::onPlayerTurnStarted(PlayerColor which)
 {
+	logGlobal->info("(NewTurnProcessor) Player turn started %s", which);
 	const auto * playerState = gameHandler->gameState().getPlayerState(which);
 
 	handleTimeEvents(which);
@@ -168,6 +169,7 @@ void NewTurnProcessor::onPlayerTurnStarted(PlayerColor which)
 
 void NewTurnProcessor::onPlayerTurnEnded(PlayerColor which)
 {
+	logGlobal->info("(NewTurnProcessor) Player turn ended %s", which);
 	const auto * playerState = gameHandler->gameState().getPlayerState(which);
 	assert(playerState->status == EPlayerStatus::INGAME);
 

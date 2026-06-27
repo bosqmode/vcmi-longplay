@@ -349,15 +349,16 @@ void CPlayerInterface::yourTurn(QueryID queryID)
 		}
 
 	acceptTurn(queryID, hotseatWait);
+
+	// __longplay__ save AFTER next player turn has started
+	performAutosave();
 }
 
 void CPlayerInterface::acceptTurn(QueryID queryID, bool hotseatWait)
 {
-	if (settings["session"]["autoSkip"].Bool())
-	{
-		while(auto iw = ENGINE->windows().topWindow<CInfoWindow>())
-			iw->close();
-	}
+	// __longplay__ skip player turn start dialogue
+	while(auto iw = ENGINE->windows().topWindow<CInfoWindow>())
+		iw->close();
 
 	if(hotseatWait)
 	{
@@ -1063,10 +1064,9 @@ void CPlayerInterface::showInfoDialog(EInfoWindowMode type, const std::string &t
 		return;
 	}
 
-	if (settings["session"]["autoSkip"].Bool() && !ENGINE->isKeyboardShiftDown())
-	{
-		return;
-	}
+	// __longplay__ skip dialogues
+	return;
+
 	std::vector<Component> vect = components; //I do not know currently how to avoid copy here
 	do
 	{
@@ -1093,10 +1093,9 @@ void CPlayerInterface::showInfoDialog(const std::string &text, const std::vector
 	LOG_TRACE_PARAMS(logGlobal, "player=%s, text=%s, is GAME->interface()=%d", playerID % text % (this==GAME->interface()));
 	waitWhileDialog();
 
-	if (settings["session"]["autoSkip"].Bool() && !ENGINE->isKeyboardShiftDown())
-	{
-		return;
-	}
+	// __longplay__ skip dialogues
+	return;
+
 	std::shared_ptr<CInfoWindow> temp = CInfoWindow::create(text, playerID, components);
 
 	if ((makingTurn || (battleInt && battleInt->curInt && battleInt->curInt.get() == this)) && ENGINE->windows().count() > 0 && GAME->interface() == this)
