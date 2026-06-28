@@ -1,0 +1,39 @@
+services:
+  saveserver:
+    build:
+      context: ./saveserver
+      dockerfile: Dockerfile
+    container_name: vcmi-save-server
+    ports:
+      - "8000:8000"
+    volumes:
+      - saves-data:/saves
+    environment:
+      - SAVES_DIR=/saves
+    restart: unless-stopped
+    networks:
+      - vcmi-longplay
+
+  host:
+    build:
+      context: ..
+      dockerfile: longplay/host/Dockerfile
+    container_name: vcmi-host
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - host-data:/home/abc/.local/share/vcmi
+    depends_on:
+      - saveserver
+    restart: unless-stopped
+    networks:
+      - vcmi-longplay
+
+volumes:
+  saves-data:
+  host-data:
+
+networks:
+  vcmi-longplay:
+    driver: bridge

@@ -34,6 +34,8 @@ RUN apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --no-cache-dir requests
+
 RUN mkdir -p /home/${USERNAME}/VCMI \
     && mkdir -p /home/${USERNAME}/.local/share/vcmi
 

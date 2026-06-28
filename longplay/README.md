@@ -90,3 +90,8 @@ The reason being, that if player A ends his turn -> save happens here -> player 
 
 When player's turn starts, he is prompted with a dialogue of something like: "Player red's turn" with an accept button (sometimes some random events). 
 We cannot have that, because in order to save the game right at next player's start -> we need to skip all these dialogues -> and perform a save.
+
+
+## Docker compose 
+
+docker compose -f longplay/docker-compose.yml up --build
