@@ -3,7 +3,7 @@ import socket
 import requests
 
 SOCKET_PATH = "/tmp/longplay-autosave.sock"
-POST_SAVE_URL = "http://saveserver:8000/saves"
+POST_SAVE_URL = "http://portal:8000/saves"
 
 if os.path.exists(SOCKET_PATH):
     os.remove(SOCKET_PATH)

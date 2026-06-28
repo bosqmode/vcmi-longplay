@@ -1,9 +1,9 @@
 services:
-  saveserver:
+  portal:
     build:
-      context: ./saveserver
+      context: ./portal
       dockerfile: Dockerfile
-    container_name: vcmi-save-server
+    container_name: vcmi-portal
     ports:
       - "8000:8000"
     volumes:
@@ -25,7 +25,7 @@ services:
     volumes:
       - host-data:/home/abc/.local/share/vcmi
     depends_on:
-      - saveserver
+      - portal
     restart: unless-stopped
     networks:
       - vcmi-longplay
