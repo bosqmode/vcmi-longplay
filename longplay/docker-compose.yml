@@ -29,6 +29,12 @@ services:
     restart: unless-stopped
     networks:
       - vcmi-longplay
+    environment:
+      - SELKIES_FRAMERATE=24
+      - SELKIES_H264_CRF=30-50
+      - SELKIES_JPEG_QUALITY=40
+      - SELKIES_MANUAL_WIDTH=1280
+      - SELKIES_MANUAL_HEIGHT=720
 
 volumes:
   saves-data:
