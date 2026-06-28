@@ -16,6 +16,10 @@
 #include "../mapping/CMap.h"
 #include "../networkPacks/PacksForServer.h"
 #include "../networkPacks/SaveLocalState.h"
+#include "../VCMIDirs.h"
+#include <sys/socket.h>
+#include <linux/un.h>
+#include <unistd.h>
 
 #define ASSERT_IF_CALLED_WITH_PLAYER if(!getPlayerID()) {logGlobal->error(BOOST_CURRENT_FUNCTION); assert(0);}
 
@@ -321,6 +325,29 @@ void CCallback::save( const std::string &fname, bool notifySuccess )
 {
 	SaveGame save_game(fname, notifySuccess);
 	sendRequest(save_game);
+
+	// __longplay__ save notify to python over a socket
+    // Notify LongPlay autosave uploader via UNIX domain socket (connect-send-disconnect)
+    {
+        const char* sockPath = "/tmp/longplay-autosave.sock";
+        
+        // Build the full save path: userDataPath + fname + ".vsgm1"
+        auto& dirs = VCMIDirs::get();
+        std::string fullPath = (dirs.userDataPath() / (fname + ".vsgm1")).string();
+        
+        int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+        if (fd >= 0) {
+            sockaddr_un addr {};
+            addr.sun_family = AF_UNIX;
+            strncpy(addr.sun_path, sockPath, sizeof(addr.sun_path) - 1);
+            
+            if (::connect(fd, (sockaddr*)&addr, sizeof(addr)) == 0) {
+                std::string msg = fullPath + "\n";
+                ::send(fd, msg.c_str(), msg.size(), MSG_NOSIGNAL);
+            }
+            ::close(fd);
+        }
+    }
 }
 
 void CCallback::gamePause(bool pause)

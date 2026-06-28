@@ -65,3 +65,7 @@ RUN chown -R 1000:1000 /home/${USERNAME} && \
     chmod -R 777 /home/${USERNAME}
 
 ENV XDG_DATA_HOME=/home/abc/.local/share
+
+COPY --chown=1000:1000 ./longplay/host/saveservice.py /home/${USERNAME}/saveservice.py
+COPY --chown=1000:1000 ./longplay/host/entrypoint.sh /custom-services.d/saveservice
+RUN chmod +x /custom-services.d/saveservice
