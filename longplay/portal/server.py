@@ -20,9 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-TEST_PLAYERS = ["P1", "P2", "P3"]
-CURRENT_PLAYER_INDEX = 0
-
 WEBTOP_HTTP_URL = "http://host:3000"
 WEBTOP_WS_URL = "ws://host:3000"
 
@@ -35,11 +32,14 @@ class SaveInfo(BaseModel):
     size: int
     uploaded_at: str
 
+current_gamestate = {}
+
 def verify_token(token: str = None, request: Request = None):
     if not token and request:
         token = request.cookies.get("desktop_token")
     
-    if token != TEST_PLAYERS[CURRENT_PLAYER_INDEX]:
+    current_player = current_gamestate.get("player", None)
+    if current_player is not None and token != current_player:
         raise HTTPException(status_code=403, detail="Not your turn")
 
 @app.post("/saves")
@@ -142,9 +142,11 @@ async def proxy_websocket(websocket: WebSocket):
     if not token:
         token = websocket.query_params.get("token")
 
-    if not token or token != TEST_PLAYERS[CURRENT_PLAYER_INDEX]:
-        await websocket.close(code=4001, reason="Not your turn")
-        return
+    current_player = current_gamestate.get("player", None)
+    if current_player is not None:
+        if not token or token != current_player:
+            await websocket.close(code=4001, reason="Not your turn")
+            return
 
     active_sessions[token] = websocket
 
@@ -175,36 +177,17 @@ async def proxy_websocket(websocket: WebSocket):
 
         await asyncio.gather(client_to_webtop(), webtop_to_client())
 
-
-@app.get("/api/turn-status")
-async def get_turn_status():
-    """Returns current turn state for frontend polling"""
-    return {
-        "current_player": TEST_PLAYERS[CURRENT_PLAYER_INDEX],
-        "players": TEST_PLAYERS,
-        "turn_index": CURRENT_PLAYER_INDEX
-    }
-
-@app.post("/api/turn-status")
-async def advance_turn():
-    """Test endpoint to simulate turn advancement"""
-    global CURRENT_PLAYER_INDEX
-    CURRENT_PLAYER_INDEX = (CURRENT_PLAYER_INDEX + 1) % len(TEST_PLAYERS)
-    return {"current_player": TEST_PLAYERS[CURRENT_PLAYER_INDEX]}
-
-
 async def turn_monitor():
     """Background task that checks turn changes and kicks disconnected players"""
     global CURRENT_PLAYER_INDEX
     while True:
         await asyncio.sleep(2)  # Check every 2 seconds
         
-        print("Checking turns...")
-        print(f"{TEST_PLAYERS[CURRENT_PLAYER_INDEX]}")
-        print(f"Sessions: {[x for x in active_sessions.keys()]}")
-
-        current_player = TEST_PLAYERS[CURRENT_PLAYER_INDEX]
+        current_player = current_gamestate.get("player", None)
         
+        if current_player is None:
+            continue
+
         # Close sessions for players who no longer have their turn
         for player_id, ws in list(active_sessions.items()):
             if player_id != current_player:
@@ -224,3 +207,17 @@ async def turn_monitor():
 async def startup_event():
     asyncio.create_task(turn_monitor())
 
+@app.post("/gamestate")
+async def update_gamestate(request: Request):
+    data = await request.json()
+    current_gamestate.update({
+        "player": data.get("player", None),
+        "day": data.get("day", 0),
+        "timestamp": asyncio.get_event_loop().time()
+    })
+    print(f"Gamestate update: {current_gamestate["timestamp"]}")
+    return {"status": "ok"}
+
+@app.get("/gamestate")
+async def get_gamestate():
+    return current_gamestate

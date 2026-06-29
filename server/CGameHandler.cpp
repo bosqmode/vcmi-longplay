@@ -780,6 +780,41 @@ void CGameHandler::start(bool resume)
 void CGameHandler::tick(int millisecondsPassed)
 {
 	turnTimerHandler->update(millisecondsPassed);
+
+	// __longplay__ gamestate update over UNIX domain socket
+    // Periodic state sync
+    static std::chrono::steady_clock::time_point lastSync;
+    static const auto interval = std::chrono::seconds(1);
+    
+    auto now = std::chrono::steady_clock::now();
+    if ((now - lastSync) >= interval && gs)
+    {
+        lastSync = now;
+        
+        // Get current turn player
+        auto it = gs->actingPlayers.begin();
+        PlayerColor currentPlayer = *it;
+        
+        // Build JSON
+        std::string msg = currentPlayer.toString() + ":" + std::to_string(gs->day) + "\n";
+        
+        // Send via UNIX socket
+		{
+			const char* sockPath = "/tmp/longplay-gamestate.sock";
+			
+			int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+			if (fd >= 0) {
+				sockaddr_un addr {};
+				addr.sun_family = AF_UNIX;
+				strncpy(addr.sun_path, sockPath, sizeof(addr.sun_path) - 1);
+				
+				if (::connect(fd, (sockaddr*)&addr, sizeof(addr)) == 0) {
+					::send(fd, msg.c_str(), msg.size(), MSG_NOSIGNAL);
+				}
+				::close(fd);
+			}
+		}
+    }
 }
 
 void CGameHandler::giveSpells(const CGTownInstance *t, const CGHeroInstance *h)

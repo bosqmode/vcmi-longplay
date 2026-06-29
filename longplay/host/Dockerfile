@@ -34,7 +34,8 @@ RUN apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir requests
+COPY longplay/host/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
 RUN mkdir -p /home/${USERNAME}/VCMI \
     && mkdir -p /home/${USERNAME}/.local/share/vcmi
@@ -68,6 +69,7 @@ RUN chown -R 1000:1000 /home/${USERNAME} && \
 
 ENV XDG_DATA_HOME=/home/abc/.local/share
 
-COPY --chown=1000:1000 ./longplay/host/saveservice.py /home/${USERNAME}/saveservice.py
-COPY --chown=1000:1000 ./longplay/host/entrypoint.sh /custom-services.d/saveservice
-RUN chmod +x /custom-services.d/saveservice
+
+COPY ./longplay/host/gamestateservice.py /gamestateservice.py
+COPY ./longplay/host/entrypoint.sh /custom-services.d/gamestateservice
+RUN chmod +x /custom-services.d/gamestateservice
