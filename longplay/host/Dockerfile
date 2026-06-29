@@ -58,6 +58,7 @@ COPY --chown=1000:1000 \
     ./longplay/builder/build/bin/vcmiclient \
     ./longplay/builder/build/bin/vcmiserver \
     /home/${USERNAME}/VCMI/
+RUN chmod +x /home/${USERNAME}/VCMI/vcmiclient
 
 COPY --chown=1000:1000 ./longplay/host/gamedata/ /home/${USERNAME}/.local/share/vcmi/
 COPY --chown=1000:1000 ./config/ /home/${USERNAME}/.local/share/vcmi/config/
@@ -73,3 +74,6 @@ ENV XDG_DATA_HOME=/home/abc/.local/share
 COPY ./longplay/host/gamestateservice.py /gamestateservice.py
 COPY ./longplay/host/entrypoint.sh /custom-services.d/gamestateservice
 RUN chmod +x /custom-services.d/gamestateservice
+
+COPY ./longplay/host/gameservice.sh /custom-services.d/gameservice
+RUN chmod +x /custom-services.d/gameservice

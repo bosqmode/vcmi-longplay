@@ -1,3 +1,4 @@
 - Force quickCombat (this has a builtin json config) for when AI attacks a player
 - Game synchronization to portal service (unix domain sockets -> saveservice.py (make this a broader service) -> portal state update)
 - automated game launch with save loading (--longplay-load-save parameter should work, maybe add more parameters for new game?)
+- Restrict host vnc/rdp access only to host container proxy (currently open so localhost:3000 works aswell)

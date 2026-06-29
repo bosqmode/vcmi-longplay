@@ -27,14 +27,20 @@ services:
     depends_on:
       - portal
     restart: unless-stopped
+    shm_size: "1gb"
     networks:
       - vcmi-longplay
     environment:
-      - SELKIES_FRAMERATE=24
+      - SELKIES_FRAMERATE=15-30
       - SELKIES_H264_CRF=30-50
       - SELKIES_JPEG_QUALITY=40
       - SELKIES_MANUAL_WIDTH=1280
       - SELKIES_MANUAL_HEIGHT=720
+      - SELKIES_AUDIO_BITRATE=128000
+      - SELKIES_MICROPHONE_ENABLED=False
+      - SELKIES_FILE_TRANSFERS="none"
+      - SELKIES_SECOND_SCREEN=False
+      - SELKIES_ENABLE_SHARING=False
 
 volumes:
   saves-data:
