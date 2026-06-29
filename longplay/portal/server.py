@@ -1,24 +1,16 @@
 import os
-import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi import WebSocket, WebSocketDisconnect
-from starlette.websockets import WebSocketDisconnect as StarletteWebSocketDisconnect
-import websockets as ws_lib
-import ssl
+from fastapi import WebSocket
 import asyncio
-from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import StreamingResponse
 import httpx
 import websockets
-
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
 
 app = FastAPI(title="VCMI Save Server")
 
@@ -48,7 +40,7 @@ def verify_token(token: str = None):
     #         status_code=status.HTTP_401_UNAUTHORIZED, 
     #         detail="Invalid or missing API token"
     #     )
-    print("asd")
+    print("Insert token verification here")
 
 @app.post("/saves")
 async def upload_save(file: UploadFile = File(...)):
@@ -95,43 +87,6 @@ async def delete_save(filename: str):
         return {"status": "deleted"}
     return {"error": "Save not found"}
 
-@app.websocket("/desktop/ws")
-async def websocket_desktop_proxy(websocket: WebSocket):
-    """Proxy WebSocket connection to host webtop streaming"""
-    await websocket.accept()
-    
-    # Connect to host's webtop websocket endpoint
-    import websockets as ws_lib
-    async with ws_lib.connect(
-        "wss://host:3001/websocket",
-        ssl=ssl_context,
-        extra_headers={"Host": "host:3001"}
-    ) as host_ws:
-        # Bidirectional proxy
-        async def client_to_host():
-            try:
-                while True:
-                    message = await websocket.receive_text()
-                    await host_ws.send(message)
-            except WebSocketDisconnect:
-                pass
-        
-        async def host_to_client():
-            try:
-                while True:
-                    message = await host_ws.recv()
-                    await websocket.send_text(message)
-            except WebSocketDisconnect:
-                pass
-        
-        # Run both directions concurrently
-        import asyncio
-        await asyncio.gather(
-            client_to_host(),
-            host_to_client(),
-            return_exceptions=True
-        )
-
 @app.get("/")
 async def serve_index():
     return FileResponse("templates/index.html")
@@ -161,47 +116,6 @@ async def proxy_http(path: str, request: Request, token: str = None):
                 status_code=proxied_res.status_code,
                 headers=response_headers
             )
-    
-@app.websocket("/websockify")
-async def proxy_websocket(websocket: WebSocket, token: str = None):
-    """
-    Intercepts the WebSocket handshake, checks auth, and tunnels 
-    the raw remote desktop data frames to and from the Webtop container.
-    """
-    # # Guard check for WebSockets
-    # if token != "my_secret_gatekeeper_token":
-    #     await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-    #     return
-
-    await websocket.accept()
-
-    # Establish connection to the backend Webtop container
-    async with websockets.connect(f"{WEBTOP_WS_URL}/websockify") as target_ws:
-        
-        # Helper to pipe data from Client -> Webtop
-        async def client_to_webtop():
-            try:
-                while True:
-                    data = await websocket.receive_bytes()
-                    await target_ws.send(data)
-            except WebSocketDisconnect:
-                pass
-            except Exception:
-                await target_ws.close()
-
-        # Helper to pipe data from Webtop -> Client
-        async def webtop_to_client():
-            try:
-                while True:
-                    data = await target_ws.recv()
-                    await websocket.send_bytes(data)
-            except websockets.exceptions.ConnectionClosed:
-                pass
-            except Exception:
-                await websocket.close()
-
-        # Run both listeners concurrently
-        await asyncio.gather(client_to_webtop(), webtop_to_client())
 
 
 @app.websocket("/desktop/websockets")
