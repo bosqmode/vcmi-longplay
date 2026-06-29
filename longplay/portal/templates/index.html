@@ -4,10 +4,73 @@
     <title>VCMI Longplay</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        iframe { border: none; width: 100%; height: 100%; }
+        iframe { border: none; width: 90%; height: 90%; }
     </style>
 </head>
 <body>
-    <iframe src="/desktop/?token=my_secret_gatekeeper_token"></iframe>
+    <h1>Longplay portal</h1>
+    <input type="text" id="playername" placeholder="Enter player name"/>
+    <button id="login-btn">login</button>
+    <button id="test-advance-btn">test advance player</button>
+    <div id="turn-status"></div>
+    <iframe id="desktop-frame"></iframe>
+
+    <script>
+        let currentPlayerId = null;
+        let turnCheckInterval = null;
+
+        async function handleLogin() {
+            const playername = document.getElementById('playername').value.trim();
+            if (!playername) {
+                alert('Please enter a player ID');
+                return;
+            }
+
+            currentPlayerId = playername;
+            document.cookie = "desktop_token=" + currentPlayerId + "; path=/desktop/";
+
+            // Check if it's this player's turn
+            const response = await fetch('/api/turn-status');
+            const status = await response.json();
+
+            if (currentPlayerId === status.current_player) {
+                // It's your turn - show desktop
+                document.getElementById('desktop-frame').src = '/desktop/?token=' + currentPlayerId;
+                document.getElementById('desktop-frame').style.display = 'block';
+                document.getElementById('turn-status').textContent = 'It is your turn!';
+
+                turnCheckInterval = setInterval(async () => {
+                    const response = await fetch('/api/turn-status');
+                    const status = await response.json();
+                    console.log(currentPlayerId + " : " + status);
+                    if (currentPlayerId !== status.current_player) {
+                        document.getElementById('desktop-frame').style.display = 'none';
+                        document.getElementById('turn-status').textContent = 
+                            `Your turn has ended! Current player: ${status.current_player}`;
+                        document.getElementById('turn-status').style.color = 'red';
+                        clearInterval(turnCheckInterval);
+                    } else {
+                        document.getElementById('turn-status').style.color = 'green';
+                        document.getElementById('turn-status').textContent = 
+                            `It is your turn! Welcome, ${currentPlayerId}.`;
+                    }
+                }, 5000);
+            } else {
+                // Not your turn - show waiting message
+                document.getElementById('turn-status').textContent = `Current player: ${status.current_player}`;
+            }
+        }
+
+        async function advanceTurn(){
+            const response = await fetch('/api/turn-status', { method: 'POST' });
+            const data = await response.json();
+            document.getElementById('turn-status').textContent = 
+                `Turn advanced! Current player: ${data.current_player}`;
+        }
+
+        // Bind login button to handler
+        document.getElementById('login-btn').addEventListener('click', handleLogin);
+        document.getElementById('test-advance-btn').addEventListener('click', advanceTurn);
+    </script>
 </body>
 </html>

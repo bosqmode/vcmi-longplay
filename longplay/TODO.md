@@ -1,0 +1,1 @@
+- Force quickCombat (this has a builtin json config) for when AI attacks a player

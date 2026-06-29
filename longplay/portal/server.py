@@ -5,9 +5,8 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi import WebSocket
 import asyncio
-from fastapi import FastAPI, WebSocket, Request
+from fastapi import FastAPI, WebSocket, Request, HTTPException
 from fastapi.responses import StreamingResponse
 import httpx
 import websockets
@@ -21,26 +20,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+TEST_PLAYERS = ["P1", "P2", "P3"]
+CURRENT_PLAYER_INDEX = 0
+
 WEBTOP_HTTP_URL = "http://host:3000"
 WEBTOP_WS_URL = "ws://host:3000"
 
 SAVES_DIR = Path(os.environ.get("SAVES_DIR", "/saves"))
 SAVES_DIR.mkdir(parents=True, exist_ok=True)
-
+active_sessions: dict[str, WebSocket] = {}
 
 class SaveInfo(BaseModel):
     name: str
     size: int
     uploaded_at: str
 
-def verify_token(token: str = None):
-    # Replace this with your actual database lookup or JWT validation
-    # if token != "my_secret_gatekeeper_token":
-    #     raise HTTPException(
-    #         status_code=status.HTTP_401_UNAUTHORIZED, 
-    #         detail="Invalid or missing API token"
-    #     )
-    print("Insert token verification here")
+def verify_token(token: str = None, request: Request = None):
+    if not token and request:
+        token = request.cookies.get("desktop_token")
+    
+    if token != TEST_PLAYERS[CURRENT_PLAYER_INDEX]:
+        raise HTTPException(status_code=403, detail="Not your turn")
 
 @app.post("/saves")
 async def upload_save(file: UploadFile = File(...)):
@@ -94,29 +94,34 @@ async def serve_index():
 
 @app.api_route("/desktop/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy_http(path: str, request: Request, token: str = None):
-    verify_token(token)
+    try:
+        if not token:
+            token = request.cookies.get("desktop_token")
 
-    headers = {k: v for k, v in request.headers.items() if k.lower() not in ["host", "accept-encoding"]}
-    headers["accept-encoding"] = "identity"
+        verify_token(token)
 
-    async with httpx.AsyncClient() as client:
-            url = f"{WEBTOP_HTTP_URL}/{path}"
-            proxied_res = await client.request(
-                method=request.method,
-                url=url,
-                headers=headers,
-                params=request.query_params
-            )
-            
-            exclude_headers = ["content-length", "connection"]
-            response_headers = {k: v for k, v in proxied_res.headers.items() if k.lower() not in exclude_headers}
-            
-            return StreamingResponse(
-                proxied_res.aiter_bytes(),
-                status_code=proxied_res.status_code,
-                headers=response_headers
-            )
+        headers = {k: v for k, v in request.headers.items() if k.lower() not in ["host", "accept-encoding"]}
+        headers["accept-encoding"] = "identity"
 
+        async with httpx.AsyncClient() as client:
+                url = f"{WEBTOP_HTTP_URL}/{path}"
+                proxied_res = await client.request(
+                    method=request.method,
+                    url=url,
+                    headers=headers,
+                    params=request.query_params
+                )
+                
+                exclude_headers = ["content-length", "connection"]
+                response_headers = {k: v for k, v in proxied_res.headers.items() if k.lower() not in exclude_headers}
+                
+                return StreamingResponse(
+                    proxied_res.aiter_bytes(),
+                    status_code=proxied_res.status_code,
+                    headers=response_headers
+                )
+    except HTTPException:
+        return StreamingResponse(iter([b'<html><body>Access denied. Not your turn.</body></html>']), status_code=403, headers={"content-type": "text/html"})
 
 @app.websocket("/desktop/websockets")
 async def proxy_websocket(websocket: WebSocket):
@@ -124,6 +129,25 @@ async def proxy_websocket(websocket: WebSocket):
     # to bypass FastAPI's automatic 403 origin guard
     await websocket.accept()
     
+    cookie_header = websocket.headers.get("cookie", "")
+    
+    # Parse the cookie string manually
+    token = None
+    if cookie_header:
+        for cookie in cookie_header.split(";"):
+            name, value = cookie.strip().split("=", 1)
+            if name == "desktop_token":
+                token = value
+    
+    if not token:
+        token = websocket.query_params.get("token")
+
+    if not token or token != TEST_PLAYERS[CURRENT_PLAYER_INDEX]:
+        await websocket.close(code=4001, reason="Not your turn")
+        return
+
+    active_sessions[token] = websocket
+
     # Forward to Webtop's exact internal websocket endpoint
     async with websockets.connect(f"{WEBTOP_WS_URL}/websockets") as target_ws:
         async def client_to_webtop():
@@ -150,3 +174,53 @@ async def proxy_websocket(websocket: WebSocket):
                 pass
 
         await asyncio.gather(client_to_webtop(), webtop_to_client())
+
+
+@app.get("/api/turn-status")
+async def get_turn_status():
+    """Returns current turn state for frontend polling"""
+    return {
+        "current_player": TEST_PLAYERS[CURRENT_PLAYER_INDEX],
+        "players": TEST_PLAYERS,
+        "turn_index": CURRENT_PLAYER_INDEX
+    }
+
+@app.post("/api/turn-status")
+async def advance_turn():
+    """Test endpoint to simulate turn advancement"""
+    global CURRENT_PLAYER_INDEX
+    CURRENT_PLAYER_INDEX = (CURRENT_PLAYER_INDEX + 1) % len(TEST_PLAYERS)
+    return {"current_player": TEST_PLAYERS[CURRENT_PLAYER_INDEX]}
+
+
+async def turn_monitor():
+    """Background task that checks turn changes and kicks disconnected players"""
+    global CURRENT_PLAYER_INDEX
+    while True:
+        await asyncio.sleep(2)  # Check every 2 seconds
+        
+        print("Checking turns...")
+        print(f"{TEST_PLAYERS[CURRENT_PLAYER_INDEX]}")
+        print(f"Sessions: {[x for x in active_sessions.keys()]}")
+
+        current_player = TEST_PLAYERS[CURRENT_PLAYER_INDEX]
+        
+        # Close sessions for players who no longer have their turn
+        for player_id, ws in list(active_sessions.items()):
+            if player_id != current_player:
+                try:
+                    await ws.close(code=4001, reason="Your turn has ended")
+                    del active_sessions[player_id]
+                    print(f"Kicked {player_id}, it's now {current_player}'s turn")
+                except Exception as e:
+                    print(f"Error closing session for {player_id}: {e}")
+        
+        # Clean up any already-closed sessions
+        dead_sessions = [pid for pid, ws in active_sessions.items() if ws.client_state.name == 'DISCONNECTED']
+        for pid in dead_sessions:
+            del active_sessions[pid]
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(turn_monitor())
+
