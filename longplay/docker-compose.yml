@@ -13,6 +13,8 @@ services:
     restart: unless-stopped
     networks:
       - vcmi-longplay
+    env_file:
+      - env.conf
 
   host:
     build:
@@ -41,6 +43,9 @@ services:
       - SELKIES_FILE_TRANSFERS="none"
       - SELKIES_SECOND_SCREEN=False
       - SELKIES_ENABLE_SHARING=False
+      - DASDVAR=jeppist
+    env_file:
+      - env.conf
 
 volumes:
   saves-data:
