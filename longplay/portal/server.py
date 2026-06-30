@@ -227,7 +227,8 @@ async def proxy_websocket(websocket: WebSocket):
     # Turn-based check (admins bypass)
     current_player = current_gamestate.get("player", None)
     if current_player is not None and creds[0] not in ADMIN_CREDENTIALS:
-        if lp_token != current_player:
+        # Compare USERNAME from token, not the full token string
+        if creds[0] != current_player:
             await websocket.close(code=4001, reason="Not your turn")
             return
 

@@ -43,6 +43,7 @@ services:
       - SELKIES_FILE_TRANSFERS="none"
       - SELKIES_SECOND_SCREEN=False
       - SELKIES_ENABLE_SHARING=False
+      - SELKIES_ENABLE_AUTH=False
     env_file:
       - env.conf
 

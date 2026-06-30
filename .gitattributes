@@ -4,3 +4,6 @@
 
 *.bat text eol=crlf
 /android/gradlew text eol=lf
+
+#__longplay__ fucking crlf on .sh scripts has caused me heart attacks multiple times
+*.sh text eol=lf
