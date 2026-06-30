@@ -47,6 +47,11 @@
 #include <boost/program_options.hpp>
 #include <vstd/StringUtils.h>
 
+#include <iostream>
+#include <string>
+#include <vector>
+#include <sstream>
+
 #include <SDL_main.h>
 #include <SDL.h>
 
@@ -163,7 +168,11 @@ int main(int argc, char * argv[])
 		("donotstartserver,d","do not attempt to start server and just connect to it instead server")
 		("serverport", po::value<si64>(), "override port specified in config file")
 		("savefrequency", po::value<si64>(), "limit auto save creation to each N days")
-		("longplay-load-save", po::value<std::string>(), "path to save file to load"); // __longplay__ loadgame launch parameter
+		("longplay-load-save", po::value<std::string>(), "path to save file to load") // __longplay__ loadgame launch parameter
+		("longplay-map", po::value<std::string>(), "map to play") // __longplay__ map launch parameter
+		("longplay-players", po::value<std::string>(), "comma (,) separated string of player names") // __longplay__ human player names
+		("longplay-factions", po::value<std::string>(), "comma (,) separated string of player factions (0-8 caste-conflux, random -1)") // __longplay__ human player factions
+		("longplay-difficulty", po::value<int>(), "difficulty (integer) 0-5"); // __longplay__ difficulty
 
 	if(argc > 1)
 	{
@@ -280,10 +289,23 @@ int main(int argc, char * argv[])
 	setSettingInteger("session/serverport", "serverport", 0);
 	setSettingInteger("general/saveFrequency", "savefrequency", 1);
 
-	// __longplay__ read launch parameter for save file path
+	// __longplay__ read launch parameters
 	std::string longplaySavePath;
 	if(vm.count("longplay-load-save"))
 		longplaySavePath = vm["longplay-load-save"].as<std::string>();
+	std::string longplayMap;
+	if(vm.count("longplay-map"))
+		longplayMap = vm["longplay-map"].as<std::string>();
+	std::string longplayPlayers;
+	if(vm.count("longplay-players"))
+		longplayPlayers = vm["longplay-players"].as<std::string>();
+	std::string longplayFactions;
+	if(vm.count("longplay-factions"))
+		longplayFactions = vm["longplay-factions"].as<std::string>();
+	int longplayDifficulty = 2;
+	if(vm.count("longplay-difficulty"))
+		longplayDifficulty = vm["longplay-difficulty"].as<int>();
+
 
 	// Initialize logging based on settings
 	logConfigurator.configure();
@@ -374,6 +396,74 @@ int main(int argc, char * argv[])
 		session["testsave"].String() = vm["testsave"].as<std::string>();
 		session["onlyai"].Bool() = true;
 		GAME->server().debugStartTest(session["testsave"].String(), true);
+	}
+	// __longplay__ handle longplay start
+	else if(longplayMap.size() > 0 && longplayPlayers.size() > 0){
+		logGlobal->info("initializing longplay...");
+		GAME->mainmenu()->makeActiveInterface();
+
+		session["donotstartserver"].Bool() = false;
+
+		Settings lastDifficulty = settings.write["general"]["lastDifficulty"];
+		lastDifficulty->Integer() = longplayDifficulty;
+
+		std::vector<std::string> players;
+		std::stringstream ss(longplayPlayers);
+		std::string token;
+
+		while(std::getline(ss, token, ',')){
+			players.push_back(token);
+			logGlobal->info(token);
+		}
+
+		GAME->server().resetStateForLobby(EStartMode::NEW_GAME, ESelectionScreen::newGame, EServerMode::LOCAL, players);
+		GAME->server().loadMode = ELoadMode::MULTI;
+		//GAME->server().screenType = ESelectionScreen::loadGame;
+		GAME->server().hotseatMode = true;
+		GAME->server().startLocalServerAndConnect(false);
+
+		GAME->mainmenu()->playMusic();
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+		GAME->server().si->difficulty = longplayDifficulty;
+
+		auto mapInfo = std::make_shared<CMapInfo>();
+		mapInfo->mapInit(longplayMap);
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		GAME->server().setMapInfo(mapInfo);
+
+		std::vector<std::string> playerFactions;
+		{
+			std::stringstream ssF(longplayFactions);
+			std::string token;
+			while(std::getline(ssF, token, ',')){
+				playerFactions.push_back(token);
+				logGlobal->info("Faction: %s", token);
+			}
+		}
+		
+		// Iterate over playerInfos directly by index to match with longplayPlayers/playerFactions
+		int playerIndex = 0;
+		for(auto& [color, settings] : GAME->server().si->playerInfos) {
+			if(settings.name.empty())
+				continue;
+
+			if(settings.connectedPlayerIDs.empty() && settings.compOnly)  // Skip AI players
+				continue;
+
+			if(playerIndex >= players.size() || playerIndex >= playerFactions.size())
+				break;
+			
+			int32_t factionId = std::stoi(playerFactions[playerIndex]);
+			logGlobal->info("Setting player '%s' (color %d) to faction ID %d", 
+						players[playerIndex].c_str(), static_cast<int>(color), factionId);
+			GAME->server().setPlayerOption(4, factionId, color);  // 4 = TOWN_ID
+			playerIndex++;
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		GAME->server().sendStartGame(false);
 	}
 	// __longplay__ handle save loading
 	else if(longplaySavePath.size() > 0){

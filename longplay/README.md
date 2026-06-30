@@ -95,3 +95,8 @@ We cannot have that, because in order to save the game right at next player's st
 ## Docker compose 
 
 docker compose -f longplay/docker-compose.yml up --build
+
+
+
+
+/vcmiclient --longplay-map "Maps/Caught in the middle" --longplay-players "P1,P2,P3" --longplay-factions "7,7,7" --longplay-difficulty 3

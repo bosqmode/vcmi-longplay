@@ -20,15 +20,6 @@ export LD_LIBRARY_PATH=/home/abc/VCMI:${LD_LIBRARY_PATH:-}
 export XDG_RUNTIME_DIR=/config/.XDG
 export PULSE_RUNTIME_PATH=/defaults
 
-# Ensure X11 authorization is available for abc user
-if [ -f /home/abc/.Xauthority ]; then
-    export XAUTHORITY=/home/abc/.Xauthority
-elif [ -f /root/.Xauthority ]; then
-    export XAUTHORITY=/root/.Xauthority
-fi
-
-echo "XAUTHORITY=$XAUTHORITY"
-
 # Main monitoring loop
 while true; do
     if pgrep -f "$VCMI_BIN" > /dev/null 2>&1; then
