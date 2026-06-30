@@ -43,7 +43,6 @@ services:
       - SELKIES_FILE_TRANSFERS="none"
       - SELKIES_SECOND_SCREEN=False
       - SELKIES_ENABLE_SHARING=False
-      - DASDVAR=jeppist
     env_file:
       - env.conf
 
