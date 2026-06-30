@@ -21,9 +21,9 @@ services:
       context: ..
       dockerfile: longplay/host/Dockerfile
     container_name: vcmi-host
-    ports:
-      - "3000:3000"
-      - "3001:3001"
+    # ports: # enable only for debugging purposes, otherwise desktop access from portal-proxy can be bypassed
+    #   - "3000:3000"
+    #   - "3001:3001"
     volumes:
       - host-data:/home/abc/.local/share/vcmi
     depends_on:
