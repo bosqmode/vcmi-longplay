@@ -351,6 +351,7 @@ void CPlayerInterface::yourTurn(QueryID queryID)
 	acceptTurn(queryID, hotseatWait);
 
 	// __longplay__ save AFTER next player turn has started
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	performAutosave();
 }
 

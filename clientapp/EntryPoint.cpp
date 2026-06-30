@@ -398,7 +398,7 @@ int main(int argc, char * argv[])
 		GAME->server().debugStartTest(session["testsave"].String(), true);
 	}
 	// __longplay__ handle longplay start
-	else if(longplayMap.size() > 0 && longplayPlayers.size() > 0){
+	else if(longplayMap.size() > 0 && longplayPlayers.size() > 0 && longplaySavePath.size() <= 0){
 		logGlobal->info("initializing longplay...");
 		GAME->mainmenu()->makeActiveInterface();
 
@@ -410,13 +410,12 @@ int main(int argc, char * argv[])
 		std::vector<std::string> players;
 		std::stringstream ss(longplayPlayers);
 		std::string token;
-
 		while(std::getline(ss, token, ',')){
 			players.push_back(token);
 			logGlobal->info(token);
 		}
-
 		GAME->server().resetStateForLobby(EStartMode::NEW_GAME, ESelectionScreen::newGame, EServerMode::LOCAL, players);
+
 		GAME->server().loadMode = ELoadMode::MULTI;
 		//GAME->server().screenType = ESelectionScreen::loadGame;
 		GAME->server().hotseatMode = true;
@@ -471,7 +470,16 @@ int main(int argc, char * argv[])
 		GAME->mainmenu()->makeActiveInterface();
 
 		session["donotstartserver"].Bool() = false;
-		GAME->server().resetStateForLobby(EStartMode::LOAD_GAME, ESelectionScreen::loadGame, EServerMode::LOCAL, {"Player1", "Player2", "Player3"}); //hotseat players
+
+		std::vector<std::string> players;
+		std::stringstream ss(longplayPlayers);
+		std::string token;
+		while(std::getline(ss, token, ',')){
+			players.push_back(token);
+			logGlobal->info(token);
+		}
+
+		GAME->server().resetStateForLobby(EStartMode::LOAD_GAME, ESelectionScreen::loadGame, EServerMode::LOCAL, players); //hotseat players
 		GAME->server().screenType = ESelectionScreen::loadGame;
 		GAME->server().loadMode = ELoadMode::MULTI;
 		GAME->server().hotseatMode = true;

@@ -32,7 +32,19 @@ if [ -d "$S6_ENV_DIR" ]; then
     done
 fi
 
-echo $MAP
+get_latest_autosave_relative_path() {
+    local save_base="/home/abc/.local/share/vcmi/Saves/Autosave"
+    
+    # ls -t sorts by modification time, most recent first
+    local latest_file
+    latest_file=$(find "$save_base" -type f -name "*.vsgm1" -size +0c -print0 2>/dev/null \
+        | xargs -0 ls -t 2>/dev/null | head -n 1)
+    
+    if [ -n "$latest_file" ]; then
+        local relative_path="${latest_file#$save_base}"
+        echo "Saves/Autosave${relative_path%/}"
+    fi
+}
 
 # Main monitoring loop
 while true; do
@@ -40,7 +52,18 @@ while true; do
         echo "vcmiclient is running (PID: $(pgrep -f "$VCMI_BIN" | head -1))"
     else
         echo "vcmiclient not found. Launching..."
-        runuser abc -c "/home/abc/VCMI/vcmiclient --longplay-map \"$MAP\" --longplay-players \"$PLAYERS\" --longplay-factions \"$FACTIONS\" --longplay-difficulty \"$DIFFICULTY\"" 2>&1 &
+
+        echo "Checking for saves..."
+        AUTOSAVE_RELATIVE_PATH=$(get_latest_autosave_relative_path)
+        echo "Save file is: $AUTOSAVE_RELATIVE_PATH"
+
+        if [ -n "$AUTOSAVE_RELATIVE_PATH" ]; then
+            echo "Loading from save"
+            runuser abc -c "/home/abc/VCMI/vcmiclient --longplay-players \"$PLAYERS\" --longplay-load-save \"$AUTOSAVE_RELATIVE_PATH\"" 2>&1 &
+        else
+            echo "No autosave found. starting new game..."
+            runuser abc -c "/home/abc/VCMI/vcmiclient --longplay-map \"$MAP\" --longplay-players \"$PLAYERS\" --longplay-factions \"$FACTIONS\" --longplay-difficulty \"$DIFFICULTY\"" 2>&1 &
+        fi
         sleep 5
         xdotool search --name "vcmi" windowfocus >/dev/null 2>&1 || true
     fi
