@@ -77,8 +77,8 @@ async def post_gamestate(data: str):
 
 def handle_gamestate(data: str):
     gamestate = data.strip()
-    player, day = gamestate.split(':')
-    data = {"player": player, "day": int(day)}
+    player, day, color = gamestate.split(':')
+    data = {"player": player, "day": int(day), "playerColor": color}
     asyncio.run(post_gamestate(data))
 
 SOCKET_HANDLERS = {

@@ -795,8 +795,15 @@ void CGameHandler::tick(int millisecondsPassed)
         auto it = gs->actingPlayers.begin();
         PlayerColor currentPlayer = *it;
         
+		std::string playerName = "None";
+		auto startInfo = gs->getStartInfo();
+		if (startInfo) {
+			auto& settings = startInfo->playerInfos[currentPlayer];
+			playerName = settings.name;  // This is the custom name set in EntryPoint.cpp
+		}
+
         // Build JSON
-        std::string msg = currentPlayer.toString() + ":" + std::to_string(gs->day) + "\n";
+        std::string msg = playerName + ":" + std::to_string(gs->day) + ":" + currentPlayer.toString() + "\n";
         
         // Send via UNIX socket
 		{

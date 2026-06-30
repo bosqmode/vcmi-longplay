@@ -1,15 +1,14 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, UploadFile, File, WebSocket, Request, HTTPException, Header
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
-from fastapi import FastAPI, WebSocket, Request, HTTPException
-from fastapi.responses import StreamingResponse
 import httpx
 import websockets
+import uuid
 
 app = FastAPI(title="VCMI Save Server")
 
@@ -26,66 +25,141 @@ WEBTOP_WS_URL = "ws://host:3000"
 SAVES_DIR = Path(os.environ.get("SAVES_DIR", "/saves"))
 SAVES_DIR.mkdir(parents=True, exist_ok=True)
 active_sessions: dict[str, WebSocket] = {}
-
-class SaveInfo(BaseModel):
-    name: str
-    size: int
-    uploaded_at: str
-
 current_gamestate = {}
 
-def verify_token(token: str = None, request: Request = None):
-    if not token and request:
-        token = request.cookies.get("desktop_token")
+# ── Credential loading from os.environ (loaded by docker-compose) ─────
+
+def _load_credentials_from_env() -> tuple[dict[str, str], dict[str, str]]:
+    """Load PLAYERS/PLAYER_PASSWORDS and ADMIN/ADMIN_PASSWORD from environment variables."""
+    players_str = os.environ.get("PLAYERS", "")
+    passwords_str = os.environ.get("PLAYER_PASSWORDS", "")
+    admin_user = os.environ.get("ADMIN", "")
+    admin_pass = os.environ.get("ADMIN_PASSWORD", "")
+
+    player_creds: dict[str, str] = {}
+    admin_creds: dict[str, str] = {}
+
+    players_list = [p.strip() for p in players_str.split(",") if p.strip()]
+    passwords_list = [p.strip() for p in passwords_str.split(",") if p.strip()]
+
+    # Pair players with passwords positionally
+    for i, player in enumerate(players_list):
+        if i < len(passwords_list):
+            player_creds[player] = passwords_list[i]
+
+    if admin_user and admin_pass:
+        admin_creds[admin_user] = admin_pass
+
+    return player_creds, admin_creds
+
+
+PLAYER_CREDENTIALS, ADMIN_CREDENTIALS = _load_credentials_from_env()
+
+# ── Rate limiting for /auth/login ─────────────────────────────────────
+
+class RateLimiter:
+    """Simple in-memory sliding-window rate limiter per IP."""
+
+    def __init__(self, max_attempts: int = 5, window_seconds: int = 60):
+        self.max_attempts = max_attempts
+        self.window_seconds = window_seconds
+        self._attempts: dict[str, list[float]] = {}
+
+    def is_allowed(self, ip: str) -> bool:
+        now = asyncio.get_event_loop().time() if not hasattr(asyncio.get_event_loop(), "new_event_loop") else __import__("time").time()
+        window_start = now - self.window_seconds
+        # Clean old entries
+        self._attempts.setdefault(ip, [])
+        self._attempts[ip] = [t for t in self._attempts[ip] if t > window_start]
+        if len(self._attempts[ip]) >= self.max_attempts:
+            return False
+        self._attempts[ip].append(now)
+        return True
+
+
+_login_limiter = RateLimiter(max_attempts=5, window_seconds=60)
+
+
+def _get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+# ── Authentication helpers ────────────────────────────────────────────
+
+def _parse_token(token: str | None) -> tuple[str, str] | None:
+    """Split token on last ':' to get (username, password). Returns None if invalid."""
+    if not token or ":" not in token:
+        return None
+    username, password = token.rsplit(":", 1)
+    if not username or not password:
+        return None
+    return (username, password)
+
+
+def _validate_credentials(username: str, password: str) -> bool:
+    return (PLAYER_CREDENTIALS.get(username) == password) or (ADMIN_CREDENTIALS.get(username) == password)
+
+
+async def verify_token_gamestate(request: Request | None = None, authorization: str | None = Header(default=None)) -> str | None:
+    """checks access to fetch gamestate. Uses 'lp-token' cookie/query param to avoid conflicts with webtop's own token system."""
+    resolved_token = request.cookies.get("lp-token")
+    if not resolved_token and authorization and authorization.startswith("Bearer "):
+        resolved_token = authorization[7:] # strips "Bearer "
+    if not resolved_token and request.query_params.get("lp-token"):
+        resolved_token = request.query_params.get("lp-token")
+
+    creds = _parse_token(resolved_token)
+    if not creds or not _validate_credentials(creds[0], creds[1]):
+        raise HTTPException(status_code=403, detail="Invalid credentials")
+
+    return creds[0]
+
+async def verify_token_desktop(request: Request | None = None, authorization: str | None = Header(default=None)) -> str | None:
+    """checks access to fetch desktop. Uses 'lp-token' cookie/query param (same as other API endpoints) to avoid conflicts with webtop's own token system."""
+    # Extract token using same logic as gamestate endpoint: lp-token cookie, then Bearer header, then lp-token query param
+    resolved_token = request.cookies.get("lp-token") if request else None
+    if not resolved_token and authorization and authorization.startswith("Bearer "):
+        resolved_token = authorization[7:]
+    if not resolved_token and request and request.query_params.get("lp-token"):
+        resolved_token = request.query_params.get("lp-token")
+
+    creds = _parse_token(resolved_token)
+    if not creds or not _validate_credentials(creds[0], creds[1]):
+        raise HTTPException(status_code=403, detail="Invalid credentials")
     
+    user = creds[0]
+    
+    # Also check turn-based access for players (admins bypass turn check)
     current_player = current_gamestate.get("player", None)
-    if current_player is not None and token != current_player:
-        raise HTTPException(status_code=403, detail="Not your turn")
+    if current_player is not None:
+        if user not in ADMIN_CREDENTIALS and user != current_player:
+            raise HTTPException(status_code=403, detail="Not your turn")
 
-@app.post("/saves")
-async def upload_save(file: UploadFile = File(...)):
-    print(f"saveserver.py::upload_save()")
-    save_path = SAVES_DIR / file.filename
-    with open(save_path, "wb") as f:
-        content = await file.read()
-        f.write(content)
-    return {"filename": file.filename, "status": "uploaded"}
+    return user
 
+@app.post("/auth/login")
+async def auth_login(request: Request):
+    """Authenticate username+password and return a token string."""
+    data = await request.json()
+    username = (data.get("username", "") or "").strip()
+    password = (data.get("password", "") or "").strip()
 
-@app.get("/saves")
-async def list_saves() -> list[SaveInfo]:
-    print(f"saveserver.py::list_saves()")
-    saves = []
-    for save_file in SAVES_DIR.iterdir():
-        if save_file.is_file():
-            stat = save_file.stat()
-            saves.append(
-                SaveInfo(
-                    name=save_file.name,
-                    size=stat.st_size,
-                    uploaded_at=datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
-                )
-            )
-    return sorted(saves, key=lambda s: s.name)
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="Missing username or password")
 
+    ip = _get_client_ip(request)
+    if not _login_limiter.is_allowed(ip):
+        raise HTTPException(status_code=429, detail="Too many login attempts, try again later")
 
-@app.get("/saves/{filename}")
-async def download_save(filename: str):
-    print(f"saveserver.py::download_save()")
-    save_path = SAVES_DIR / filename
-    if not save_path.exists():
-        return {"error": "Save not found"}
-    return FileResponse(save_path, media_type="application/octet-stream", filename=filename)
+    if not _validate_credentials(username, password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-
-@app.delete("/saves/{filename}")
-async def delete_save(filename: str):
-    print(f"saveserver.py::delete_save()")
-    save_path = SAVES_DIR / filename
-    if save_path.exists():
-        save_path.unlink()
-        return {"status": "deleted"}
-    return {"error": "Save not found"}
+    token = f"{username}:{password}"
+    is_admin = username in ADMIN_CREDENTIALS
+    return {"status": "ok", "username": username, "token": token, "isAdmin": is_admin}
 
 @app.get("/")
 async def serve_index():
@@ -93,15 +167,14 @@ async def serve_index():
 
 
 @app.api_route("/desktop/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def proxy_http(path: str, request: Request, token: str = None):
+async def proxy_http(path: str, request: Request, authorization: str | None = Header(default=None)):
     try:
-        if not token:
-            token = request.cookies.get("desktop_token")
-
-        verify_token(token)
+        await verify_token_desktop(authorization=authorization, request=request)
 
         headers = {k: v for k, v in request.headers.items() if k.lower() not in ["host", "accept-encoding"]}
         headers["accept-encoding"] = "identity"
+        # Strip ALL token-like query params before forwarding to webtop to avoid conflicts with webtop's own token system
+        filtered_params = {k: v for k, v in request.query_params.items() if k not in ("token", "lp-token")}
 
         async with httpx.AsyncClient() as client:
                 url = f"{WEBTOP_HTTP_URL}/{path}"
@@ -109,7 +182,7 @@ async def proxy_http(path: str, request: Request, token: str = None):
                     method=request.method,
                     url=url,
                     headers=headers,
-                    params=request.query_params
+                    params=filtered_params if filtered_params else None
                 )
                 
                 exclude_headers = ["content-length", "connection"]
@@ -129,26 +202,36 @@ async def proxy_websocket(websocket: WebSocket):
     # to bypass FastAPI's automatic 403 origin guard
     await websocket.accept()
     
+    # Extract longplay API token from cookie or query param (use 'lp-token' to avoid conflicts with webtop's own token system)
     cookie_header = websocket.headers.get("cookie", "")
-    
-    # Parse the cookie string manually
-    token = None
+    lp_token = None
     if cookie_header:
         for cookie in cookie_header.split(";"):
             name, value = cookie.strip().split("=", 1)
-            if name == "desktop_token":
-                token = value
-    
-    if not token:
-        token = websocket.query_params.get("token")
+            if name == "lp-token":
+                lp_token = value
+    if not lp_token:
+        lp_token = websocket.query_params.get("lp-token")
 
+    # Also check Authorization header
+    auth_header = websocket.headers.get("authorization", "")
+    if not lp_token and auth_header.startswith("Bearer "):
+        lp_token = auth_header[7:]
+
+    # Validate credentials using our API token
+    creds = _parse_token(lp_token)
+    if not creds or not _validate_credentials(creds[0], creds[1]):
+        await websocket.close(code=4001, reason="Invalid credentials")
+        return
+
+    # Turn-based check (admins bypass)
     current_player = current_gamestate.get("player", None)
-    if current_player is not None:
-        if not token or token != current_player:
+    if current_player is not None and creds[0] not in ADMIN_CREDENTIALS:
+        if lp_token != current_player:
             await websocket.close(code=4001, reason="Not your turn")
             return
 
-    active_sessions[token] = websocket
+    active_sessions[lp_token] = websocket
 
     # Forward to Webtop's exact internal websocket endpoint
     async with websockets.connect(f"{WEBTOP_WS_URL}/websockets") as target_ws:
@@ -188,13 +271,15 @@ async def turn_monitor():
         if current_player is None:
             continue
 
-        # Close sessions for players who no longer have their turn
+        # Close sessions for players who no longer have their turn (admins are never kicked)
         for player_id, ws in list(active_sessions.items()):
-            if player_id != current_player:
+            # Extract username from token (format: username:password)
+            session_username = player_id.split(":")[0] if ":" in player_id else player_id
+            if session_username != current_player and session_username not in ADMIN_CREDENTIALS:
                 try:
                     await ws.close(code=4001, reason="Your turn has ended")
                     del active_sessions[player_id]
-                    print(f"Kicked {player_id}, it's now {current_player}'s turn")
+                    print(f"Kicked {session_username}, it's now {current_player}'s turn")
                 except Exception as e:
                     print(f"Error closing session for {player_id}: {e}")
         
@@ -213,11 +298,41 @@ async def update_gamestate(request: Request):
     current_gamestate.update({
         "player": data.get("player", None),
         "day": data.get("day", 0),
+        "playerColor": data.get("playerColor", None),
         "timestamp": asyncio.get_event_loop().time()
     })
-    print(f"Gamestate update: {current_gamestate["timestamp"]}")
+    print(f"Gamestate update: {current_gamestate["player"]}, {current_gamestate["playerColor"]}, {current_gamestate["day"]}, {current_gamestate["timestamp"]}")
     return {"status": "ok"}
 
 @app.get("/gamestate")
-async def get_gamestate():
+async def get_gamestate(request: Request, authorization: str | None = Header(default=None)):
+    await verify_token_gamestate(authorization=authorization, request=request)
     return current_gamestate
+
+
+
+# old stuff, maybe one day...
+class SaveInfo(BaseModel):
+    name: str
+    size: int
+    uploaded_at: str
+
+@app.post("/saves")
+async def upload_save(file: UploadFile = File(...)):
+    print(f"saveserver.py::saves() unimplemented")
+    return {"status": "ok"}
+
+@app.get("/saves")
+async def list_saves() -> list[SaveInfo]:
+    print(f"saveserver.py::list_saves() unimplemented")
+    return {"status": "ok"}
+
+@app.get("/saves/{filename}")
+async def download_save(filename: str):
+    print(f"saveserver.py::download_save() unimplemented")
+    return {"status": "ok"}
+
+@app.delete("/saves/{filename}")
+async def delete_save(filename: str):
+    print(f"saveserver.py::delete_save() unimplemented")
+    return {"status": "ok"}
