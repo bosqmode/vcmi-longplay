@@ -11,6 +11,8 @@ Plan is the following:
 
 All of the longplay code should exist under /longplay -directory, except when/if we need to modify the source for hooks etc.
 
+Currently only works for coop scenarios, combat turns in a PVP scenario has not been implemented yet
+
 ## Building the source
 
 Most of the VCMI source is unmodified, but there probably needs to be a couple of hooks for the host OS to allow correct users to log in to the system, hence why this is a fork.
@@ -68,6 +70,8 @@ and not the full path (this is how vcmiclient reads the maps from $XDG_CONFIG_DI
 
 Note!: It is recommended not to change these variables if you've already started a game, the whole system is heavily vibe-coded and is pretty fragile. So make sure to configure everything correctly,
 before starting a game.
+
+Note!: Note that only COOP scenarios are supported currently, so make sure to select a map where all the players are on the same side.
 
 ### Copy game data
 
