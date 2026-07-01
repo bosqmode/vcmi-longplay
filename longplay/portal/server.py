@@ -302,9 +302,9 @@ async def update_gamestate(request: Request):
         "player": data.get("player", None),
         "day": data.get("day", 0),
         "playerColor": data.get("playerColor", None),
-        "timestamp": asyncio.get_event_loop().time()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     })
-    print(f"Gamestate update: {current_gamestate["player"]}, {current_gamestate["playerColor"]}, {current_gamestate["day"]}, {current_gamestate["timestamp"]}")
+    print(f"Gamestate update: {current_gamestate['player']}, {current_gamestate['playerColor']}, {current_gamestate['day']}, {current_gamestate['timestamp']}")
     return {"status": "ok"}
 
 @app.get("/gamestate")

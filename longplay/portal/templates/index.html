@@ -27,6 +27,20 @@
 </head>
 <body class="bg-gray-900">
 <div id="app" class="h-full w-full">
+    <!-- HEADER -->
+    <div v-if="currentView !== 'login'" class="h-12 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-5">
+        <div class="flex items-center gap-2">
+            <span class="text-accent-yellow text-md font-bold bg-yellow-900/30 px-1.5 py-0.5 rounded">{{ username }}</span>
+        </div>
+        <button @click="toggleDesktop" :disabled="!canActivateDesktop"
+            class="py-1.5 px-4 bg-accent-red hover:bg-red-700 text-white rounded-lg text-md font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ activateDesktopButtonText }}
+        </button>
+        <button @click="logout"
+            class="py-1.5 px-4 bg-accent-gray hover:bg-gray-700 text-white rounded-lg text-md font-semibold transition-colors">
+            Logout
+        </button>
+    </div>
 
     <!-- View A: Login -->
     <div v-if="currentView === 'login'" class="flex items-center justify-center h-full">
@@ -49,34 +63,66 @@
 
     <!-- View B: Status -->
     <div v-if="currentView === 'status'" class="h-full flex flex-col">
-        <div class="h-9 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-5">
-            <div class="flex items-center gap-2">
-                <span class="text-gray-300 text-sm">{{ gameStateText }}</span>
-                <span v-if="isAdmin" class="text-accent-yellow text-xs font-bold bg-yellow-900/30 px-1.5 py-0.5 rounded">ADMIN</span>
+        <!-- Centered status card -->
+        <div class="flex-1 flex items-center justify-center px-4 py-8">
+            <div v-if="gameState.player" class="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-lg text-center">
+                <!-- Player name -->
+                <div class="mb-6">
+                    <p class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-1">Current Player</p>
+                    <p class="text-white text-3xl font-bold">{{ gameState.player }}</p>
+                </div>
+
+                <!-- Divider -->
+                <div class="border-t border-gray-700 my-4"></div>
+
+                <!-- Day and Color row -->
+                <div class="flex items-center justify-center gap-8 mb-6">
+                    <!-- Day -->
+                    <div class="text-center">
+                        <p class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-1">Day</p>
+                        <p class="text-white text-4xl font-bold">{{ gameState.day || 0 }}</p>
+                    </div>
+
+                    <!-- Player Color -->
+                    <div class="text-center">
+                        <p class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-1">Color</p>
+                        <div class="flex items-center justify-center gap-2 mt-1">
+                            <div v-if="gameState.playerColor"
+                                :class="'w-8 h-8 rounded-lg shadow-sm ' + playerColorClass(gameState.playerColor)"
+                                class="border border-gray-600"></div>
+                            <span v-else class="text-gray-500 text-lg">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="border-t border-gray-700 my-4"></div>
+
+                <div class="mb-6">
+                    <button @click="toggleDesktop" :disabled="!canActivateDesktop"
+                        class="py-1.5 px-4 bg-accent-red hover:bg-red-700 text-white rounded-lg text-md font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        {{ activateDesktopButtonText }}
+                    </button>
+                </div>
+
+                <div class="border-t border-gray-700 my-4"></div>
+
+                <!-- Last updated -->
+                <p class="text-gray-500 text-xs">Last updated: {{ lastUpdatedText }}</p>
             </div>
-            <button v-if="!desktopActivated && canActivateDesktop" @click="activateDesktop"
-                class="py-1.5 px-4 bg-accent-red hover:bg-red-700 text-white rounded-lg text-xs font-semibold transition-colors">
-                Activate Remote Desktop
-            </button>
-            <button v-if="!desktopActivated && !canActivateDesktop" disabled
-                class="py-1.5 px-4 bg-gray-600 text-gray-400 rounded-lg text-xs font-semibold cursor-not-allowed">
-                {{ activateButtonDisabledText }}
-            </button>
+
+            <!-- Empty state: waiting for game -->
+            <div v-else class="text-center">
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-lg">
+                    <p class="text-gray-300 text-xl font-semibold mb-2">Waiting for Game</p>
+                    <p class="text-gray-500 text-sm">{{ gameStateText }}</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- View C: Desktop -->
     <div v-if="currentView === 'desktop'" class="h-full flex flex-col">
-        <div class="h-9 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-5">
-            <div class="flex items-center gap-2">
-                <span class="text-green-400 text-sm">{{ desktopStatusText }}</span>
-                <span v-if="isAdmin" class="text-accent-yellow text-xs font-bold bg-yellow-900/30 px-1.5 py-0.5 rounded">ADMIN</span>
-            </div>
-            <button @click="exitDesktop"
-                class="py-1.5 px-4 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold transition-colors">
-                Exit Desktop
-            </button>
-        </div>
         <iframe :src="desktopUrl" id="desktop-frame" class="flex-1 w-full border-0"></iframe>
     </div>
 
@@ -95,20 +141,27 @@ createApp({
         const playerName = ref(null);
         const isAdmin = ref(false);
         const gameState = ref({ player: null, day: 0, playerColor: null });
+        const lastUpdatedTimestamp = ref(null);
         const errorMsg = ref('');
         const loggingIn = ref(false);
         const desktopActivated = ref(false);
-        const pollTimer = ref(null);
+        const gamestateInterval = ref(null);
+        const turnInterval = ref(null);
 
         // Computed
         const canActivateDesktop = computed(() => {
-            if (isAdmin.value) return true;
-            return gameState.value.player === playerName.value;
+            if(gameState.value.player === playerName.value || isAdmin.value){
+                return true;
+            }
+            return false;
         });
 
-        const activateButtonDisabledText = computed(() => {
-            if (!gameState.value.player) return 'Waiting for game...';
-            return `Wait: ${gameState.value.player}`;
+        const activateDesktopButtonText = computed(() => {
+            if (canActivateDesktop.value && !desktopActivated.value) 
+                return 'Play your turn!';
+            else if(desktopActivated.value)
+                return 'Close desktop';
+            return `Not your turn`;
         });
 
         const gameStateText = computed(() => {
@@ -123,6 +176,35 @@ createApp({
             if (canActivateDesktop.value) return `Your turn - desktop connected`;
             return 'Turn ended';
         });
+
+        const lastUpdatedText = computed(() => {
+            if (!lastUpdatedTimestamp.value) return 'Never';
+            // Handle both ISO string (new format) and numeric timestamp (old format)
+            let date;
+            if (typeof lastUpdatedTimestamp.value === 'string') {
+                date = new Date(lastUpdatedTimestamp.value);
+            } else {
+                date = new Date(lastUpdatedTimestamp.value * 1000);
+            }
+            return date.toLocaleString();
+        });
+
+        const playerColorMap = {
+            blue: 'bg-blue-600',
+            red: 'bg-red-600',
+            green: 'bg-green-600',
+            yellow: 'bg-yellow-500',
+            orange: 'bg-orange-500',
+            purple: 'bg-purple-600',
+            cyan: 'bg-cyan-500',
+            darkblue: 'bg-indigo-700',
+        };
+
+        function playerColorClass(color) {
+            if (!color) return 'bg-gray-600';
+            const key = color.toLowerCase().replace(/\s+/g, '');
+            return playerColorMap[key] || 'bg-gray-600';
+        }
 
         // Use 'lp-token' query param for desktop access (our API authentication), no token forwarded to webtop
         const desktopUrl = computed(() => {
@@ -163,7 +245,7 @@ createApp({
                 currentView.value = 'status';
 
                 // Start polling for game state changes
-                startPolling();
+                startGamestatePolling();
 
             } catch (err) {
                 errorMsg.value = 'Failed to login: ' + err.message;
@@ -184,14 +266,20 @@ createApp({
                     headers: { 'Authorization': `Bearer ${token.value}` }
                 });
                 if (resp.ok) {
-                    gameState.value = await resp.json();
+                    const data = await resp.json();
+                    gameState.value = { player: data.player, day: data.day, playerColor: data.playerColor };
+                    // Store timestamp as-is; server now sends ISO format strings
+                    lastUpdatedTimestamp.value = data.timestamp || null;
                 }
             } catch (e) {
                 console.error('Failed to fetch game state:', e);
             }
         }
 
-        function startPolling() {
+        function startGamestatePolling() {
+            if(gamestateInterval.value)
+                return;
+
             const poll = async () => {
                 await fetchGameState();
                 // Check if we should transition to desktop view automatically for admins
@@ -200,11 +288,37 @@ createApp({
                 }
             };
             poll(); // initial fetch
-            pollTimer.value = setInterval(poll, 3000);
+            gamestateInterval.value = setInterval(poll, 3000);
         }
 
-        async function activateDesktop() {
-            if (!canActivateDesktop.value || desktopActivated.value) return;
+        function stopGamestatePolling(){
+            if(!gamestateInterval.value)
+                return;
+
+            clearInterval(gamestateInterval.value);
+            gamestateInterval.value = null;
+        }
+
+        async function logout(){
+            exitDesktop();
+            currentView.value = 'login';
+            username.value = '';
+            password.value = '';
+            token.value = '';
+            document.cookie = "lp-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+            stopGamestatePolling();
+            stopDesktopTurnMonitoring();
+        }
+
+        async function toggleDesktop() {
+            if(desktopActivated.value)
+            {
+                exitDesktop();
+                return;   
+            }
+
+            if (!canActivateDesktop.value) 
+                return;
 
             desktopActivated.value = true;
             currentView.value = 'desktop';
@@ -225,34 +339,46 @@ createApp({
         }
 
         function startDesktopTurnMonitoring() {
+            if(turnInterval.value)
+                return;
+
             const checkTurn = async () => {
                 await fetchGameState();
                 if (!isAdmin.value && gameState.value.player !== playerName.value) {
                     // Turn ended - go back to status view
                     currentView.value = 'status';
                     desktopActivated.value = false;
-                    if (pollTimer.value) clearInterval(pollTimer.value);
-                    startPolling(); // resume status polling
+                    stopDesktopTurnMonitoring();
+                    startGamestatePolling(); // resume status polling
                 } else if (gameState.value.player === playerName.value) {
                     // Still your turn
                 }
             };
-            pollTimer.value = setInterval(checkTurn, 3000);
+            turnInterval.value = setInterval(checkTurn, 3000);
+        }
+
+        function stopDesktopTurnMonitoring(){
+            if(!turnInterval.value)
+                return;
+
+            clearInterval(turnInterval.value);
+            turnInterval.value = null;
         }
 
         function exitDesktop() {
             currentView.value = 'status';
             desktopActivated.value = false;
-            if (pollTimer.value) clearInterval(pollTimer.value);
-            startPolling();
+            startGamestatePolling();
+            stopDesktopTurnMonitoring();
         }
 
         return {
             currentView, username, password, token, playerName, isAdmin,
-            gameState, errorMsg, loggingIn, desktopActivated,
-            canActivateDesktop, activateButtonDisabledText,
-            gameStateText, desktopStatusText, desktopUrl,
-            login, focusPassword, activateDesktop, exitDesktop
+            gameState, errorMsg, loggingIn, desktopActivated, lastUpdatedTimestamp,
+            canActivateDesktop, activateDesktopButtonText,
+            gameStateText, desktopStatusText, lastUpdatedText, desktopUrl,
+            playerColorClass,
+            login, focusPassword, toggleDesktop, exitDesktop, logout
         };
     }
 }).mount('#app');
