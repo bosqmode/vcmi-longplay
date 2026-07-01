@@ -35,14 +35,29 @@ fi
 get_latest_autosave_relative_path() {
     local save_base="/home/abc/.local/share/vcmi/Saves/Autosave"
     
-    # ls -t sorts by modification time, most recent first
-    local latest_file
-    latest_file=$(find "$save_base" -type f -name "*.vsgm1" -size +0c -print0 2>/dev/null \
-        | xargs -0 ls -t 2>/dev/null | head -n 1)
+    # Use -maxdepth to only find files directly in Autosave, not nested dirs
+    # Also verify it's a regular file (not a directory)
+    local latest_file=""
+    local latest_mtime=0
     
-    if [ -n "$latest_file" ]; then
-        local relative_path="${latest_file#$save_base}"
-        echo "Saves/Autosave${relative_path%/}"
+    while IFS= read -r -d '' file; do
+        if [ -f "$file" ] && [ "$file" != "$save_base" ]; then
+            local mtime
+            mtime=$(stat -c %Y "$file" 2>/dev/null || echo 0)
+            if [ "$mtime" -gt "$latest_mtime" ]; then
+                latest_mtime=$mtime
+                latest_file="$file"
+            fi
+        fi
+    done < <(find "$save_base" -type f -name "*.vsgm1" -size +0c -print0 2>/dev/null)
+    
+    if [ -n "$latest_file" ] && [ -f "$latest_file" ]; then
+        # Extract the relative path from Autosave directory
+        local rel_dir
+        rel_dir=$(realpath --relative-to="$save_base" "$(dirname "$latest_file")")
+        local rel_file
+        rel_file=$(basename "$latest_file")
+        echo "Saves/Autosave/${rel_dir}/${rel_file}"
     fi
 }
 
