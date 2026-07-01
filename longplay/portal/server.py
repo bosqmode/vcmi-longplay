@@ -1,6 +1,5 @@
 import os
-from datetime import datetime, timezone, timedelta
-from pathlib import Path
+from datetime import datetime, timezone
 from fastapi import FastAPI, UploadFile, File, WebSocket, Request, HTTPException, Header
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,9 +7,8 @@ from pydantic import BaseModel
 import asyncio
 import httpx
 import websockets
-import uuid
 
-app = FastAPI(title="VCMI Save Server")
+app = FastAPI(title="VCMI Portal")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,8 +20,6 @@ app.add_middleware(
 WEBTOP_HTTP_URL = "http://host:3000"
 WEBTOP_WS_URL = "ws://host:3000"
 
-SAVES_DIR = Path(os.environ.get("SAVES_DIR", "/saves"))
-SAVES_DIR.mkdir(parents=True, exist_ok=True)
 active_sessions: dict[str, WebSocket] = {}
 current_gamestate = {}
 
@@ -314,7 +310,7 @@ async def get_gamestate(request: Request, authorization: str | None = Header(def
 
 
 
-# old stuff, maybe one day...
+# old save stuff, maybe one day...
 class SaveInfo(BaseModel):
     name: str
     size: int

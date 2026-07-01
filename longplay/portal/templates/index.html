@@ -263,8 +263,12 @@ createApp({
         }
 
         async function fetchGameState() {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+
             try {
                 const resp = await fetch('/gamestate', {
+                    signal: controller.signal,
                     headers: { 'Authorization': `Bearer ${token.value}` }
                 });
                 if (resp.ok) {
@@ -274,7 +278,14 @@ createApp({
                     lastUpdatedTimestamp.value = data.timestamp || null;
                 }
             } catch (e) {
-                console.error('Failed to fetch game state:', e);
+                if(e.name === 'AbortError'){
+                    console.error('Fetching gamestate failed due to timeout');
+                }
+                else{
+                    console.error('Failed to fetch game state:', e);
+                }
+            } finally {
+                clearTimeout(timeoutId);
             }
         }
 

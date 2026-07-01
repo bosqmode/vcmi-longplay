@@ -1,7 +1,5 @@
-- Force quickCombat (this has a builtin json config) for when AI attacks a player
-- Game synchronization to portal service (unix domain sockets -> saveservice.py (make this a broader service) -> portal state update)
-- automated game launch with save loading (--longplay-load-save parameter should work, maybe add more parameters for new game?)
-- Restrict host vnc/rdp access only to host container proxy (currently open so localhost:3000 works aswell)
+- Force quickCombat (this has a builtin json config) for when AI attacks a player (or turns based on battle turns)
 - protect host api service endspoints with apikey (ones that are used by host container)
 - hide most of host desktop environment
-- add admin account to access desktop no matter who's turn
+- saves mount? (makes it easier to clear game data)
+- autosave after battles?

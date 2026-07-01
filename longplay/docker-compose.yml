@@ -6,10 +6,6 @@ services:
     container_name: vcmi-portal
     ports:
       - "8000:8000"
-    volumes:
-      - saves-data:/saves
-    environment:
-      - SAVES_DIR=/saves
     restart: unless-stopped
     networks:
       - vcmi-longplay
@@ -48,7 +44,6 @@ services:
       - env.conf
 
 volumes:
-  saves-data:
   host-data:
 
 networks:
