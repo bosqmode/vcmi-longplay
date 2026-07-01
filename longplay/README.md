@@ -9,11 +9,6 @@ Plan is the following:
 - Only the player with their turn can access the host (username/password auth) (admin account for maintenance)
 - Rinse & repeat until game is over
 
-Things to consider:
-- Copying savefiles from the host for backup
-- Host shutdown/boot for cost optimization (imagine we host this on AWS and the server just keeps running for a week without anybody playing their turn?)
-- WebUI for login & RDP, display who's turn it is, maybe a Telegram -bot?
-
 All of the longplay code should exist under /longplay -directory, except when/if we need to modify the source for hooks etc.
 
 ## Building the source
@@ -24,10 +19,13 @@ All commands run from the root of this repo.
 
 ### Build the builder image
 
+```
 docker build -f longplay/builder/Dockerfile -t vcmi-builder ..
+```
 
 ### Compile source within the container
 
+```
 docker run --rm -it -v "${PWD}:/src" vcmi-builder
 
 cd src/longplay/builder/build
@@ -37,49 +35,15 @@ cmake -S ../../../ -DENABLE_CCACHE=OFF -DENABLE_TEST=OFF -DENABLE_MMAI=OFF -DENA
 cmake --build . -j8
 
 exit
+```
 
-Compiled binaries can be found in longplay/builder/build/bin/
+Or just run ```build.bat```
 
-## Building the host container
-
-### Copy gamedata to /longplay/host/gamedata
-
-Copy the installed game data (Data/, Maps/ and Mp3/) to /longplay/host/gamedata/
-
-Like this:
-- /longplay/host/gamedata
-    - /Data
-    - /Maps
-    - /Mp3
-
-### Build the host container
-
-docker build -f longplay/host/Dockerfile -t vcmi-host .
-
-### Start host container
-
-docker run --rm --name vcmi_host -p 3000:3000 -p 3001:3001 vcmi-host
-
-### Connecting
-
-https://localhost:3000/
-
+Compiled binaries can be found in ```longplay/builder/build/bin/```
 
 ## vcmiclient modifications
 
 Listed some changes to vcmiclient
-
-### Loading a save
-
-Modified source to accept loading of a savefile using a custom launch parameter: --longplay-load-save
-
-Usage:
-
-./vcmiclient --longplay-load-save="/home/path/to/savefile"
-
-NOTE!: Paths are not absolute, here's an example: ./vcmiclient --longplay-load-save="Saves/Autosave/2026-06-27_21-39_Carpe_Diem_(Al/1"
-
-the path in the previous one is read (in docker environment) at: /home/{USERNAME}/.local/share/vcmi/Saves/Autosave/2026-06-27_21-39_Carpe_Diem_(Al/1.vsgm1 ($XDG_DATA_HOME ?)
 
 ### Saving game on turn START
 
@@ -92,11 +56,53 @@ When player's turn starts, he is prompted with a dialogue of something like: "Pl
 We cannot have that, because in order to save the game right at next player's start -> we need to skip all these dialogues -> and perform a save.
 
 
-## Docker compose 
+## Docker compose and starting a game
 
-docker compose -f longplay/docker-compose.yml up --build
+To start a game, first one needs to configure the session, then just run docker compose.
 
+### Environment variables, the game config
 
+This happens by tweaking the ```env.conf``` file under /longplay.
+Most of the env vars are quite self-explanatory. For map, just make sure to use the partial path like "Maps/Caught in the middle"
+and not the full path (this is how vcmiclient reads the maps from $XDG_CONFIG_DIR (or something)).
 
+Note!: It is recommended not to change these variables if you've already started a game, the whole system is heavily vibe-coded and is pretty fragile. So make sure to configure everything correctly,
+before starting a game.
 
-/vcmiclient --longplay-map "Maps/Caught in the middle" --longplay-players "P1,P2,P3" --longplay-factions "7,7,7" --longplay-difficulty 3
+### Copy game data
+
+Buy a copy of Heroes 3. Install it, and copy /Data, /Maps, and /Mp3 -directories to /longplay/host/gamedata/*
+
+The folder structure should look like this:
+
+- /longplay/host/gamedata
+    - /Data
+    - /Maps
+    - /Mp3
+
+### Starting a game
+
+You've built vcmiclient and copied your Heroes 3 copy's game data to /longplay/host/gamedata, now it's time for you to start a game.
+Just run:
+
+```docker compose -f longplay/docker-compose.yml up --build```
+
+Then just head to:
+
+```http://localhost:8000/``` 
+
+and login with a user configured in the previously mentioned env.conf
+
+### Clearing saves / starting a new game
+
+Saves dir is currently a named volume, so in order to get rid of the saves, you'll have to delete the previously created mount volume
+
+```
+docker compose down
+
+docker volume ls
+
+docker volume rm your_project_name_host-data
+```
+
+After that, you can reconfigure the env.conf and build/run docker compose again

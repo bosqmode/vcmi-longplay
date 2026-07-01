@@ -6,12 +6,9 @@ Plan is the following:
 - Only the player with their turn can access the host (username/password auth) (admin account for maintenance)
 - Rinse & repeat until game is over
 
-Things to consider:
-- Copying savefiles from the host for backup
-- Host shutdown/boot for cost optimization (imagine we host this on AWS and the server just keeps running for a week without anybody playing their turn?)
-- WebUI for login & RDP, display who's turn it is, maybe a Telegram -bot?
-
 All of the longplay code should exist under /longplay -directory, except when/if we need to modify the source for hooks etc.
+
+Read /longplay/README.md for more info
 
 # VCMI - Open Heroes 3
 

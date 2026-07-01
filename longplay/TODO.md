@@ -3,3 +3,4 @@
 - hide most of host desktop environment
 - saves mount? (makes it easier to clear game data, configuring docker mounts so that the user abc can read/write mounted dirs is a bit of pain tho)
 - autosave after battles?
+- Host shutdown/boot for cost optimization (imagine we host this on AWS and the server just keeps running for a week without anybody playing their turn?)
