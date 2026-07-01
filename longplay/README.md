@@ -110,3 +110,12 @@ docker volume rm your_project_name_host-data
 ```
 
 After that, you can reconfigure the env.conf and build/run docker compose again
+
+
+## NGINX proxy
+
+In docker-compose.yml you can find an nginx server.
+This proxies all https traffic to http, since the remote desktop over the internet requires https.
+For that one has to configure HTTPS/TLS certs, using for example, certbot.
+
+If http will suffice, you can just comment out the whole nginx part, uncomment portal's ports and use those instead.

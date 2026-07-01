@@ -1,4 +1,3 @@
-- Force quickCombat (this has a builtin json config) for when AI attacks a player (or turns based on battle turns)
 - hide most of host desktop environment
 - saves mount? (makes it easier to clear game data, configuring docker mounts so that the user abc can read/write mounted dirs is a bit of pain tho)
 - autosave after battles?

@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: vcmi-portal
     # ports:
-    #   - "8000:8000" (nginx)
+    #   - "8000:8000" (nginx, see the container below) uncomment this if you just want to run this locally and expose the portal service to :8000
     restart: unless-stopped
     networks:
       - vcmi-longplay
@@ -43,7 +43,7 @@ services:
     env_file:
       - env.conf
 
-  nginx:
+  nginx: # in order to host over the internet, we need https certs, to do so, configure https/tls with certbot or something, and proxy https -> http using nginx, otherwise you can just comment this whole service
       image: nginx:latest
       container_name: vcmi-nginx
       ports:
