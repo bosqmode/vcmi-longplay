@@ -791,9 +791,27 @@ void CGameHandler::tick(int millisecondsPassed)
     {
         lastSync = now;
         
-        // Get current turn player
+        // Get current turn player (adventure map acting player)
         auto it = gs->actingPlayers.begin();
         PlayerColor currentPlayer = *it;
+
+		// Check for active battles with human players
+		for(const auto& battlePtr : gs->currentBattles)
+		{
+			if(!battlePtr || battlePtr->battleIsFinished())
+				continue;
+			
+			for(auto side : {BattleSide::ATTACKER, BattleSide::DEFENDER})
+			{
+				PlayerColor player = battlePtr->getSidePlayer(side);
+				if(player.isValidPlayer() && 
+				gameInfo().getPlayerState(player)->isHuman())
+				{
+					//player in battle
+					currentPlayer = player;
+				}
+			}
+		}
         
 		std::string playerName = "None";
 		auto startInfo = gs->getStartInfo();
@@ -802,7 +820,7 @@ void CGameHandler::tick(int millisecondsPassed)
 			playerName = settings.name;  // This is the custom name set in EntryPoint.cpp
 		}
 
-        // Build JSON
+        // Build msg
         std::string msg = playerName + ":" + std::to_string(gs->day) + ":" + currentPlayer.toString() + "\n";
         
         // Send via UNIX socket

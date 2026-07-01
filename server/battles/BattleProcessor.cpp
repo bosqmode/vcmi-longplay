@@ -199,7 +199,10 @@ BattleID BattleProcessor::setupBattle(int3 tile, BattleSideArray<const CArmedIns
 	bool isAttackerHuman = gameHandler->gameInfo().getPlayerState(bs.info->getSide(BattleSide::ATTACKER).color)->isHuman();
 
 	bool onlyOnePlayerHuman = isDefenderHuman != isAttackerHuman;
-	bs.info->replayAllowed = topBattleQuery == nullptr && onlyOnePlayerHuman;
+
+	//__longplay__ no replays allowed
+	bs.info->replayAllowed = false;
+	//bs.info->replayAllowed = topBattleQuery == nullptr && onlyOnePlayerHuman;
 
 	gameHandler->sendAndApply(bs);
 
