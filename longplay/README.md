@@ -93,7 +93,7 @@ Just run:
 
 Then just head to:
 
-```http://localhost:8000/``` 
+```http://localhost:8086/``` 
 
 and login with a user configured in the previously mentioned env.conf
 

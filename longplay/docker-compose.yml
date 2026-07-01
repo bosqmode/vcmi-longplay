@@ -4,8 +4,8 @@ services:
       context: ./portal
       dockerfile: Dockerfile
     container_name: vcmi-portal
-    ports:
-      - "8000:8000"
+    # ports:
+    #   - "8000:8000" (nginx)
     restart: unless-stopped
     networks:
       - vcmi-longplay
@@ -42,6 +42,24 @@ services:
       - SELKIES_ENABLE_AUTH=False
     env_file:
       - env.conf
+
+  nginx:
+      image: nginx:latest
+      container_name: vcmi-nginx
+      ports:
+        - "8086:80"
+        - "8087:443"
+      env_file:
+        - env.conf
+      volumes:
+        # Mount the template here instead of mounting nginx.conf directly
+        - ./templates:/etc/nginx/templates:ro
+        - /etc/letsencrypt:/etc/letsencrypt:ro
+      restart: unless-stopped
+      networks:
+        - vcmi-longplay
+      depends_on:
+        - portal
 
 volumes:
   host-data:
