@@ -1,5 +1,4 @@
 - Force quickCombat (this has a builtin json config) for when AI attacks a player (or turns based on battle turns)
-- protect host api service endspoints with apikey (ones that are used by host container)
 - hide most of host desktop environment
 - saves mount? (makes it easier to clear game data, configuring docker mounts so that the user abc can read/write mounted dirs is a bit of pain tho)
 - autosave after battles?
