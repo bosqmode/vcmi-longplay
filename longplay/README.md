@@ -4,6 +4,12 @@ This repo is a fork of https://github.com/vcmi/vcmi
 
 The aim of this project is to introduce a long living campaign with multiple players without needing every player to be online at the same time.
 
+<img width="543" height="382" alt="image" src="https://github.com/user-attachments/assets/092511c2-9e49-41fc-8b5c-617cce95980a" />
+<img width="743" height="503" alt="image" src="https://github.com/user-attachments/assets/5b29a5d9-d7ad-47d9-b784-b1a692a83d2f" />
+<img width="530" height="378" alt="image" src="https://github.com/user-attachments/assets/096a25ff-4cf8-4881-97d5-e3ccf86f51b8" />
+
+
+
 Plan is the following:
 - Remote host machine runs the client and allows web based desktop access
 - Only the player with their turn can access the host (username/password auth) (admin account for maintenance)
