@@ -7,6 +7,9 @@ import json
 
 print("Starting gamestateservice.py")
 
+# Load the portal API key from environment to authenticate with the portal service
+PORTAL_APIKEY = os.environ.get("PORTAL_APIKEY", "")
+
 # Socket paths mapped to their purpose
 SOCKET_ROUTES = {
     "/tmp/longplay-autosave.sock": "autosave",
@@ -68,11 +71,15 @@ def handle_autosave(data: str):
 
 async def post_gamestate(data: str):
     try:
+        headers = {}
+        if PORTAL_APIKEY:
+            headers["X-Portal-Apikey"] = PORTAL_APIKEY
+        
         async with aiohttp.ClientSession() as session:
-            async with session.post(POST_GAMESTATE_UPDATE, json=data):
+            async with session.post(POST_GAMESTATE_UPDATE, json=data, headers=headers):
                 pass  # Context manager sends the request, body is ignored
-    except:
-        print(f"Error posting gamestate {e}")
+    except Exception as e:
+        print(f"Error posting gamestate: {e}")
 
 
 def handle_gamestate(data: str):

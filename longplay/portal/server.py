@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timezone
-from fastapi import FastAPI, UploadFile, File, WebSocket, Request, HTTPException, Header
+from fastapi import FastAPI, UploadFile, File, WebSocket, Request, HTTPException, Header, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -50,6 +50,23 @@ def _load_credentials_from_env() -> tuple[dict[str, str], dict[str, str]]:
 
 
 PLAYER_CREDENTIALS, ADMIN_CREDENTIALS = _load_credentials_from_env()
+
+# ── Portal API key for internal service authentication ─────────────────
+
+PORTAL_APIKEY = os.environ.get("PORTAL_APIKEY", "")
+
+
+async def validate_portal_apikey(x_portal_apikey: str | None = Header(default=None)) -> None:
+    """Validate requests using the PORTAL_APIKEY environment variable.
+    
+    If PORTAL_APIKEY is not set, validation is skipped (useful for local development).
+    """
+    if not PORTAL_APIKEY:
+        return  # Skip validation if API key not configured
+    
+    if x_portal_apikey != PORTAL_APIKEY:
+        raise HTTPException(status_code=403, detail="Invalid or missing API key")
+
 
 # ── Rate limiting for /auth/login ─────────────────────────────────────
 
@@ -291,7 +308,7 @@ async def turn_monitor():
 async def startup_event():
     asyncio.create_task(turn_monitor())
 
-@app.post("/gamestate")
+@app.post("/gamestate", dependencies=[Depends(validate_portal_apikey)])
 async def update_gamestate(request: Request):
     data = await request.json()
     current_gamestate.update({
@@ -316,22 +333,22 @@ class SaveInfo(BaseModel):
     size: int
     uploaded_at: str
 
-@app.post("/saves")
+@app.post("/saves", dependencies=[Depends(validate_portal_apikey)])
 async def upload_save(file: UploadFile = File(...)):
     print(f"saveserver.py::saves() unimplemented")
     return {"status": "ok"}
 
-@app.get("/saves")
+@app.get("/saves", dependencies=[Depends(validate_portal_apikey)])
 async def list_saves() -> list[SaveInfo]:
     print(f"saveserver.py::list_saves() unimplemented")
     return {"status": "ok"}
 
-@app.get("/saves/{filename}")
+@app.get("/saves/{filename}", dependencies=[Depends(validate_portal_apikey)])
 async def download_save(filename: str):
     print(f"saveserver.py::download_save() unimplemented")
     return {"status": "ok"}
 
-@app.delete("/saves/{filename}")
+@app.delete("/saves/{filename}", dependencies=[Depends(validate_portal_apikey)])
 async def delete_save(filename: str):
     print(f"saveserver.py::delete_save() unimplemented")
     return {"status": "ok"}
