@@ -346,7 +346,7 @@ async def update_gamestate(request: Request):
     })
     new_player = current_gamestate.get("player", None)
 
-    if previous_player is not new_player:
+    if previous_player != new_player:
         send_telegram_message(f"*Turn Update*\n ___________\n {new_player}'s turn!") # should be converted to async
 
     print(f"Gamestate update: {current_gamestate['player']}, {current_gamestate['playerColor']}, {current_gamestate['day']}, {current_gamestate['timestamp']}")
