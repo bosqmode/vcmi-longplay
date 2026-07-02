@@ -2,7 +2,9 @@
 
 This repo is a fork of https://github.com/vcmi/vcmi
 
-The aim of this project is to introduce a long living campaign with multiple players without needing every player to be online at the same time.
+The aim of this experimental project is to introduce a long living campaign with multiple players without needing every player to be online at the same time.
+
+Note!: This project is VERY experimental. Most of it has been vibed with locally hosted qwen3.6:35b, so please tone down you expectations.
 
 <img width="543" height="382" alt="image" src="https://github.com/user-attachments/assets/092511c2-9e49-41fc-8b5c-617cce95980a" />
 <img width="743" height="503" alt="image" src="https://github.com/user-attachments/assets/5b29a5d9-d7ad-47d9-b784-b1a692a83d2f" />
@@ -99,7 +101,7 @@ Just run:
 
 Then just head to:
 
-```http://localhost:8086/``` 
+```http://localhost:8080/``` 
 
 and login with a user configured in the previously mentioned env.conf
 
@@ -139,3 +141,46 @@ To set it up:
 - create a channel
 - add your previously created bot to the channel
 - set the channel ID and bot token to env.conf
+
+# Architecture overview
+
+The whole system is constructed around 3 different services (see longplay/docker-compose.yml)
+
+                    [ Internet / Client Browser ]
+                                │
+                                ▼ (HTTPS)
+                        ┌───────────────┐
+                        │  NGINX Proxy  │  (SSL Termination)
+                        └───────┬───────┘
+                                │
+                                ▼ (HTTP / WebSockets)
+                        ┌───────────────┐
+                        │    Portal     │  (Auth, Turn Management, & Proxy)
+                        └───────┬───────┘
+                                │
+                                ▼ (Local VNC/WebRTC)
+                        ┌───────────────┐
+                        │     Host      │  (Ubuntu KDE + VCMI Client)
+                        └───────────────┘
+
+## Host
+
+Base Image: Built on lscr.io/linuxserver/webtop:ubuntu-kde, providing a lightweight, dockerized Ubuntu desktop environment running the KDE Plasma interface.
+
+Remote Desktop Delivery: It exposes a built-in, WebSocket-based remote desktop interface (via Kasm/selkies), allowing full desktop interaction directly inside a web browser without external plugins.
+
+Application Lifecycle: The host natively runs the vcmiclient. A supervisor script or daemon monitors the VCMI process, ensuring it automatically restarts and maintains its exact state if it ever closes or crashes.
+
+## Portal
+
+Authentication & Queue Management: Players log into this interface. The Portal tracks player turns, manages the queue, and grants desktop access only to the active player.
+
+Traffic Reverse-Proxying: To prevent exposing the Host directly, all remote desktop traffic (WebSockets/HTTP) is reverse-proxied through the Portal.
+
+Session Enforcement: The Portal actively monitors turns. The moment a player's turn ends, the Portal forcefully terminates their remote desktop WebSocket connection and transfers access rights to the next player in line (This happens by Host posting gamestate updates to Portal).
+
+## NGINX (optional, but required for over-the-internet)
+
+The NGINX service is an optional but highly recommended edge proxy, essential for over-the-internet deployment.
+
+Host's desktop access requires https over the internet, so outside of LAN this seems to be required.
