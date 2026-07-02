@@ -53,6 +53,8 @@ Compiled binaries can be found in ```longplay/builder/build/bin/```
 
 ## vcmiclient modifications
 
+Most of the source code modifications contain a comment // \_\_longplay\_\_ <- search for this in order to find longplay -related modifications
+
 Listed some changes to vcmiclient
 
 ### Saving game on turn START
