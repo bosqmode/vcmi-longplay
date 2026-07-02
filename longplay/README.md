@@ -125,3 +125,17 @@ This proxies all https traffic to http, since the remote desktop over the intern
 For that one has to configure HTTPS/TLS certs, using for example, certbot.
 
 If http will suffice, you can just comment out the whole nginx part, uncomment portal's ports and use those instead.
+
+
+## Telegram bot
+
+There are a couple env vars to configure a bot that sends messages to a channel, informing who's turn it is.
+
+To set it up:
+- Search for @BotFather on telegram
+- send /newbot
+- follow the instructions
+- save the token it sends you
+- create a channel
+- add your previously created bot to the channel
+- set the channel ID and bot token to env.conf
