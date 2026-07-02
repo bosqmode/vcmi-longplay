@@ -7,6 +7,7 @@ from pydantic import BaseModel
 import asyncio
 import httpx
 import websockets
+import requests
 
 app = FastAPI(title="VCMI Portal")
 
@@ -19,9 +20,34 @@ app.add_middleware(
 
 WEBTOP_HTTP_URL = "http://host:3000"
 WEBTOP_WS_URL = "ws://host:3000"
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_BOT_CHANNEL_ID = os.environ.get("TELEGRAM_BOT_CHANNEL_ID", "")
 
 active_sessions: dict[str, WebSocket] = {}
 current_gamestate = {}
+
+def send_telegram_message(message):
+    if TELEGRAM_BOT_CHANNEL_ID == "" or TELEGRAM_BOT_TOKEN == "":
+        return
+    
+    TOKEN = TELEGRAM_BOT_TOKEN
+    CHAT_ID = TELEGRAM_BOT_CHANNEL_ID
+    
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+    
+    try:
+        response = requests.post(url, json=payload)
+        return response.json()
+    except Exception as e:
+        print(f"Failed to send Telegram alert: {e}")
+
+
+send_telegram_message("Turnbot initialized!")
 
 # ── Credential loading from os.environ (loaded by docker-compose) ─────
 
@@ -311,12 +337,18 @@ async def startup_event():
 @app.post("/gamestate", dependencies=[Depends(validate_portal_apikey)])
 async def update_gamestate(request: Request):
     data = await request.json()
+    previous_player = current_gamestate.get("player", None)
     current_gamestate.update({
         "player": data.get("player", None),
         "day": data.get("day", 0),
         "playerColor": data.get("playerColor", None),
         "timestamp": datetime.now(timezone.utc).isoformat()
     })
+    new_player = current_gamestate.get("player", None)
+
+    if previous_player is not new_player:
+        send_telegram_message(f"*Turn Update*\n ___________\n {new_player}'s turn!") # should be converted to async
+
     print(f"Gamestate update: {current_gamestate['player']}, {current_gamestate['playerColor']}, {current_gamestate['day']}, {current_gamestate['timestamp']}")
     return {"status": "ok"}
 
