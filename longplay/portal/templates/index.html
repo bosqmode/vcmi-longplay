@@ -208,6 +208,16 @@ createApp({
             return playerColorMap[key] || 'bg-gray-600';
         }
 
+        function clearClipboard(){
+            navigator.clipboard.writeText('')
+            .then(() => {
+                console.log('Clipboard cleared successfully.');
+            })
+            .catch(err => {
+                console.error('Could not clear clipboard: ', err);
+            });
+        }
+
         // Use 'lp-token' query param for desktop access (our API authentication), no token forwarded to webtop
         const desktopUrl = computed(() => {
             return token.value ? `/desktop/?lp-token=${token.value}` : '';
@@ -215,6 +225,7 @@ createApp({
 
         // Methods
         async function login() {
+            clearClipboard();
             const u = username.value.trim();
             const p = password.value;
             if (!u || !p) { errorMsg.value = 'Please enter both username and password'; return; }
@@ -324,6 +335,7 @@ createApp({
         }
 
         async function toggleDesktop() {
+            clearClipboard();
             if(desktopActivated.value)
             {
                 exitDesktop();
@@ -390,7 +402,7 @@ createApp({
             gameState, errorMsg, loggingIn, desktopActivated, lastUpdatedTimestamp,
             canActivateDesktop, activateDesktopButtonText,
             gameStateText, desktopStatusText, lastUpdatedText, desktopUrl,
-            playerColorClass,
+            playerColorClass, clearClipboard,
             login, focusPassword, toggleDesktop, exitDesktop, logout
         };
     }
