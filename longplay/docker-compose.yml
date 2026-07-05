@@ -11,6 +11,11 @@ services:
       - vcmi-longplay
     env_file:
       - env.conf
+    logging:
+      driver: json-file
+      options:
+        max-size: "30m"
+        max-file: "1"
 
   host:
     build:
@@ -42,6 +47,11 @@ services:
       - SELKIES_ENABLE_AUTH=False
     env_file:
       - env.conf
+    logging:
+      driver: json-file
+      options:
+        max-size: "30m"
+        max-file: "1"
 
   nginx: # in order to host over the internet, we need https certs, to do so, configure https/tls with certbot or something, and proxy https -> http using nginx, otherwise you can just comment this whole service
       image: nginx:latest
@@ -60,6 +70,11 @@ services:
         - vcmi-longplay
       depends_on:
         - portal
+      logging:
+        driver: json-file
+        options:
+          max-size: "30m"
+          max-file: "1"
 
 volumes:
   host-data:
