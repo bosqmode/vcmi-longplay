@@ -13,12 +13,14 @@ PORTAL_APIKEY = os.environ.get("PORTAL_APIKEY", "")
 # Socket paths mapped to their purpose
 SOCKET_ROUTES = {
     "/tmp/longplay-autosave.sock": "autosave",
-    "/tmp/longplay-gamestate.sock": "gamestate"
+    "/tmp/longplay-gamestate.sock": "gamestate",
+    "/tmp/longplay-start.sock": "start"
 }
 
 # Portal endpoints
 POST_SAVE_URL = "http://portal:8000/saves"
 POST_GAMESTATE_UPDATE = "http://portal:8000/gamestate"
+POST_START = "http://portal:8000/start"
 
 # Create all sockets
 sockets = []
@@ -88,9 +90,26 @@ def handle_gamestate(data: str):
     data = {"player": player, "day": int(day), "playerColor": color}
     asyncio.run(post_gamestate(data))
 
+async def post_start(msg: str):
+    try:
+        headers = {}
+        if PORTAL_APIKEY:
+            headers["X-Portal-Apikey"] = PORTAL_APIKEY
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(POST_START, data=msg, headers=headers):
+                pass  # Context manager sends the request, body is ignored
+    except Exception as e:
+        print(f"Error posting gamestate: {e}")
+
+def handle_start(msg: str):
+    message = msg.strip()
+    asyncio.run(post_start(msg))
+
 SOCKET_HANDLERS = {
     "autosave": handle_autosave,
     "gamestate": handle_gamestate,
+    "start": handle_start
 }
 
 while True:

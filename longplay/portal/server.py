@@ -357,7 +357,13 @@ async def get_gamestate(request: Request, authorization: str | None = Header(def
     await verify_token_gamestate(authorization=authorization, request=request)
     return current_gamestate
 
-
+@app.post("/start", dependencies=[Depends(validate_portal_apikey)])
+async def start_post(request: Request):
+    body_bytes = await request.body()
+    data = body_bytes.decode("utf-8")
+    print(f"received start post: {data}")
+    send_telegram_message(f"gameservice.sh: {data}")
+    return {"status": "ok"}
 
 # old save stuff, maybe one day...
 class SaveInfo(BaseModel):

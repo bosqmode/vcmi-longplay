@@ -360,14 +360,24 @@ void BattleInterface::battleFinished(const BattleResult& br, QueryID queryID)
 		return;
 	}
 
-	auto wnd = std::make_shared<BattleResultWindow>(br, *(this->curInt));
-	wnd->resultCallback = [this, queryID](ui32 selection)
-	{
-		curInt->cb->selectionMade(selection, queryID);
-	};
-	ENGINE->windows().pushWindow(wnd);
+	// __longplay__ skip BattleResultWindow if AI attacks a human player, otherwise we will be stuck in the said window as "Computer"
+	bool attackerIsHuman = (attackerInt != nullptr);
+	bool defenderIsHuman = (defenderInt != nullptr);
+	if(!attackerIsHuman && defenderIsHuman){
+		curInt->cb->selectionMade(0, queryID);
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		windowObject->close();
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}else{
+		auto wnd = std::make_shared<BattleResultWindow>(br, *(this->curInt));
+		wnd->resultCallback = [this, queryID](ui32 selection)
+		{
+			curInt->cb->selectionMade(selection, queryID);
+		};
+		ENGINE->windows().pushWindow(wnd);
+		curInt->waitWhileDialog(); // Avoid freeze when AI end turn after battle. Check bug #1897
+	}
 
-	curInt->waitWhileDialog(); // Avoid freeze when AI end turn after battle. Check bug #1897
 	CPlayerInterface::battleInt.reset();
 }
 

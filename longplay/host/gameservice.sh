@@ -20,6 +20,8 @@ export LD_LIBRARY_PATH=/home/abc/VCMI:${LD_LIBRARY_PATH:-}
 export XDG_RUNTIME_DIR=/config/.XDG
 export PULSE_RUNTIME_PATH=/defaults
 
+START_SOCKET_PATH="/tmp/longplay-start.sock"
+
 # Read custom environment variables set by docker-compose.yml
 S6_ENV_DIR="/run/s6/container_environment/"
 if [ -d "$S6_ENV_DIR" ]; then
@@ -71,6 +73,14 @@ while true; do
         echo "Checking for saves..."
         AUTOSAVE_RELATIVE_PATH=$(get_latest_autosave_relative_path)
         echo "Save file is: $AUTOSAVE_RELATIVE_PATH"
+
+        if [ -S "$START_SOCKET_PATH" ]; then
+            echo "starting vcmi..." | nc -U -N "$START_SOCKET_PATH"
+            echo "Message sent successfully."
+        else
+            echo "Error: Socket $START_SOCKET_PATH does not exist."
+            exit 1
+        fi
 
         if [ -n "$AUTOSAVE_RELATIVE_PATH" ]; then
             echo "Loading from save"
