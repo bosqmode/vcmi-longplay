@@ -79,7 +79,6 @@ while true; do
             echo "Message sent successfully."
         else
             echo "Error: Socket $START_SOCKET_PATH does not exist."
-            exit 1
         fi
 
         if [ -n "$AUTOSAVE_RELATIVE_PATH" ]; then
