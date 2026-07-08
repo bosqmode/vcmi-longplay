@@ -57,8 +57,10 @@ COPY --chown=1000:1000 \
     ./longplay/builder/build/bin/libvcmiservercommon.a \
     ./longplay/builder/build/bin/vcmiclient \
     ./longplay/builder/build/bin/vcmiserver \
+    ./longplay/builder/build/bin/vcmieditor \
     /home/${USERNAME}/VCMI/
 RUN chmod +x /home/${USERNAME}/VCMI/vcmiclient
+RUN chmod +x /home/${USERNAME}/VCMI/vcmieditor
 
 COPY --chown=1000:1000 ./longplay/host/gamedata/ /home/${USERNAME}/.local/share/vcmi/
 COPY --chown=1000:1000 ./config/ /home/${USERNAME}/.local/share/vcmi/config/

@@ -795,9 +795,12 @@ void CGameHandler::tick(int millisecondsPassed)
         auto it = gs->actingPlayers.begin();
         PlayerColor currentPlayer = *it;
 
+		logGlobal->info("currentBattles: %zu", gs->currentBattles.size());
+
 		// Check for active battles with human players
 		for(const auto& battlePtr : gs->currentBattles)
 		{
+			logGlobal->info("battle: %d - finished: %d", battlePtr->getBattleID().getNum(), battlePtr->battleIsFinished() ? 1 : 0);
 			if(!battlePtr || battlePtr->battleIsFinished())
 				continue;
 			

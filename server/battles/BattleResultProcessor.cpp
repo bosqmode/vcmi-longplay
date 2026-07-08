@@ -436,9 +436,50 @@ void BattleResultProcessor::battleFinalize(const BattleID & battleID, const Batt
 	finishingBattle->remainingBattleQueriesCount--;
 	logGlobal->trace("Decremented gameHandler->queries count to %d", finishingBattle->remainingBattleQueriesCount);
 
-	if (finishingBattle->remainingBattleQueriesCount > 0)
+	// __longplay__ pop battle result queries to fix attacking same AI player twice in same round causing AI to freeze
+	if (finishingBattle->remainingBattleQueriesCount > 0){
+		// Check for stale battle-related queries and try to clean them up
+		
+		for(auto queryView : gameHandler->queries->allQueries())
+		{
+			auto * battleDialogQuery = dynamic_cast<CBattleDialogQuery*>(queryView.get());
+			auto * battleQueryObj = dynamic_cast<CBattleQuery*>(queryView.get());
+
+			if(battleDialogQuery)
+			{
+				logGlobal->info("  Found CBattleDialogQuery (qid=%d) blocking finalization", 
+					static_cast<int>(battleDialogQuery->queryID));
+				
+				for(PlayerColor pc : battleDialogQuery->players)
+				{
+					if(gameHandler->queries->topQuery(pc) == queryView)
+					{
+						logGlobal->info("  Popping CBattleDialogQuery via popIfTop");
+						gameHandler->queries->popIfTop(static_cast<const CQuery&>(*battleDialogQuery));
+						break;
+					}
+				}
+			}
+			else if(battleQueryObj)
+			{
+				logGlobal->info("  Found CBattleQuery (qid=%d) blocking finalization", 
+					static_cast<int>(battleQueryObj->queryID));
+				
+				for(PlayerColor pc : battleQueryObj->players)
+				{
+					if(gameHandler->queries->topQuery(pc) == queryView)
+					{
+						logGlobal->info("  Popping CBattleQuery via popIfTop");
+						gameHandler->queries->popIfTop(static_cast<const CQuery&>(*battleQueryObj));
+						break;
+					}
+				}
+			}
+		}
+
 		//Battle results will be handled when all battle gameHandler->queries are closed
 		return;
+	}
 
 	//TODO consider if we really want it to work like above. ATM each player as unblocked as soon as possible
 	// but the battle consequences are applied after final player is unblocked. Hard to abuse...
