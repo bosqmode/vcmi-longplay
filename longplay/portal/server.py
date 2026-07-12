@@ -311,7 +311,8 @@ async def turn_monitor():
         if current_player is None:
             continue
 
-        print(f"ws active sessions: {len(active_sessions.items())}")
+        print(f"ws active sessions: {len(active_sessions)}")
+        current_gamestate["activeSessions"] = len(active_sessions)
 
         # Close sessions for players who no longer have their turn (admins are never kicked)
         for player_id, ws in list(active_sessions.items()):

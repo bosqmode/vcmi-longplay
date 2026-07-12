@@ -71,29 +71,17 @@
                 <!-- Player name -->
                 <div class="mb-6">
                     <p class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-1">Current Player</p>
-                    <p class="text-white text-3xl font-bold">{{ gameState.player }}</p>
+                    <p :class="['text-3xl font-bold', playerTextColorClass(gameState.playerColor)]">{{ gameState.player }}</p>
                 </div>
 
                 <!-- Divider -->
                 <div class="border-t border-gray-700 my-4"></div>
 
-                <!-- Day and Color row -->
+                <!-- Day -->
                 <div class="flex items-center justify-center gap-8 mb-6">
-                    <!-- Day -->
                     <div class="text-center">
                         <p class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-1">Day</p>
                         <p class="text-white text-4xl font-bold">{{ gameState.day || 0 }}</p>
-                    </div>
-
-                    <!-- Player Color -->
-                    <div class="text-center">
-                        <p class="text-gray-400 text-sm font-medium uppercase tracking-wider mb-1">Color</p>
-                        <div class="flex items-center justify-center gap-2 mt-1">
-                            <div v-if="gameState.playerColor"
-                                :class="'w-8 h-8 rounded-lg shadow-sm ' + playerColorClass(gameState.playerColor)"
-                                class="border border-gray-600"></div>
-                            <span v-else class="text-gray-500 text-lg">—</span>
-                        </div>
                     </div>
                 </div>
 
@@ -108,6 +96,15 @@
                 </div>
 
                 <div class="border-t border-gray-700 my-4"></div>
+
+                <!-- Active desktop connections -->
+                <div class="flex items-center justify-center gap-2 mb-4">
+                    <div :class="{ 'bg-green-500': (gameState.activeSessions ?? 0) > 0, 'bg-gray-600': !(gameState.activeSessions ?? 0) }" 
+                        class="w-2 h-2 rounded-full"></div>
+                    <p class="text-gray-400 text-sm">
+                        Active desktop connections: <span class="font-semibold">{{ (gameState.activeSessions ?? 0) }}</span>
+                    </p>
+                </div>
 
                 <!-- Last updated -->
                 <p class="text-gray-500 text-xs">Last updated: {{ lastUpdatedText }}</p>
@@ -191,21 +188,21 @@ createApp({
             return date.toLocaleString();
         });
 
-        const playerColorMap = {
-            blue: 'bg-blue-600',
-            red: 'bg-red-600',
-            green: 'bg-green-600',
-            yellow: 'bg-yellow-500',
-            orange: 'bg-orange-500',
-            purple: 'bg-purple-600',
-            cyan: 'bg-cyan-500',
-            darkblue: 'bg-indigo-700',
+        const playerTextColorMap = {
+            red: 'text-red-600',
+            blue: 'text-blue-600',
+            tan: 'text-yellow-200',
+            green: 'text-green-600',
+            orange: 'text-orange-500',
+            purple: 'text-purple-600',
+            teal: 'text-teal-500',
+            pink: 'text-pink-400',
         };
 
-        function playerColorClass(color) {
-            if (!color) return 'bg-gray-600';
+        function playerTextColorClass(color) {
+            if (!color) return 'text-white';
             const key = color.toLowerCase().replace(/\s+/g, '');
-            return playerColorMap[key] || 'bg-gray-600';
+            return playerTextColorMap[key] || 'text-white';
         }
 
         function clearClipboard(){
@@ -284,7 +281,12 @@ createApp({
                 });
                 if (resp.ok) {
                     const data = await resp.json();
-                    gameState.value = { player: data.player, day: data.day, playerColor: data.playerColor };
+                    gameState.value = { 
+                        player: data.player, 
+                        day: data.day, 
+                        playerColor: data.playerColor,
+                        activeSessions: data.activeSessions ?? 0 
+                    };
                     // Store timestamp as-is; server now sends ISO format strings
                     lastUpdatedTimestamp.value = data.timestamp || null;
                 }
@@ -402,7 +404,7 @@ createApp({
             gameState, errorMsg, loggingIn, desktopActivated, lastUpdatedTimestamp,
             canActivateDesktop, activateDesktopButtonText,
             gameStateText, desktopStatusText, lastUpdatedText, desktopUrl,
-            playerColorClass, clearClipboard,
+            playerTextColorClass, clearClipboard,
             login, focusPassword, toggleDesktop, exitDesktop, logout
         };
     }
