@@ -1065,9 +1065,6 @@ void CPlayerInterface::showInfoDialog(EInfoWindowMode type, const std::string &t
 		return;
 	}
 
-	// __longplay__ skip dialogues
-	return;
-
 	std::vector<Component> vect = components; //I do not know currently how to avoid copy here
 	do
 	{
@@ -1093,9 +1090,6 @@ void CPlayerInterface::showInfoDialog(const std::string &text, const std::vector
 {
 	LOG_TRACE_PARAMS(logGlobal, "player=%s, text=%s, is GAME->interface()=%d", playerID % text % (this==GAME->interface()));
 	waitWhileDialog();
-
-	// __longplay__ skip dialogues
-	return;
 
 	std::shared_ptr<CInfoWindow> temp = CInfoWindow::create(text, playerID, components);
 
