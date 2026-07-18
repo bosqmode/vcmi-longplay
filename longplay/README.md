@@ -40,7 +40,7 @@ docker run --rm -it -v "${PWD}:/src" vcmi-builder
 
 cd src/longplay/builder/build
 
-cmake -S ../../../ -DENABLE_CCACHE=OFF -DENABLE_TEST=OFF -DENABLE_MMAI=OFF -DENABLE_LAUNCHER=OFF -DCMAKE_BUILD_TYPE=Release -DENABLE_STATIC=ON
+cmake -S ../../../ -DENABLE_CCACHE=OFF -DENABLE_TEST=OFF -DENABLE_MMAI=OFF -DENABLE_LAUNCHER=OFF -DENABLE_DISCORD=OFF -DCMAKE_BUILD_TYPE=Release -DENABLE_STATIC=ON
 
 cmake --build . -j8
 
