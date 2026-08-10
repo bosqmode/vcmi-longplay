@@ -8,6 +8,7 @@ import asyncio
 import httpx
 import websockets
 import requests
+import docker
 
 app = FastAPI(title="VCMI Portal")
 
@@ -391,3 +392,43 @@ async def download_save(filename: str):
 async def delete_save(filename: str):
     print(f"saveserver.py::delete_save() unimplemented")
     return {"status": "ok"}
+
+
+# ── Admin endpoints ─────────────────────────────────────────────────────
+
+async def reboot_host_container():
+    """Reboot the vcmi-host container via Docker socket."""
+    try:
+        client = docker.from_env()
+        host_container = client.containers.get("vcmi-host")
+        host_container.restart()
+        print("Host container restart initiated")
+        return True, "ok"
+    except docker.errors.NotFound:
+        return False, "Host container not found"
+    except Exception as e:
+        print(f"Error rebooting host: {e}")
+        return False, str(e)
+
+
+@app.post("/admin/reboot-host")
+async def admin_reboot_host(request: Request):
+    """Reboot the vcmi-host container. Admin only."""
+    # Extract token from cookie, header, or query param
+    resolved_token = request.cookies.get("lp-token")
+    authorization = request.headers.get("authorization", "")
+    
+    if not resolved_token and authorization.startswith("Bearer "):
+        resolved_token = authorization[7:]
+    if not resolved_token and request.query_params.get("lp-token"):
+        resolved_token = request.query_params.get("lp-token")
+    
+    creds = _parse_token(resolved_token)
+    if not creds or creds[0] not in ADMIN_CREDENTIALS:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    success, message = await reboot_host_container()
+    if success:
+        return {"status": "ok", "message": message}
+    else:
+        raise HTTPException(status_code=500, detail=message)

@@ -33,6 +33,10 @@
             <span class="text-accent-yellow text-md font-bold bg-yellow-900/30 px-1.5 py-0.5 rounded">{{ username }}</span>
         </div>
         <div class="flex items-center gap-3">
+            <button v-if="isAdmin" @click="confirmReboot"
+                class="py-1.5 px-4 bg-amber-600 hover:bg-orange-700 text-white rounded-lg text-md font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                Reboot host
+            </button>
             <button @click="toggleDesktop" :disabled="!canActivateDesktop"
                 class="py-1.5 px-4 bg-accent-red hover:bg-red-700 text-white rounded-lg text-md font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 {{ activateDesktopButtonText }}
@@ -399,13 +403,31 @@ createApp({
             stopDesktopTurnMonitoring();
         }
 
+        async function confirmReboot() {
+            if (confirm('Reboot host container? The game will be temporarily unavailable.')) {
+                await rebootHost();
+            }
+        }
+
+        async function rebootHost() {
+            try {
+                const resp = await fetch('/admin/reboot-host', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token.value}` }
+                });
+                exitDesktop();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
         return {
             currentView, username, password, token, playerName, isAdmin,
             gameState, errorMsg, loggingIn, desktopActivated, lastUpdatedTimestamp,
             canActivateDesktop, activateDesktopButtonText,
             gameStateText, desktopStatusText, lastUpdatedText, desktopUrl,
             playerTextColorClass, clearClipboard,
-            login, focusPassword, toggleDesktop, exitDesktop, logout
+            login, focusPassword, toggleDesktop, exitDesktop, logout, confirmReboot
         };
     }
 }).mount('#app');
