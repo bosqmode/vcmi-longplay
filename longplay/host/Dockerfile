@@ -66,6 +66,7 @@ COPY --chown=1000:1000 ./longplay/host/gamedata/ /home/${USERNAME}/.local/share/
 COPY --chown=1000:1000 ./config/ /home/${USERNAME}/.local/share/vcmi/config/
 COPY --chown=1000:1000 ./Mods/ /home/${USERNAME}/.local/share/vcmi/Mods/
 COPY --chown=1000:1000 ./scripts/ /home/${USERNAME}/.local/share/vcmi/scripts/
+COPY --chown=1000:1000 ./longplay/host/modSettings.json /config/.config/vcmi/modSettings.json
 
 RUN chown -R 1000:1000 /home/${USERNAME} && \
     chmod -R 777 /home/${USERNAME}

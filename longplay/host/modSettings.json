@@ -1,0 +1,8 @@
+{
+    "activePreset": "default",
+    "presets": {
+        "default": {
+            "mods": ["vcmi", "core", "hota"]
+        }
+    }
+}

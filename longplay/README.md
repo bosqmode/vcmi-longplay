@@ -93,6 +93,7 @@ The folder structure should look like this:
     - /Data
     - /Maps
     - /Mp3
+    - /Mods (if any, like HOTA etc...)
 
 ### Starting a game
 
@@ -186,3 +187,8 @@ Session Enforcement: The Portal actively monitors turns. The moment a player's t
 The NGINX service is an optional but highly recommended edge proxy, essential for over-the-internet deployment.
 
 Host's desktop access requires https over the internet, so outside of LAN this seems to be required.
+
+# HOTA (Horn of the abyss)
+
+To activate HOTA, download the mod, place it under /longplay/host/gamedata/Mods,
+and edit /longplay/host/modSettings.json to include it, or delete "hota" if not needed.
