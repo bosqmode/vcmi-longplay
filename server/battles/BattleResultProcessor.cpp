@@ -31,7 +31,6 @@
 #include "../../lib/networkPacks/PacksForClientBattle.h"
 
 #include <vcmi/spells/Spell.h>
-#include <boost/lexical_cast.hpp>
 
 BattleResultProcessor::BattleResultProcessor(CGameHandler * gameHandler)
 	: gameHandler(gameHandler)
@@ -145,7 +144,7 @@ CasualtiesAfterBattle::CasualtiesAfterBattle(const CBattleInfoCallback & battle,
 void CasualtiesAfterBattle::updateArmy(CGameHandler *gh)
 {
 	if (gh->gameInfo().getObjInstance(army->id) == nullptr)
-		throw std::runtime_error("Object " + army->getObjectName() + " is not on the map!");
+		throw std::runtime_error("Object " + army->getObjectNameTextID() + " is not on the map!");
 
 	for (const auto & ncount : newStackCounts)
 	{
@@ -268,7 +267,7 @@ void BattleResultProcessor::endBattle(const CBattleInfoCallback & battle)
 	if (!battleQuery)
 	{
 		logGlobal->error("Cannot find battle query!");
-		gameHandler->complain("Player " + boost::lexical_cast<std::string>(battle.sideToPlayer(BattleSide::ATTACKER)) + " has no battle query at the top!");
+		gameHandler->complain("Player " + std::to_string(battle.sideToPlayer(BattleSide::ATTACKER).getNum()) + " has no battle query at the top!");
 		return;
 	}
 
@@ -536,13 +535,17 @@ void BattleResultProcessor::battleFinalize(const BattleID & battleID, const Batt
 		// Eagle Eye handling
 		if(auto eagleEyeLevel = winnerHero->valOfBonuses(BonusType::LEARN_BATTLE_SPELL_LEVEL_LIMIT))
 		{
+			// hero also needs corresponding level of Wisdom to learn a spell
+			const int spellLevelLimit = std::min(eagleEyeLevel, winnerHero->maxSpellLevel());
+
+			resultsApplied.learnedSpells.eagleEyeBonus = true;
 			resultsApplied.learnedSpells.learn = 1;
 			resultsApplied.learnedSpells.hid = finishingBattle->winnerId;
 			for(const auto & spellId : (*battle)->getUsedSpells(CBattleInfoEssentials::otherSide(result.winner)))
 			{
 				const auto spell = spellId.toEntity(LIBRARY->spells());
 				if(spell
-					&& spell->getLevel() <= eagleEyeLevel
+					&& spell->getLevel() <= spellLevelLimit
 					&& !winnerHero->spellbookContainsSpell(spell->getId())
 					&& gameHandler->getRandomGenerator().nextInt(99) < winnerHero->valOfBonuses(BonusType::LEARN_BATTLE_SPELL_CHANCE))
 				{

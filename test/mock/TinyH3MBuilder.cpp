@@ -14,6 +14,8 @@
 #include "TinyH3MWriter.h"
 
 #include "../../lib/VCMIDirs.h"
+#include "../../lib/entities/hero/CHero.h"
+#include "../../lib/entities/hero/CHeroClass.h"
 #include "../../lib/texts/CLegacyConfigParser.h"
 #include "../../lib/mapping/MapFeaturesH3M.h"
 #include "../../lib/mapping/MapFormatSettings.h"
@@ -145,6 +147,14 @@ void writeLegacyTemplate(TinyH3MWriter & w, const LegacyTemplate & t)
 	w.skipZero(16);
 }
 
+// Per-format field sizes. The HotA sub-version only matters for HOTA maps; every
+// other format ignores it. Builder and loader must agree on this exact value or
+// the sized bitmasks desync the stream.
+MapFormatFeaturesH3M featuresFor(EMapFormat format, uint32_t hotaVersion)
+{
+	return MapFormatFeaturesH3M::find(format, format == EMapFormat::HOTA ? hotaVersion : 0);
+}
+
 } // namespace
 
 TinyH3MBuilder::TinyH3MBuilder(EMapFormat format_)
@@ -177,9 +187,27 @@ TinyH3MBuilder & TinyH3MBuilder::difficulty(EMapDifficulty d)
 	return *this;
 }
 
+TinyH3MBuilder & TinyH3MBuilder::hotaVersion(uint32_t version)
+{
+	hotaFormatVersion = version;
+	return *this;
+}
+
 TinyH3MBuilder & TinyH3MBuilder::playerActive(PlayerColor color)
 {
 	playerEnabled.at(color.getNum()) = true;
+	return *this;
+}
+
+TinyH3MBuilder & TinyH3MBuilder::town(const int3 & pos, FactionID faction, PlayerColor owner)
+{
+	ObjectSpec spec;
+	spec.id            = Obj::TOWN;
+	spec.subid         = MapObjectSubID(faction.getNum());
+	spec.position      = pos;
+	spec.owner         = owner;
+	spec.templateIndex = registerTemplate(spec.id, spec.subid);
+	registerObject(std::move(spec));
 	return *this;
 }
 
@@ -199,9 +227,10 @@ TinyH3MBuilder & TinyH3MBuilder::hero(const int3 & pos, HeroTypeID type, PlayerC
 {
 	ObjectSpec spec;
 	spec.id            = Obj::HERO;
-	// readMap derives the hero's class subID from this slot; HERO objects use the hero-type
-	// number directly.
-	spec.subid         = MapObjectSubID(type.getNum());
+	// The HERO object template is keyed by hero *class* (Heroes.txt ships one row per
+	// class, subid 0..17). The hero's actual identity is written separately in the
+	// object body (writeHeroBody / CMapLoaderH3M::readHero) and is what the loader uses.
+	spec.subid         = MapObjectSubID(type.toHeroType()->heroClass->getIndex());
 	spec.position      = pos;
 	spec.owner         = owner;
 	spec.heroType      = type;
@@ -247,6 +276,22 @@ TinyH3MBuilder & TinyH3MBuilder::heroPrimary(uint8_t attack, uint8_t defense, ui
 	return *this;
 }
 
+TinyH3MBuilder & TinyH3MBuilder::heroSecondarySkills(std::vector<std::pair<SecondarySkill, uint8_t>> skills)
+{
+	auto & spec = lastObject();
+	assert(spec.id == Obj::HERO || spec.id == Obj::RANDOM_HERO);
+	spec.heroSecondarySkills = std::move(skills);
+	return *this;
+}
+
+TinyH3MBuilder & TinyH3MBuilder::heroSpells(std::vector<SpellID> spells)
+{
+	auto & spec = lastObject();
+	assert(spec.id == Obj::HERO || spec.id == Obj::RANDOM_HERO);
+	spec.heroSpells = std::move(spells);
+	return *this;
+}
+
 TinyH3MBuilder & TinyH3MBuilder::heroEquipped(std::vector<std::pair<ArtifactPosition, ArtifactID>> equipped)
 {
 	auto & spec = lastObject();
@@ -288,6 +333,17 @@ TinyH3MBuilder & TinyH3MBuilder::resource(const int3 & pos, GameResID resource, 
 	return *this;
 }
 
+TinyH3MBuilder & TinyH3MBuilder::pandora(const int3 & pos)
+{
+	ObjectSpec spec;
+	spec.id            = Obj::PANDORAS_BOX;
+	spec.subid         = MapObjectSubID(0);
+	spec.position      = pos;
+	spec.templateIndex = registerTemplate(spec.id, spec.subid);
+	registerObject(std::move(spec));
+	return *this;
+}
+
 TinyH3MBuilder & TinyH3MBuilder::artifact(const int3 & pos, ArtifactID artifact)
 {
 	ObjectSpec spec;
@@ -306,6 +362,18 @@ TinyH3MBuilder & TinyH3MBuilder::scroll(const int3 & pos, SpellID spell)
 	spec.subid         = MapObjectSubID(0);
 	spec.position      = pos;
 	spec.scrollSpell   = spell;
+	spec.templateIndex = registerTemplate(spec.id, spec.subid);
+	registerObject(std::move(spec));
+	return *this;
+}
+
+TinyH3MBuilder & TinyH3MBuilder::dwelling(const int3 & pos, MapObjectSubID type, PlayerColor owner)
+{
+	ObjectSpec spec;
+	spec.id            = Obj::CREATURE_GENERATOR1;
+	spec.subid         = type;
+	spec.position      = pos;
+	spec.owner         = owner;
 	spec.templateIndex = registerTemplate(spec.id, spec.subid);
 	registerObject(std::move(spec));
 	return *this;
@@ -356,15 +424,42 @@ TinyH3MBuilder & TinyH3MBuilder::questGuard(const int3 & pos, Quest mission)
 	return *this;
 }
 
+TinyH3MBuilder & TinyH3MBuilder::questGate(const int3 & pos, Quest mission)
+{
+	// HotA encodes the Quest Gate as a BORDER_GATE with the magic subID 1000.
+	ObjectSpec spec;
+	spec.id            = Obj::BORDER_GATE;
+	spec.subid         = MapObjectSubID(1000);
+	spec.position      = pos;
+	spec.quest         = std::move(mission);
+	spec.templateIndex = registerTemplate(spec.id, spec.subid);
+	registerObject(std::move(spec));
+	return *this;
+}
+
 TinyH3MBuilder & TinyH3MBuilder::seerHut(const int3 & pos, Quest mission, SeerReward reward)
 {
 	ObjectSpec spec;
 	spec.id            = Obj::SEER_HUT;
 	spec.subid         = MapObjectSubID(0);
 	spec.position      = pos;
-	spec.quest         = std::move(mission);
-	spec.reward        = reward;
+	spec.seerOneShots.emplace_back(std::move(mission), reward);
 	spec.templateIndex = registerTemplate(spec.id, spec.subid);
+	registerObject(std::move(spec));
+	return *this;
+}
+
+TinyH3MBuilder & TinyH3MBuilder::seerHutMulti(const int3 & pos,
+	std::vector<std::pair<Quest, SeerReward>> oneShots,
+	std::vector<std::pair<Quest, SeerReward>> repeatables)
+{
+	ObjectSpec spec;
+	spec.id              = Obj::SEER_HUT;
+	spec.subid           = MapObjectSubID(0);
+	spec.position        = pos;
+	spec.seerOneShots    = std::move(oneShots);
+	spec.seerRepeatables = std::move(repeatables);
+	spec.templateIndex   = registerTemplate(spec.id, spec.subid);
 	registerObject(std::move(spec));
 	return *this;
 }
@@ -459,6 +554,40 @@ Quest TinyH3MBuilder::missionKillHero(ObjectHandle target)
 	return q;
 }
 
+Quest TinyH3MBuilder::missionHeroClass(std::vector<HeroClassID> classes)
+{
+	Quest q;
+	q.kind = EQuestMission::HOTA_HERO_CLASS;
+	q.heroClasses = std::move(classes);
+	return q;
+}
+
+Quest TinyH3MBuilder::missionReachDate(uint32_t daysPassed)
+{
+	assert(daysPassed >= 1); // loader stores wireValue + 1, so day 0 is unreachable
+	Quest q;
+	q.kind = EQuestMission::HOTA_REACH_DATE;
+	q.reachDateDay = daysPassed;
+	return q;
+}
+
+Quest TinyH3MBuilder::missionDifficulty(uint8_t difficultyMask)
+{
+	assert(difficultyMask >= 1 && difficultyMask <= 31);
+	Quest q;
+	q.kind = EQuestMission::HOTA_GAME_DIFFICULTY;
+	q.difficultyMask = difficultyMask;
+	return q;
+}
+
+Quest TinyH3MBuilder::missionScripted(uint32_t scriptEventID)
+{
+	Quest q;
+	q.kind = EQuestMission::HOTA_SCRIPTED;
+	q.scriptEventID = scriptEventID;
+	return q;
+}
+
 SeerReward TinyH3MBuilder::rewardNothing()
 {
 	return {};
@@ -503,8 +632,11 @@ uint32_t TinyH3MBuilder::registerTemplate(MapObjectID id, MapObjectSubID subid)
 
 std::vector<uint8_t> TinyH3MBuilder::build()
 {
+	if(format == EMapFormat::HOTA && hotaFormatVersion > 3)
+		throw std::runtime_error("TinyH3MBuilder: only HotA sub-format versions 0..3 are implemented");
+
 	TinyH3MWriter w;
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 	w.setFormatLevel(features);
 
 	writeHeader(w);
@@ -524,6 +656,7 @@ std::vector<uint8_t> TinyH3MBuilder::build()
 
 std::vector<uint8_t> TinyH3MBuilder::buildAndDump(const std::string & testName)
 {
+	mapName = testName; // so the map identifies its originating test when opened in the editor
 	auto bytes = build();
 
 	const auto dir = VCMIDirs::get().userCachePath() / "testMaps";
@@ -547,10 +680,24 @@ std::vector<uint8_t> TinyH3MBuilder::buildAndDump(const std::string & testName)
 
 void TinyH3MBuilder::writeHeader(TinyH3MWriter & w) const
 {
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 
-	// Mirror of CMapLoaderH3M::readHeader, non-HOTA branch only.
+	// Mirror of CMapLoaderH3M::readHeader.
 	w.writeUInt32(static_cast<uint32_t>(format));   // EMapFormat byte read as uint32
+
+	if(format == EMapFormat::HOTA)
+	{
+		w.writeUInt32(hotaFormatVersion);
+		if(features.levelHOTA1)
+		{
+			w.writeBool(false); // isMirrorMap
+			w.writeBool(false); // isArenaMap
+		}
+		if(features.levelHOTA2)
+			w.writeUInt32(static_cast<uint32_t>(features.terrainsCount));
+		// levelHOTA5+ header blocks (town-types/difficulty mask, hire-defeated, ...)
+		// are not emitted: only HotA versions 0..3 are supported by the builder.
+	}
 
 	// areAnyPlayers must be false when no human/computer can play any color, otherwise
 	// the H3 editor rejects the map.
@@ -575,7 +722,7 @@ void TinyH3MBuilder::writeHeader(TinyH3MWriter & w) const
 
 void TinyH3MBuilder::writePlayerInfo(TinyH3MWriter & w) const
 {
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 
 	// All 8 players default to "neither human nor computer".
 	//
@@ -639,14 +786,16 @@ void TinyH3MBuilder::writeTeamInfo(TinyH3MWriter & w) const
 
 void TinyH3MBuilder::writeAllowedHeroes(TinyH3MWriter & w) const
 {
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 
 	// non-HOTA: fixed-size bitmask (features.heroesBytes bytes)
 	// HOTA:     size-prefixed bitmask (uint32 count + ceil(count/8) bytes)
 	if(features.levelHOTA0)
 	{
-		w.writeUInt32(static_cast<uint32_t>(features.heroesCount));
-		w.writeAllOnes((features.heroesCount + 7) / 8);
+		// size-prefixed: a count of 0 leaves the default-allowed set untouched.
+		// (Emitting the full HotA heroesCount would index entities the test
+		// environment lacks without the HotA mod loaded.)
+		w.writeUInt32(0);
 	}
 	else
 	{
@@ -662,7 +811,7 @@ void TinyH3MBuilder::writeAllowedHeroes(TinyH3MWriter & w) const
 
 void TinyH3MBuilder::writeDisposedHeroes(TinyH3MWriter & w) const
 {
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 
 	// SOD+ only, single count byte (no entries follow when count == 0).
 	if(features.levelSOD)
@@ -671,26 +820,44 @@ void TinyH3MBuilder::writeDisposedHeroes(TinyH3MWriter & w) const
 
 void TinyH3MBuilder::writeMapOptions(TinyH3MWriter & w) const
 {
-	// 31 reserved zero bytes. Builder does not emit HOTA-only extensions yet.
+	auto features = featuresFor(format, hotaFormatVersion);
+
+	// 31 reserved zero bytes.
 	w.skipZero(31);
+
+	if(features.levelHOTA0)
+	{
+		w.writeBool(false); // allowSpecialMonths
+		w.skipZero(3);
+	}
+	if(features.levelHOTA1)
+		w.writeInt32(0);    // combinedArtifactsCount = none banned (no bitmask bytes follow)
+	if(features.levelHOTA3)
+		w.writeInt32(-1);   // roundLimit = no limit
+	// levelHOTA5+ per-player hero-recruitment block not emitted (versions 0..3 only).
 }
 
 void TinyH3MBuilder::writeAllowedArtifacts(TinyH3MWriter & w) const
 {
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 
 	//   ROE: no bytes (not AB+).
 	//   AB / SOD: bitmask of features.artifactsBytes (non-HOTA).
-	//   HOTA0+: sized bitmask. (Not emitted yet.)
+	//   HOTA0+: size-prefixed bitmask (uint32 count + ceil(count/8) bytes).
 	// invert=true on the read side, so all-zero bytes here means "default-allowed
 	// set untouched" -> all standard artifacts remain allowed.
-	if(features.levelAB)
+	if(features.levelHOTA0)
+	{
+		// size-prefixed: a count of 0 keeps the default-allowed artifact set.
+		w.writeUInt32(0);
+	}
+	else if(features.levelAB)
 		w.skipZero(features.artifactsBytes);
 }
 
 void TinyH3MBuilder::writeAllowedSpellsAbilities(TinyH3MWriter & w) const
 {
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 
 	// SOD+ only. Same invert=true convention -> zero bytes means default-allowed.
 	if(features.levelSOD)
@@ -708,14 +875,22 @@ void TinyH3MBuilder::writeRumors(TinyH3MWriter & w) const
 
 void TinyH3MBuilder::writePredefinedHeroes(TinyH3MWriter & w) const
 {
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 
 	//   non-SOD: nothing to emit.
 	//   SOD: one `customised` bool per hero (all false = no overrides).
-	//   HOTA0+: prefix with uint32 heroesCount (not emitted yet).
-	//   HOTA5+: trailing per-hero block (not emitted yet).
-	if(features.levelSOD)
-		w.skipZero(features.heroesCount);
+	//   HOTA0+: prefix with uint32 heroesCount.
+	//   HOTA5+: trailing per-hero block (not emitted; versions 0..3 only).
+	if(!features.levelSOD)
+		return;
+
+	if(features.levelHOTA0)
+	{
+		// HOTA prefixes the per-hero "customised" flags with their count; 0 = none.
+		w.writeUInt32(0);
+		return;
+	}
+	w.skipZero(features.heroesCount);
 }
 
 void TinyH3MBuilder::writeTerrain(TinyH3MWriter & w) const
@@ -749,12 +924,25 @@ void TinyH3MBuilder::writeObjectTemplates(TinyH3MWriter & w) const
 	// uint32 count + per-template body.
 	w.writeUInt32(static_cast<uint32_t>(templates.size()));
 	for(const auto & key : templates)
-		writeLegacyTemplate(w, legacyTemplate(key.first, key.second));
+	{
+		// The HotA Quest Gate (BORDER_GATE subID 1000) has no Objects.txt row;
+		// reuse the colourless BORDER_GATE template bytes with the subID overridden.
+		if(key.first == Obj::BORDER_GATE && key.second.getNum() == 1000)
+		{
+			LegacyTemplate t = legacyTemplate(Obj::BORDER_GATE, MapObjectSubID(0));
+			t.subid = 1000;
+			writeLegacyTemplate(w, t);
+		}
+		else
+		{
+			writeLegacyTemplate(w, legacyTemplate(key.first, key.second));
+		}
+	}
 }
 
 void TinyH3MBuilder::writeObjects(TinyH3MWriter & w) const
 {
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 
 	// uint32 count + per-object body. Per-object header is int3 position +
 	// uint32 template index + 5 reserved bytes, then a type-specific body.
@@ -784,6 +972,8 @@ void TinyH3MBuilder::writeObjects(TinyH3MWriter & w) const
 				if(features.levelAB)
 					w.skipZero(features.spellsBytes);                  // obligatorySpells bitmask
 				w.skipZero(features.spellsBytes);                      // possibleSpells bitmask
+				if(features.levelHOTA1)
+					w.writeBool(false);                                // spellResearchAllowed
 				w.writeUInt32(0);                                      // castle events count
 				if(features.levelSOD)
 					w.writeUInt8(0xff);                                // alignment = "same as owner / random"
@@ -816,6 +1006,35 @@ void TinyH3MBuilder::writeObjects(TinyH3MWriter & w) const
 				w.skipZero(4);
 				break;
 
+			case Obj::PANDORAS_BOX:
+				// Mirror of readBoxContent, readPandora and readBoxHotaContent
+				w.writeBool(false);                                    // hasMessage (=> no guards / no skip)
+				w.writeUInt32(0);                                      // heroExperience
+				w.writeInt32(0);                                       // manaDiff
+				w.writeInt8(0);                                        // morale
+				w.writeInt8(0);                                        // luck
+				for(int i = 0; i < features.resourcesCount; ++i)
+					w.writeInt32(0);                                   // resources
+				for(int i = 0; i < GameConstants::PRIMARY_SKILLS; ++i)
+					w.writeUInt8(0);                                   // primary skills
+				w.writeUInt8(0);                                       // gained abilities count
+				w.writeUInt8(0);                                       // gained artifacts count
+				w.writeUInt8(0);                                       // gained spells count
+				w.writeUInt8(0);                                       // gained creatures count
+				w.skipZero(8);                                         // reserved
+
+				if(features.levelHOTA5)
+				{
+					w.skipZero(1);                                     // readPandora: unknown, always 0
+					w.writeInt32(0);                                   // movement mode: 0 = give
+					w.writeInt32(0);                                   // movement amount
+				}
+				if(features.levelHOTA6)
+					w.writeInt32(31);                                  // allowed difficulties; reader rejects 0
+				if(features.levelHOTA9)
+					w.writeBool(false);                                // does not use the event system
+				break;
+
 			case Obj::ARTIFACT:
 			case Obj::RANDOM_ART:
 			case Obj::RANDOM_TREASURE_ART:
@@ -834,10 +1053,20 @@ void TinyH3MBuilder::writeObjects(TinyH3MWriter & w) const
 				writeScrollBody(w, obj);
 				break;
 
+			case Obj::CREATURE_GENERATOR1:
+				w.writePlayer32(obj.owner);
+				break;
+
 			case Obj::KEYMASTER:
 			case Obj::BORDERGUARD:
-			case Obj::BORDER_GATE:
 				// readGeneric — no body bytes. Subid (keymaster colour) lives in the template.
+				break;
+
+			case Obj::BORDER_GATE:
+				// HotA Quest Gate (subID 1000) carries a quest body, read via
+				// readQuestGuard. A plain border gate has no body (readGeneric).
+				if(obj.subid.getNum() == 1000)
+					writeQuestBody(w, obj.quest);
 				break;
 
 			case Obj::QUEST_GUARD:
@@ -845,17 +1074,28 @@ void TinyH3MBuilder::writeObjects(TinyH3MWriter & w) const
 				break;
 
 			case Obj::SEER_HUT:
-				// Non-HOTA: single quest, no repeatable block, trailing skipZero(2).
-				// NONE mission emits only the missionId byte then a 1-byte zero
-				// placeholder where the reward kind would live; non-NONE missions
-				// emit the full mission body + a real reward block.
-				writeQuestBody(w, obj.quest);
-				if(obj.quest.kind != EQuestMission::NONE)
-					writeRewardBody(w, obj.reward);
-				else
-					w.skipZero(1);
+			{
+				// HOTA v3+: uint32 one-shot count, the quests, uint32 repeatable
+				// count, the repeatables, then skipZero(2). Pre-HOTA: exactly one
+				// quest and the trailing skipZero(2).
+				const bool multiQuest = features.levelHOTA3;
+				assert((multiQuest || (obj.seerOneShots.size() == 1 && obj.seerRepeatables.empty()))
+					&& "multi-quest seer huts require the HOTA v3+ format");
+
+				if(multiQuest)
+					w.writeUInt32(static_cast<uint32_t>(obj.seerOneShots.size()));
+				for(const auto & [quest, reward] : obj.seerOneShots)
+					writeSeerHutQuest(w, quest, reward);
+
+				if(multiQuest)
+				{
+					w.writeUInt32(static_cast<uint32_t>(obj.seerRepeatables.size()));
+					for(const auto & [quest, reward] : obj.seerRepeatables)
+						writeSeerHutQuest(w, quest, reward);
+				}
 				w.skipZero(2);
 				break;
+			}
 
 			default:
 				throw std::runtime_error("TinyH3MBuilder: object body not implemented for id="
@@ -866,7 +1106,7 @@ void TinyH3MBuilder::writeObjects(TinyH3MWriter & w) const
 
 void TinyH3MBuilder::writeHeroBody(TinyH3MWriter & w, const ObjectSpec & obj) const
 {
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 
 	// Mirror of CMapLoaderH3M::readHero, non-HOTA branch. Each optional field
 	// is gated on whether the corresponding spec field was populated by the
@@ -892,7 +1132,19 @@ void TinyH3MBuilder::writeHeroBody(TinyH3MWriter & w, const ObjectSpec & obj) co
 	}
 
 	w.writeBool(false);                    // hasPortrait
-	w.writeBool(false);                    // hasSecSkills
+	const bool hasSecSkills = !obj.heroSecondarySkills.empty();
+	w.writeBool(hasSecSkills);
+	if(hasSecSkills)
+	{
+		w.writeUInt32(static_cast<uint32_t>(obj.heroSecondarySkills.size()));
+		for(const auto & [skill, level] : obj.heroSecondarySkills)
+		{
+			assert(skill.hasValue());
+			assert(level >= 1 && level <= 3);
+			w.writeUInt8(static_cast<uint8_t>(skill.getNum()));
+			w.writeUInt8(level);
+		}
+	}
 
 	const bool hasGarison = !obj.heroGarrisonStacks.empty();
 	w.writeBool(hasGarison);
@@ -916,7 +1168,10 @@ void TinyH3MBuilder::writeHeroBody(TinyH3MWriter & w, const ObjectSpec & obj) co
 
 	if(features.levelSOD)
 	{
-		w.writeBool(false);                // hasCustomSpells
+		const bool hasCustomSpells = obj.heroSpells.has_value();
+		w.writeBool(hasCustomSpells);
+		if(hasCustomSpells)
+			writeSpellBitmask(w, *obj.heroSpells);
 
 		const bool hasPrim = obj.heroPrimarySkills.has_value();
 		w.writeBool(hasPrim);
@@ -935,6 +1190,23 @@ void TinyH3MBuilder::writeScrollBody(TinyH3MWriter & w, const ObjectSpec & obj) 
 	// is a single zero byte) + 4-byte spell id.
 	w.writeBool(false);                    // hasMessage
 	w.writeSpell32(obj.scrollSpell);
+}
+
+void TinyH3MBuilder::writeSpellBitmask(TinyH3MWriter & w, const std::vector<SpellID> & spells) const
+{
+	const auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	std::vector<std::byte> mask(static_cast<size_t>(features.spellsBytes));
+
+	for(const auto & spell : spells)
+	{
+		assert(spell.hasValue());
+		assert(spell.getNum() < features.spellsCount);
+		const auto index = static_cast<size_t>(spell.getNum());
+		mask.at(index / 8) |= static_cast<std::byte>(1 << (index % 8));
+	}
+
+	for(const auto byte : mask)
+		w.writeUInt8(std::to_integer<uint8_t>(byte));
 }
 
 void TinyH3MBuilder::writeCreatureSet(TinyH3MWriter & w, const std::vector<std::pair<CreatureID, uint16_t>> & stacks) const
@@ -959,7 +1231,7 @@ void TinyH3MBuilder::writeArtifactSet(TinyH3MWriter & w,
 	const std::vector<std::pair<ArtifactPosition, ArtifactID>> & equipped,
 	const std::vector<ArtifactID> & backpack) const
 {
-	auto features = MapFormatFeaturesH3M::find(format, /*hotaVersion*/ 0);
+	auto features = featuresFor(format, hotaFormatVersion);
 
 	// Build a slot lookup so we can iterate equipped slots in fixed order
 	// regardless of the user's input order.
@@ -981,9 +1253,19 @@ void TinyH3MBuilder::writeQuestBody(TinyH3MWriter & w, const Quest & quest) cons
 {
 	// readQuest reads a single int8 missionId then dispatches per-type. NONE
 	// returns immediately; everything else falls through to lastDay + 3 strings.
-	w.writeInt8(static_cast<int8_t>(quest.kind));
 	if(quest.kind == EQuestMission::NONE)
+	{
+		w.writeInt8(static_cast<int8_t>(EQuestMission::NONE));
 		return;
+	}
+
+	// HotA missions ride on the HOTA_MULTI placeholder byte (10) + a uint32 subID;
+	// every other kind writes its own missionId byte directly.
+	const bool isHotaMission = quest.kind == EQuestMission::HOTA_HERO_CLASS
+		|| quest.kind == EQuestMission::HOTA_REACH_DATE
+		|| quest.kind == EQuestMission::HOTA_GAME_DIFFICULTY
+		|| quest.kind == EQuestMission::HOTA_SCRIPTED;
+	w.writeInt8(static_cast<int8_t>(isHotaMission ? EQuestMission::HOTA_MULTI_PLACEHOLDER : quest.kind));
 
 	switch(quest.kind)
 	{
@@ -1032,6 +1314,38 @@ void TinyH3MBuilder::writeQuestBody(TinyH3MWriter & w, const Quest & quest) cons
 			w.writeUInt32(quest.killTargetIdentifier);
 			break;
 
+		case EQuestMission::HOTA_HERO_CLASS:
+		{
+			w.writeUInt32(0); // missionSubID
+			// sized hero-class bitmask: uint32 count + ceil(count/8) bytes, bit i => class i
+			uint32_t classBytes = 0;
+			for(HeroClassID hc : quest.heroClasses)
+				classBytes = std::max(classBytes, static_cast<uint32_t>(hc.getNum()) / 8 + 1);
+			std::vector<uint8_t> mask(classBytes, 0);
+			for(HeroClassID hc : quest.heroClasses)
+				mask[hc.getNum() / 8] |= static_cast<uint8_t>(1u << (hc.getNum() % 8));
+			w.writeUInt32(classBytes * 8);
+			for(uint8_t b : mask)
+				w.writeUInt8(b);
+			break;
+		}
+
+		case EQuestMission::HOTA_REACH_DATE:
+			w.writeUInt32(1);                      // missionSubID
+			w.writeUInt32(quest.reachDateDay - 1); // loader stores wire value + 1
+			break;
+
+		case EQuestMission::HOTA_GAME_DIFFICULTY:
+			w.writeUInt32(2);                      // missionSubID
+			w.writeUInt32(quest.difficultyMask);
+			break;
+
+		case EQuestMission::HOTA_SCRIPTED:
+			w.writeUInt32(3);                      // missionSubID
+			w.writeUInt32(quest.scriptEventID);
+			w.writeBool(false);                    // unknown trailing bool, meaning TBD
+			break;
+
 		default:
 			throw std::runtime_error("TinyH3MBuilder: mission kind "
 				+ std::to_string(static_cast<int>(quest.kind)) + " not implemented");
@@ -1059,6 +1373,18 @@ void TinyH3MBuilder::writeRewardBody(TinyH3MWriter & w, const SeerReward & rewar
 			w.writeUInt32(reward.resourceAmount);
 			break;
 	}
+}
+
+void TinyH3MBuilder::writeSeerHutQuest(TinyH3MWriter & w, const Quest & quest, const SeerReward & reward) const
+{
+	// readSeerHutQuest reads the mission, then a reward block only when the mission
+	// is non-NONE. NONE keeps a single zero placeholder byte (matches the existing
+	// single-quest fixtures; NONE-mission seer huts are not used in practice).
+	writeQuestBody(w, quest);
+	if(quest.kind != EQuestMission::NONE)
+		writeRewardBody(w, reward);
+	else
+		w.skipZero(1);
 }
 
 void TinyH3MBuilder::writeEvents(TinyH3MWriter & w) const

@@ -3,52 +3,22 @@
 #include <gtest/gtest.h>
 
 #include "../../../server/queries/CQuery.h"
-#include "../../../server/IGameServer.h"
+#include "../../../server/battles/BattleProcessor.h"
 #include "../../../server/queries/QueriesProcessor.h"
 #include "CGameHandler.h"
 
+#include "mock/GameHandlerTestServer.h"
+#include "mock/TinyH3MBuilder.h"
+#include "mock/TinyMapGameTest.h"
+
+#include "lib/battle/BattleInfo.h"
+#include "lib/gameState/CGameState.h"
+#include "lib/mapObjects/CGDwelling.h"
+#include "lib/mapObjects/CGHeroInstance.h"
+#include "lib/mapping/CMap.h"
+
 namespace
 {
-
-class DummyGameServer : public IGameServer
-{
-public:
-	void setState(EServerState value) override
-	{
-		state = value;
-	}
-
-	EServerState getState() const override
-	{
-		return state;
-	}
-
-	bool isPlayerHost(const PlayerColor & color) const override
-	{
-		return false;
-	}
-
-	bool hasPlayerAt(PlayerColor player, GameConnectionID connectionID) const override
-	{
-		return false;
-	}
-
-	bool hasBothPlayersAtSameConnection(PlayerColor left, PlayerColor right) const override
-	{
-		return false;
-	}
-
-	void applyPack(CPackForClient & pack) override
-	{
-	}
-
-	void sendPack(CPackForClient & pack, GameConnectionID connectionID) override
-	{
-	}
-
-private:
-	EServerState state{};
-};
 
 enum class QueryEvent
 {
@@ -136,9 +106,27 @@ public:
 class QueriesProcessorTest : public ::testing::Test
 {
 protected:
-	DummyGameServer server;
+	GameHandlerTestServer server;
 	CGameHandler gh{server};
 	QueriesProcessor & queries = *gh.queries;
+};
+
+class NeutralDwellingBattleQueryTest : public TinyMapGameTest
+{
+protected:
+	void startGame()
+	{
+		TinyH3M::TinyH3MBuilder builder(EMapFormat::SOD);
+		builder
+			.size(36, false)
+			.playerActive(PlayerColor(0))
+			.playerActive(PlayerColor(1))
+			.hero({5, 5, 0}, HeroTypeID(0), PlayerColor(0))
+			.heroGarrison({{CreatureID(0), 10}})
+			.dwelling({7, 5, 0}, MapObjectSubID(0), PlayerColor(1));
+
+		startWithMap(std::move(builder));
+	}
 };
 
 }
@@ -146,6 +134,33 @@ protected:
 TEST_F(QueriesProcessorTest, topQuery_returnsNullWhenPlayerHasNoQueries)
 {
 	EXPECT_EQ(queries.topQuery(PlayerColor(1)), nullptr);
+}
+
+TEST_F(NeutralDwellingBattleQueryTest, ownedDwellingUsesNeutralBattleSideWithoutNeutralQuery)
+{
+	startGame();
+
+	auto * hero = findHeroByOwner(PlayerColor(0));
+	auto * dwelling = findFirst<CGDwelling>();
+	ASSERT_NE(hero, nullptr);
+	ASSERT_NE(dwelling, nullptr);
+	ASSERT_TRUE(dwelling->setCreature(SlotID(0), CreatureID(1), 10));
+
+	GameHandlerTestServer server(gameState());
+	CGameHandler gh(server, gameState());
+
+	gh.battles->startBattle(hero, dwelling);
+
+	const auto * battle = gameState()->getBattle(PlayerColor(0));
+	ASSERT_NE(battle, nullptr);
+	EXPECT_EQ(battle->getSide(BattleSide::DEFENDER).color, PlayerColor::NEUTRAL);
+
+	const auto attackerQuery = gh.queries->topQuery(PlayerColor(0));
+	ASSERT_NE(attackerQuery, nullptr);
+	EXPECT_EQ(attackerQuery->getType(), QueryType::Battle);
+	ASSERT_EQ(attackerQuery->players.size(), 1);
+	EXPECT_EQ(attackerQuery->players.front(), PlayerColor(0));
+	EXPECT_EQ(gh.queries->topQuery(PlayerColor(1)), nullptr);
 }
 
 TEST_F(QueriesProcessorTest, popIfTop_removesTopQuery)
@@ -538,4 +553,3 @@ TEST_F(QueriesProcessorTest, countQuery_returnsZeroForNullptr)
 {
 	EXPECT_EQ(queries.countQuery(nullptr), 0);
 }
-

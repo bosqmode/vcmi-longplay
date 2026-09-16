@@ -13,6 +13,7 @@
 
 #include "CThreadHelper.h"
 #include "VCMIDirs.h"
+#include "texts/TextOperations.h"
 #include <boost/stacktrace.hpp>
 
 #if defined(NDEBUG) && !defined(VCMI_ANDROID)
@@ -50,8 +51,6 @@ constexpr int32_t CONSOLE_GRAY = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_
 constexpr int32_t CONSOLE_TEAL = FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
 #endif
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 #ifdef CREATE_MEMORY_DUMP
 
 static void createMemoryDump(MINIDUMP_EXCEPTION_INFORMATION * meinfo)
@@ -62,7 +61,7 @@ static void createMemoryDump(MINIDUMP_EXCEPTION_INFORMATION * meinfo)
 	const auto dumpName = boost::filesystem::path(executablePath.data()).filename().wstring() + L"_crashinfo.dmp";
 	const auto dumpPath = VCMIDirs::get().userLogsPath() / dumpName;
 	HANDLE dfile = CreateFileW(dumpPath.c_str(), GENERIC_READ|GENERIC_WRITE, FILE_SHARE_WRITE|FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
-	logGlobal->error("Crash info will be put in %s", dumpPath.string());
+	logGlobal->error("Crash info will be put in %s", TextOperations::filesystemPathToUtf8(dumpPath));
 	
 	auto dumpType = MiniDumpWithDataSegs;
 
@@ -313,5 +312,3 @@ void CConsoleHandler::start()
 {
 	thread = std::thread(std::bind(&CConsoleHandler::run, this));
 }
-
-VCMI_LIB_NAMESPACE_END

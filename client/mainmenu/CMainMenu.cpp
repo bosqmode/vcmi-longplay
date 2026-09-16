@@ -18,17 +18,17 @@
 #include "../lobby/CBonusSelection.h"
 #include "../lobby/CSelectionBase.h"
 #include "../lobby/CLobbyScreen.h"
-#include "../media/IMusicPlayer.h"
-#include "../media/IVideoPlayer.h"
+#include "media/IMusicPlayer.h"
+#include "media/IVideoPlayer.h"
 #include "../gui/CursorHandler.h"
 #include "../windows/GUIClasses.h"
 #include "../GameEngine.h"
 #include "../GameInstance.h"
-#include "../eventsSDL/InputHandler.h"
+#include "events/InputHandler.h"
 #include "../gui/ShortcutHandler.h"
 #include "../gui/Shortcut.h"
 #include "../gui/WindowHandler.h"
-#include "../render/Canvas.h"
+#include "render/Canvas.h"
 #include "../globalLobby/GlobalLobbyLoginWindow.h"
 #include "../globalLobby/GlobalLobbyClient.h"
 #include "../globalLobby/GlobalLobbyWindow.h"
@@ -62,7 +62,6 @@
 #include "../../lib/GameLibrary.h"
 #include "../../lib/json/JsonUtils.h"
 
-#include <boost/lexical_cast.hpp>
 
 ISelectionScreenInfo * SEL = nullptr;
 
@@ -773,7 +772,7 @@ void CSimpleJoinScreen::connectToServer()
 		buttonOk->block(true);
 	ENGINE->input().stopTextInput();
 
-	startConnection(inputAddress ? inputAddress->getText() : "", inputPort ? boost::lexical_cast<ui16>(inputPort->getText()) : 0);
+	startConnection(inputAddress ? inputAddress->getText() : "", inputPort ? static_cast<ui16>(std::stoul(inputPort->getText())) : 0);
 }
 
 void CSimpleJoinScreen::leaveScreen()

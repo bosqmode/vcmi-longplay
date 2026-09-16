@@ -9,8 +9,6 @@
  */
 #pragma once
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 /// Class which consists of three integer values. Represents position on adventure map.
 class int3
 {
@@ -82,15 +80,16 @@ public:
 	constexpr bool operator==(const int3 & i) const { return (x == i.x && y == i.y && z == i.z); }
 	constexpr bool operator!=(const int3 & i) const { return (x != i.x || y != i.y || z != i.z); }
 
-	constexpr bool operator<(const int3 & i) const
+	/// Ordered by z, then y, then x - map keys and sorted containers all over lib depend on it
+	constexpr std::strong_ordering operator<=>(const int3 & i) const
 	{
-		if (z != i.z)
-			return z < i.z;
+		if (auto cmp = z <=> i.z; cmp != std::strong_ordering::equal)
+			return cmp;
 
-		if (y != i.y)
-			return y < i.y;
+		if (auto cmp = y <=> i.y; cmp != std::strong_ordering::equal)
+			return cmp;
 
-		return x < i.x;
+		return x <=> i.x;
 	}
 
 	enum EDistanceFormula
@@ -204,11 +203,9 @@ int3 findClosestTile (Container & container, int3 dest)
 	return result;
 }
 
-VCMI_LIB_NAMESPACE_END
-
 template<>
-struct std::hash<VCMI_LIB_WRAP_NAMESPACE(int3)> {
-	std::size_t operator()(VCMI_LIB_WRAP_NAMESPACE(int3) const& pos) const noexcept {
+struct std::hash<::int3> {
+	std::size_t operator()(::int3 const& pos) const noexcept {
 		return hash_value(pos);
 	}
 };

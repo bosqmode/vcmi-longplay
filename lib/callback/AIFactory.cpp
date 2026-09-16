@@ -26,8 +26,6 @@
 #endif
 #include "../../AI/EmptyAI/CEmptyAI.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 std::shared_ptr<CGlobalAI> AIFactory::createAdventureAI(const std::string & name)
 {
 	logGlobal->info("Creating adventure AI %s", name);
@@ -50,7 +48,7 @@ std::shared_ptr<CGlobalAI> AIFactory::createAdventureAI(const std::string & name
 
 std::shared_ptr<CBattleGameInterface> AIFactory::createBattleAI(const std::string & name)
 {
-	logGlobal->info("Creating battle AI %s", name);
+	logGlobal->trace("Creating battle AI %s", name);
 
 	if(name == "BattleAI")
 #ifdef ENABLE_BATTLE_AI
@@ -86,5 +84,3 @@ bool AIFactory::isAvailableAdventureAI(const std::string & name)
 #endif
 	return false;
 }
-
-VCMI_LIB_NAMESPACE_END

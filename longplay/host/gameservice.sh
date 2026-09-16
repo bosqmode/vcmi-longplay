@@ -35,15 +35,14 @@ if [ -d "$S6_ENV_DIR" ]; then
 fi
 
 get_latest_autosave_relative_path() {
-    local save_base="/home/abc/.local/share/vcmi/Saves/Autosave"
+    local save_base="/home/abc/.local/share/vcmi/Saves"
     
-    # Use -maxdepth to only find files directly in Autosave, not nested dirs
-    # Also verify it's a regular file (not a directory)
+    # Walk through every directory (nested or not) inside Saves/ and find the file with the latest timestamp
     local latest_file=""
     local latest_mtime=0
     
     while IFS= read -r -d '' file; do
-        if [ -f "$file" ] && [ "$file" != "$save_base" ]; then
+        if [ -f "$file" ]; then
             local mtime
             mtime=$(stat -c %Y "$file" 2>/dev/null || echo 0)
             if [ "$mtime" -gt "$latest_mtime" ]; then
@@ -54,12 +53,10 @@ get_latest_autosave_relative_path() {
     done < <(find "$save_base" -type f -name "*.vsgm1" -size +0c -print0 2>/dev/null)
     
     if [ -n "$latest_file" ] && [ -f "$latest_file" ]; then
-        # Extract the relative path from Autosave directory
-        local rel_dir
-        rel_dir=$(realpath --relative-to="$save_base" "$(dirname "$latest_file")")
-        local rel_file
-        rel_file=$(basename "$latest_file")
-        echo "Saves/Autosave/${rel_dir}/${rel_file}"
+        # Extract the relative path from the Saves base directory
+        local rel_path
+        rel_path=$(realpath --relative-to="$save_base" "$latest_file")
+        echo "Saves/${rel_path}"
     fi
 }
 

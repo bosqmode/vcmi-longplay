@@ -19,8 +19,6 @@
 #include "../IGameSettings.h"
 #include "../spells/SpellSchoolHandler.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 int BonusCacheBase::getBonusValueImpl(BonusCacheEntry & currentValue, const CSelector & selector, BonusCacheMode mode) const
 {
 	if (target->getTreeVersion() == currentValue.version)
@@ -102,11 +100,23 @@ void PrimarySkillsCache::update() const
 		LIBRARY->engineSettings()->getVectorValue(EGameSettings::HEROES_MINIMAL_PRIMARY_SKILLS, PrimarySkill::KNOWLEDGE)
 	};
 
+	std::array<int, 4> maxValues = {
+		LIBRARY->engineSettings()->getVectorValue(EGameSettings::HEROES_MAXIMAL_PRIMARY_SKILLS, PrimarySkill::ATTACK),
+		LIBRARY->engineSettings()->getVectorValue(EGameSettings::HEROES_MAXIMAL_PRIMARY_SKILLS, PrimarySkill::DEFENSE),
+		LIBRARY->engineSettings()->getVectorValue(EGameSettings::HEROES_MAXIMAL_PRIMARY_SKILLS, PrimarySkill::SPELL_POWER),
+		LIBRARY->engineSettings()->getVectorValue(EGameSettings::HEROES_MAXIMAL_PRIMARY_SKILLS, PrimarySkill::KNOWLEDGE)
+	};
+
 	auto list = target->getBonuses(primarySkillsSelector);
-	skills[PrimarySkill::ATTACK] = std::max(minValues[PrimarySkill::ATTACK], list->valOfBonuses(attackSelector));
-	skills[PrimarySkill::DEFENSE] = std::max(minValues[PrimarySkill::DEFENSE], list->valOfBonuses(defenceSelector));
-	skills[PrimarySkill::SPELL_POWER] = std::max(minValues[PrimarySkill::SPELL_POWER], list->valOfBonuses(spellPowerSelector));
-	skills[PrimarySkill::KNOWLEDGE] = std::max(minValues[PrimarySkill::KNOWLEDGE], list->valOfBonuses(knowledgeSelector));
+	auto clampSkill = [&minValues, &maxValues](PrimarySkill skill, int value) -> int
+	{
+		return std::clamp(value, minValues[skill.getNum()], std::max(minValues[skill.getNum()], maxValues[skill.getNum()]));
+	};
+
+	skills[PrimarySkill::ATTACK] = clampSkill(PrimarySkill::ATTACK, list->valOfBonuses(attackSelector));
+	skills[PrimarySkill::DEFENSE] = clampSkill(PrimarySkill::DEFENSE, list->valOfBonuses(defenceSelector));
+	skills[PrimarySkill::SPELL_POWER] = clampSkill(PrimarySkill::SPELL_POWER, list->valOfBonuses(spellPowerSelector));
+	skills[PrimarySkill::KNOWLEDGE] = clampSkill(PrimarySkill::KNOWLEDGE, list->valOfBonuses(knowledgeSelector));
 
 	version = target->getTreeVersion();
 }
@@ -195,7 +205,6 @@ const UnitBonusValuesProxy::SelectorsArray * UnitBonusValuesProxy::generateSelec
 		attack.And(selectorRanged),//ATTACK_RANGED,
 		defence.And(selectorMelee),//DEFENCE_MELEE,
 		defence.And(selectorRanged),//DEFENCE_RANGED,
-		Selector::type()(BonusType::IN_FRENZY),//IN_FRENZY,
 		Selector::type()(BonusType::HYPNOTIZED),//HYPNOTIZED,
 		Selector::type()(BonusType::FORGETFULL),//FORGETFULL,
 		Selector::type()(BonusType::FREE_SHOOTING).Or(Selector::type()(BonusType::SIEGE_WEAPON)),//HAS_FREE_SHOOTING,
@@ -206,5 +215,3 @@ const UnitBonusValuesProxy::SelectorsArray * UnitBonusValuesProxy::generateSelec
 
 	return &selectors;
 }
-
-VCMI_LIB_NAMESPACE_END

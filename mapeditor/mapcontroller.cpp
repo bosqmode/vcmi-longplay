@@ -19,6 +19,7 @@
 #include "../lib/mapObjectConstructors/CObjectClassesHandler.h"
 #include "../lib/mapObjectConstructors/CommonConstructors.h"
 #include "../lib/mapObjects/ObjectTemplate.h"
+#include "../lib/mapObjects/Quest.h"
 #include "../lib/mapping/CMapService.h"
 #include "../lib/mapping/CMap.h"
 #include "../lib/mapping/CMapEditManager.h"
@@ -38,6 +39,7 @@
 #include "inspector/inspector.h"
 #include "GameLibrary.h"
 #include "PlayerSelectionDialog.h"
+#include "translator.h"
 
 MapController::MapController(QObject * parent)
 	: QObject(parent)
@@ -69,6 +71,9 @@ void MapController::connectScenes()
 
 MapController::~MapController()
 {
+	if(_map)
+		Translator::instance().uninstall(*_map->texts);
+
 	main = nullptr;
 }
 
@@ -231,9 +236,15 @@ void MapController::repairMap(CMap * map)
 
 void MapController::setMap(std::unique_ptr<CMap> cmap)
 {
+	if(_map)
+		Translator::instance().uninstall(*_map->texts);
+
 	cmap->cb = _cb.get();
 	_map = std::move(cmap);
 	_cb->setMap(_map.get());
+
+	// map texts are inert data - the editor has to install them to render map-defined names
+	Translator::instance().install(_map->texts);
 	
 	repairMap();
 	
@@ -277,6 +288,24 @@ void MapController::initializeMap()
 		_scenes[i]->createMap();
 		_miniscenes[i]->createMap();
 	}
+}
+
+void MapController::addLevel(const MapLayerId & layerType)
+{
+	if(!canAddLevel())
+		return;
+
+	_map->addLevel(layerType);
+
+	resetMapHandler();
+	initializeMap();
+
+	main->mapChanged();
+}
+
+bool MapController::canAddLevel() const
+{
+	return _map && _map->levels() < MAX_LEVELS;
 }
 
 void MapController::sceneForceUpdate()
@@ -439,6 +468,15 @@ bool MapController::discardObject(int level) const
 
 void MapController::createObject(int level, std::shared_ptr<CGObjectInstance> obj) const
 {
+	//A freshly created quest source owns no quest yet - map loaders add one while reading
+	//the object. The inspector edits the active quest in place, so give a newly placed
+	//seer hut or quest guard a quest to edit instead of letting getQuest() throw.
+	if(auto * questSource = dynamic_cast<QuestSource *>(obj.get()))
+	{
+		if(questSource->allQuests().empty())
+			questSource->addQuest();
+	}
+
 	_scenes[level]->selectionObjectsView.newObject = obj;
 	_scenes[level]->selectionObjectsView.selectionMode = SelectionObjectsLayer::MOVEMENT;
 	_scenes[level]->selectionObjectsView.redraw();

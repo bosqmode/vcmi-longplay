@@ -14,11 +14,8 @@
 #include "../../lib/battle/CBattleInfoCallback.h"
 #include "../../lib/battle/PossiblePlayerBattleAction.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
 class CStack;
 class CGTownInstance;
-
-VCMI_LIB_NAMESPACE_END
 
 class CButton;
 class BattleInterface;
@@ -53,6 +50,9 @@ class BattleWindow : public InterfaceObjectConfigurable
 	void bOptionsf();
 	void bSurrenderf();
 	void bFleef();
+
+	/// true if the player's hero in this battle is essential to the scenario, so losing it (retreat/surrender) ends the game
+	bool ownHeroLossEndsScenario() const;
 	void bAutofightf();
 	void bSpellf();
 	void bWaitf();
@@ -76,6 +76,12 @@ class BattleWindow : public InterfaceObjectConfigurable
 	/// flip battle queue visibility to opposite
 	void toggleQueueVisibility();
 	void createQueue();
+
+	/// flip a boolean battle display setting (hex grid / mouse shadow / movement shadow)
+	void toggleBattleSetting(const std::string & name);
+
+	/// flip visibility of the hovered-stack info panel
+	void toggleStackInfoWindowsVisibility();
 
 	void toggleStickyHeroWindowsVisibility();
 	void toggleStickyQuickSpellVisibility();

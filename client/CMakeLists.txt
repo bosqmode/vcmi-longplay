@@ -35,14 +35,6 @@ set(vcmiclientcommon_SRCS
 	battle/StackQueue.cpp
 	battle/UnitActionPanel.cpp
 
-	eventsSDL/NotificationHandler.cpp
-	eventsSDL/InputHandler.cpp
-	eventsSDL/InputSourceKeyboard.cpp
-	eventsSDL/InputSourceMouse.cpp
-	eventsSDL/InputSourceText.cpp
-	eventsSDL/InputSourceTouch.cpp
-	eventsSDL/InputSourceGameController.cpp
-
 	gui/CIntObject.cpp
 	gui/CursorHandler.cpp
 	gui/EventDispatcher.cpp
@@ -84,20 +76,16 @@ set(vcmiclientcommon_SRCS
 	mapView/mapHandler.cpp
 	mapView/MapOverlayLogVisualizer.cpp
 
-	media/CAudioBase.cpp
-	media/CMusicHandler.cpp
-	media/CSoundHandler.cpp
-	media/CVideoHandler.cpp
-
 	netlag/NetworkLagCompensator.cpp
 	netlag/PackRollbackGeneratorVisitor.cpp
 
+	replay/GameplayReplayer.cpp
+	replay/ReplayAbortOverlay.cpp
+	replay/ReplaySelectionWindow.cpp
+
 	render/AssetGenerator.cpp
 	render/CAnimation.cpp
-	render/CBitmapHandler.cpp
 	render/CDefFile.cpp
-	render/Canvas.cpp
-	render/CanvasImage.cpp
 	render/ColorFilter.cpp
 	render/Colors.cpp
 	render/Graphics.cpp
@@ -106,20 +94,6 @@ set(vcmiclientcommon_SRCS
 	render/hdEdition/HdImageLoader.cpp
 	render/hdEdition/PakLoader.cpp
 	render/hdEdition/DdsFormat.cpp
-
-	renderSDL/CBitmapFont.cpp
-	renderSDL/CTrueTypeFont.cpp
-	renderSDL/CursorHardware.cpp
-	renderSDL/CursorSoftware.cpp
-	renderSDL/FontChain.cpp
-	renderSDL/ScalableImage.cpp
-	renderSDL/RenderHandler.cpp
-	renderSDL/SDLImage.cpp
-	renderSDL/SDLImageLoader.cpp
-	renderSDL/SDLImageScaler.cpp
-	renderSDL/SDLRWwrapper.cpp
-	renderSDL/ScreenHandler.cpp
-	renderSDL/SDL_Extensions.cpp
 
 	globalLobby/GlobalLobbyAddChannelWindow.cpp
 	globalLobby/GlobalLobbyClient.cpp
@@ -137,6 +111,7 @@ set(vcmiclientcommon_SRCS
 	widgets/CGarrisonInt.cpp
 	widgets/CreatureCostBox.cpp
 	widgets/ComboBox.cpp
+	widgets/ControllerActionButton.cpp
 	widgets/CTextInput.cpp
 	widgets/GraphicalPrimitiveCanvas.cpp
 	widgets/Images.cpp
@@ -175,7 +150,9 @@ set(vcmiclientcommon_SRCS
 	windows/CMarketWindow.cpp
 	windows/CMessage.cpp
 	windows/CPuzzleWindow.cpp
+	windows/CJournalWindow.cpp
 	windows/CQuestLog.cpp
+	windows/CScenarioEventJournal.cpp
 	windows/CSpellWindow.cpp
 	windows/CTutorialWindow.cpp
 	windows/wiki/WikiCommon.cpp
@@ -203,11 +180,14 @@ set(vcmiclientcommon_SRCS
 	windows/settings/AdventureOptionsTab.cpp
 	windows/settings/KeyBindingsWindow.cpp
 
-	xBRZ/xbrz.cpp
+	filters/xBRZ/xbrz.cpp
+
+	filters/FSR/fsr_rcas.cpp
 
 	ArtifactsUIController.cpp
 	GameEngine.cpp
 	GameInstance.cpp
+	Translator.cpp
 	CPlayerInterface.cpp
 	PlayerLocalState.cpp
 	CServerHandler.cpp
@@ -250,6 +230,7 @@ set(vcmiclientcommon_HEADERS
 	battle/BattleProjectileController.h
 	battle/BattleRenderer.h
 	battle/BattleResultWindow.h
+	battle/BattleSidePanel.h
 	battle/BattleSiegeController.h
 	battle/BattleStacksController.h
 	battle/BattleWindow.h
@@ -259,14 +240,6 @@ set(vcmiclientcommon_HEADERS
 	battle/StackInfoBasicPanel.h
 	battle/StackQueue.h
 	battle/UnitActionPanel.h
-
-	eventsSDL/NotificationHandler.h
-	eventsSDL/InputHandler.h
-	eventsSDL/InputSourceKeyboard.h
-	eventsSDL/InputSourceMouse.h
-	eventsSDL/InputSourceText.h
-	eventsSDL/InputSourceTouch.h
-	eventsSDL/InputSourceGameController.h
 
 	gui/CIntObject.h
 	gui/CursorHandler.h
@@ -314,56 +287,34 @@ set(vcmiclientcommon_HEADERS
 	mapView/mapHandler.h
 	mapView/MapOverlayLogVisualizer.h
 
-	media/CAudioBase.h
-	media/CEmptyVideoPlayer.h
-	media/CMusicHandler.h
-	media/CSoundHandler.h
-	media/CVideoHandler.h
-	media/IMusicPlayer.h
-	media/ISoundPlayer.h
-	media/IVideoPlayer.h
-
 	netlag/NetworkLagCompensator.h
 	netlag/NetworkLagPredictedPack.h
 	netlag/NetworkLagPredictionTestVisitor.h
 	netlag/NetworkLagReplyPrediction.h
 	netlag/PackRollbackGeneratorVisitor.h
 
+	replay/GameplayReplayer.h
+	replay/ReplayAbortOverlay.h
+	replay/ReplayPackFilter.h
+	replay/ReplaySelectionWindow.h
+
 	render/AssetGenerator.h
 	render/CAnimation.h
 	render/CBitmapHandler.h
 	render/CDefFile.h
-	render/Canvas.h
-	render/CanvasImage.h
 	render/ColorFilter.h
 	render/Colors.h
 	render/EFont.h
 	render/Graphics.h
+	render/ICacheableAsset.h
 	render/ICursor.h
 	render/IFont.h
-	render/IImage.h
 	render/IImageLoader.h
 	render/ImageLocator.h
 	render/IRenderHandler.h
-	render/IScreenHandler.h
 	render/hdEdition/HdImageLoader.h
 	render/hdEdition/PakLoader.h
 	render/hdEdition/DdsFormat.h
-
-	renderSDL/CBitmapFont.h
-	renderSDL/CTrueTypeFont.h
-	renderSDL/CursorHardware.h
-	renderSDL/CursorSoftware.h
-	renderSDL/FontChain.h
-	renderSDL/ScalableImage.h
-	renderSDL/RenderHandler.h
-	renderSDL/SDLImage.h
-	renderSDL/SDLImageLoader.h
-	renderSDL/SDLImageScaler.h
-	renderSDL/SDLRWwrapper.h
-	renderSDL/ScreenHandler.h
-	renderSDL/SDL_Extensions.h
-	renderSDL/SDL_PixelAccess.h
 
 	globalLobby/GlobalLobbyClient.h
 	globalLobby/GlobalLobbyDefines.h
@@ -383,6 +334,7 @@ set(vcmiclientcommon_HEADERS
 	widgets/CGarrisonInt.h
 	widgets/CreatureCostBox.h
 	widgets/ComboBox.h
+	widgets/ControllerActionButton.h
 	widgets/CTextInput.h
 	widgets/GraphicalPrimitiveCanvas.h
 	widgets/Images.h
@@ -422,7 +374,9 @@ set(vcmiclientcommon_HEADERS
 	windows/CMapOverview.h
 	windows/CMarketWindow.h
 	windows/CPuzzleWindow.h
+	windows/CJournalWindow.h
 	windows/CQuestLog.h
+	windows/CScenarioEventJournal.h
 	windows/CSpellWindow.h
 	windows/CTutorialWindow.h
 	windows/wiki/WikiCommon.h
@@ -450,8 +404,10 @@ set(vcmiclientcommon_HEADERS
 	windows/settings/AdventureOptionsTab.h
 	windows/settings/KeyBindingsWindow.h
 
-	xBRZ/xbrz.h
-	xBRZ/xbrz_tools.h
+	filters/xBRZ/xbrz.h
+	filters/xBRZ/xbrz_tools.h
+
+	filters/FSR/fsr_rcas.h
 
 	ArtifactsUIController.h
 	CMT.h
@@ -459,6 +415,7 @@ set(vcmiclientcommon_HEADERS
 	GameEngine.h
 	GameEngineUser.h
 	GameInstance.h
+	Translator.h
 	PlayerLocalState.h
 	CServerHandler.h
 	Client.h
@@ -492,47 +449,32 @@ if(WIN32)
 			PROJECT_LABEL "VCMI_vcmiclientcommon"
 	)
 	set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT vcmiclientcommon)
-	if(NOT ENABLE_DEBUG_CONSOLE)
-		target_link_libraries(vcmiclientcommon SDL2::SDL2main)
-	endif()
 	target_compile_definitions(vcmiclientcommon PRIVATE WINDOWS_IGNORE_PACKING_MISMATCH)
 elseif(IOS)
 	target_link_libraries(vcmiclientcommon PRIVATE
 		iOS_utils
-
-		# FFmpeg
-		bz2
-		iconv
-		z
-		"-framework AudioToolbox"
-		"-framework AVFoundation"
-		"-framework CoreMedia"
-		"-framework VideoToolbox"
 	)
 endif()
 
 target_link_libraries(vcmiclientcommon PRIVATE vcmiservercommon)
 
 target_link_libraries(vcmiclientcommon PUBLIC
-		vcmi SDL2::SDL2 SDL2::Image SDL2::Mixer SDL2::TTF libsquish::libsquish
+		vcmi ${VCMI_MEDIA_BACKEND}
 )
+
+# render/ holds the parts both backends share, and the few SDL calls that were renamed
+# between SDL2 and SDL3 are selected there with #ifdef VCMI_SDL3
+if(ENABLE_SDL3)
+	target_compile_definitions(vcmiclientcommon PUBLIC VCMI_SDL3)
+endif()
 
 if(ENABLE_VIDEO)
 	target_compile_definitions(vcmiclientcommon PRIVATE ENABLE_VIDEO)
-	target_link_libraries(vcmiclientcommon PRIVATE
-		${ffmpeg_LIBRARIES}
-	)
 endif()
 
 target_include_directories(vcmiclientcommon PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
-
-if (ffmpeg_INCLUDE_DIRS)
-	target_include_directories(vcmiclientcommon PRIVATE
-		${ffmpeg_INCLUDE_DIRS}
-	)
-endif()
 
 if(VCMI_PORTMASTER)
 	target_compile_definitions(vcmiclientcommon PRIVATE VCMI_PORTMASTER)

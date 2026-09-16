@@ -19,8 +19,6 @@
 #include "../library/Bonus.h"
 #include "UnitState.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 namespace scripting::api
 {
 
@@ -36,11 +34,11 @@ public:
 	static void registerMethods(MethodRegistrar & R);
 
 	static const Creature * getCreature(const ::battle::Unit & unit);
+	static std::optional<std::string> getTurretPart(const ::battle::Unit & unit);
 	static BattleHexArray getHexes(const ::battle::Unit & unit);
+	static BattleHexArray getSurroundingHexes(const ::battle::Unit & unit);
 	static bool hasAbsoluteImmunity(const ::battle::Unit & unit, const spells::Spell & spell);
 	static LuaUnitState copy(const ::battle::Unit & unit);
 };
 
 }
-
-VCMI_LIB_NAMESPACE_END

@@ -75,7 +75,11 @@ if(ANDROID)
 	set(ENABLE_STATIC_LIBS ON)
 	set(ENABLE_LAUNCHER ON)
 else()
-	option(ENABLE_STATIC_LIBS "Link libvcmi statically into client/server applications" OFF)
+	if(IOS)
+		set(ENABLE_STATIC_LIBS ON)
+	else()
+		option(ENABLE_STATIC_LIBS "Link libvcmi statically into client/server applications" OFF)
+	endif()
 	option(ENABLE_LAUNCHER "Enable compilation of launcher" ON)
 endif()
 
@@ -123,17 +127,28 @@ else()
 			check_cxx_compiler_flag("-std=c++23" COMPILER_SUPPORTS_CXX23)
 		endif()
 
-
 		# Determine if Glaze can be used
 		set(DISCORD_RPC_NO_GLAZE OFF)
 		if(
-			(MACOS AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS "10.15")
-			OR
 			(IOS AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS "13.0")
 			OR
 			(NOT COMPILER_SUPPORTS_CXX23)
 		)
-	        set(DISCORD_RPC_NO_GLAZE ON)
+			set(DISCORD_RPC_NO_GLAZE ON)
+		elseif(MACOS)
+			# when deployment target is not set, treat current macOS version as deployment target
+			# it's not strictly correct as default compiler behavior is to set macOS major version as deployment target
+			# e.g. if building on macOS 15.7.7, default deployment target would be 15.0
+			# but in this case it's sufficient
+			if(CMAKE_OSX_DEPLOYMENT_TARGET)
+				set(deploymentTarget ${CMAKE_OSX_DEPLOYMENT_TARGET})
+			else()
+				execute_process(COMMAND sw_vers -productVersion
+					OUTPUT_VARIABLE deploymentTarget OUTPUT_STRIP_TRAILING_WHITESPACE)
+			endif()
+			if(deploymentTarget VERSION_LESS "10.15")
+				set(DISCORD_RPC_NO_GLAZE ON)
+			endif()
 		endif()
 	endif()
 endif()
@@ -488,7 +503,7 @@ endif()
 #        Finding packages                  #
 ############################################
 
-set(BOOST_COMPONENTS date_time filesystem program_options)
+set(BOOST_COMPONENTS filesystem program_options)
 if(ENABLE_INNOEXTRACT)
 	list(APPEND BOOST_COMPONENTS iostreams)
 endif()
@@ -517,30 +532,56 @@ if (ENABLE_CLIENT)
 		find_package(ffmpeg REQUIRED COMPONENTS avutil swscale avformat avcodec swresample)
 	endif()
 
-	find_package(SDL2 REQUIRED)
-	find_package(SDL2_image REQUIRED)
-	if(TARGET SDL2_image::SDL2_image)
-		add_library(SDL2::Image ALIAS SDL2_image::SDL2_image)
-	endif()
-	if(TARGET SDL2_image::SDL2_image-static)
-		add_library(SDL2::Image ALIAS SDL2_image::SDL2_image-static)
-	endif()
-	find_package(SDL2_mixer REQUIRED)
-	if(TARGET SDL2_mixer::SDL2_mixer)
-		add_library(SDL2::Mixer ALIAS SDL2_mixer::SDL2_mixer)
-	endif()
-	if(TARGET SDL2_mixer::SDL2_mixer-static)
-		add_library(SDL2::Mixer ALIAS SDL2_mixer::SDL2_mixer-static)
-	endif()
-	find_package(SDL2_ttf REQUIRED)
-	if(TARGET SDL2_ttf::SDL2_ttf)
-		add_library(SDL2::TTF ALIAS SDL2_ttf::SDL2_ttf)
-	endif()
-	if(TARGET SDL2_ttf::SDL2_ttf-static)
-		add_library(SDL2::TTF ALIAS SDL2_ttf::SDL2_ttf-static)
+	find_package(libsquish REQUIRED)
+
+	# upstream SDL3, its static builds and the Conan packages all export different target
+	# names, so take whichever one this configuration actually provides
+	function(vcmi_resolve_sdl3_target output)
+		foreach(candidate IN LISTS ARGN)
+			if(TARGET ${candidate})
+				set(${output} ${candidate} PARENT_SCOPE)
+				return()
+			endif()
+		endforeach()
+
+		set(availableTargets "")
+		if(NOT CMAKE_VERSION VERSION_LESS 3.21)
+			get_property(allTargets GLOBAL PROPERTY IMPORTED_TARGETS)
+			foreach(target IN LISTS allTargets)
+				if(target MATCHES "[Ss][Dd][Ll]")
+					list(APPEND availableTargets ${target})
+				endif()
+			endforeach()
+		endif()
+
+		message(FATAL_ERROR "No usable SDL3 target found.\n  tried:     ${ARGN}\n  available: ${availableTargets}")
+	endfunction()
+
+	# Probe for a complete set of SDL3 libraries so that ENABLE_SDL3 can default to
+	# whether this machine can actually build the SDL3 backend. Passing
+	# -DENABLE_SDL3=ON/OFF explicitly always wins over this default.
+	find_package(SDL3 QUIET)
+	find_package(SDL3_image QUIET)
+	find_package(SDL3_mixer QUIET)
+	find_package(SDL3_ttf QUIET)
+	if(SDL3_FOUND AND SDL3_image_FOUND AND SDL3_mixer_FOUND AND SDL3_ttf_FOUND)
+		set(SDL3_BACKEND_AVAILABLE ON)
+	else()
+		set(SDL3_BACKEND_AVAILABLE OFF)
 	endif()
 
-	find_package(libsquish REQUIRED)
+	option(ENABLE_SDL3 "Use the SDL3 media backend instead of SDL2" ${SDL3_BACKEND_AVAILABLE})
+
+	if(ENABLE_SDL3)
+		if(NOT SDL3_BACKEND_AVAILABLE)
+			message(FATAL_ERROR "ENABLE_SDL3 is on but SDL3, SDL3_image, SDL3_mixer and SDL3_ttf were not all found")
+		endif()
+		vcmi_resolve_sdl3_target(SDL3_CORE_TARGET SDL3::SDL3 SDL3::SDL3-static sdl::sdl)
+		set(VCMI_MEDIA_BACKEND vcmisdl3)
+	else()
+		set(VCMI_MEDIA_BACKEND vcmisdl2)
+	endif()
+	message(STATUS "Media backend: ${VCMI_MEDIA_BACKEND} (SDL3 available: ${SDL3_BACKEND_AVAILABLE})")
 endif()
 
 if(ENABLE_LOBBY)
@@ -696,7 +737,7 @@ endif()
 
 add_subdirectory(lib)
 
-if (ENABLE_CLIENT)
+if (ENABLE_CLIENT OR ENABLE_TEST)
 	add_subdirectory_with_folder("AI" AI)
 endif()
 
@@ -728,6 +769,11 @@ endif()
 
 if (ENABLE_CLIENT)
 	add_subdirectory(client)
+	if(ENABLE_SDL3)
+		add_subdirectory(clientsdl3)
+	else()
+		add_subdirectory(clientsdl2)
+	endif()
 	add_subdirectory(clientapp)
 endif()
 

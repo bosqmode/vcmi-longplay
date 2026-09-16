@@ -16,11 +16,11 @@
 #include "../GameEngine.h"
 #include "../GameInstance.h"
 
-#include "../render/IRenderHandler.h"
-#include "../render/CAnimation.h"
-#include "../render/Canvas.h"
-#include "../render/CanvasImage.h"
-#include "../render/IFont.h"
+#include "render/IRenderHandler.h"
+#include "render/CAnimation.h"
+#include "render/Canvas.h"
+#include "render/CanvasImage.h"
+#include "render/IFont.h"
 #include "../gui/Shortcut.h"
 #include "../gui/WindowHandler.h"
 #include "../widgets/Buttons.h"
@@ -441,6 +441,11 @@ void BattleOnlyModeHeroSelector::manageSpells()
 			parent.onChange();
 			manageSpells();
 		}, 0, images, true, true);
+		window->setControllerActionPrompts(
+			LIBRARY->generaltexth->translate(add
+				? "vcmi.lobby.battleOnlySpell.actionAdd"
+				: "vcmi.lobby.battleOnlySpell.actionRemove"),
+			LIBRARY->generaltexth->translate("vcmi.lobby.battleOnlySpell.actionCancel"));
 		window->onPopup = [list](int index) {
 			std::shared_ptr<CComponent> comp = std::make_shared<CComponent>(ComponentType::SPELL, list[index]);
 			CRClickPopup::createAndPush(list[index].toSpell()->getDescriptionTranslated(0), CInfoWindow::TCompsInfo(1, comp));
@@ -481,18 +486,18 @@ void BattleOnlyModeHeroSelector::selectHero()
 	})));
 	
 	std::vector<std::string> texts;
-	std::vector<std::shared_ptr<IImage>> images;
+	std::vector<int32_t> heroIconIndices;
 	// Add "no hero" option
 	texts.push_back(LIBRARY->generaltexth->translate("core.genrltxt.507"));
-	images.push_back(nullptr);
+	heroIconIndices.push_back(-1);
 	for (const auto & h : heroes)
 	{
 		texts.push_back(h.toHeroType()->getNameTranslated());
-
-		auto image = ENGINE->renderHandler().loadImage(AnimationPath::builtin("PortraitsSmall"), h.toHeroType()->imageIndex, 0, EImageBlitMode::OPAQUE);
-		image->scaleTo(Point(35, 23), EScalingAlgorithm::NEAREST);
-		images.push_back(image);
+		heroIconIndices.push_back(h.toHeroType()->imageIndex);
 	}
+
+	// Load portraits lazily: only visible list items are created, so avoid decoding all of them upfront.
+	auto imageLoader = CObjectListWindow::makeLazyHeroPortraitLoader(std::move(heroIconIndices));
 	auto window = std::make_shared<CObjectListWindow>(texts, nullptr, LIBRARY->generaltexth->translate("vcmi.lobby.battleOnlyModeHeroSelect"), LIBRARY->generaltexth->translate("vcmi.lobby.battleOnlyModeHeroSelect"), [this, heroes](int index){
 		if(index == 0)
 		{
@@ -516,7 +521,7 @@ void BattleOnlyModeHeroSelector::selectHero()
 		parent.startInfo->spellBook[id] = heroes[index].toHeroType()->haveSpellBook;
 
 		parent.onChange();
-	}, selectedIndex, images, true, true);
+	}, selectedIndex, imageLoader, true, true);
 	window->onPopup = [heroes](int index) {
 		if(index == 0)
 			return;
@@ -625,7 +630,7 @@ void BattleOnlyModeHeroSelector::setCreatureIcons()
 			MetaString str;
 			str.appendTextID("vcmi.lobby.battleOnlyModeSelectUnit");
 			str.replaceNumber(i + 1);
-			creatureImage[i] = std::make_shared<CPicture>(drawBlackBox(Point(32, 32), str.toString(), id == 1 ? parent.boxColor : parent.disabledBoxColor), Point(6 + i * 36, 78));
+			creatureImage[i] = std::make_shared<CPicture>(drawBlackBox(Point(32, 32), str.toString(&GAME->translator()), id == 1 ? parent.boxColor : parent.disabledBoxColor), Point(6 + i * 36, 78));
 			selectedArmyInput[i]->disable();
 		}
 		else
@@ -728,7 +733,7 @@ void BattleOnlyModeHeroSelector::setSecSkillIcons()
 			MetaString str;
 			str.appendTextID("vcmi.lobby.battleOnlyModeSelectSkill");
 			str.replaceNumber(i + 1);
-			secSkillImage[i] = std::make_shared<CPicture>(drawBlackBox(Point(32, 32), str.toString(), id == 1 ? parent.boxColor : parent.disabledBoxColor), imgPos);
+			secSkillImage[i] = std::make_shared<CPicture>(drawBlackBox(Point(32, 32), str.toString(&GAME->translator()), id == 1 ? parent.boxColor : parent.disabledBoxColor), imgPos);
 			selectedSecSkillInput[i]->disable();
 		}
 		else
@@ -849,8 +854,8 @@ void BattleOnlyModeHeroSelector::setArtifactIcons()
 		{
 			MetaString str;
 			str.appendTextID("vcmi.lobby.battleOnlyModeSelectArtifact");
-			str.replaceTextID("vcmi.lobby.battleOnlyModeSelectArtifact." + std::to_string(artPos[i]));
-			artifactImage[i] = std::make_shared<CPicture>(drawBlackBox(Point(32, 32), str.toString(), id == 1 ? parent.boxColor : parent.disabledBoxColor), imgPos);
+			str.replaceTextID("vcmi.lobby.battleOnlyModeSelectArtifact", artPos[i]);
+			artifactImage[i] = std::make_shared<CPicture>(drawBlackBox(Point(32, 32), str.toString(&GAME->translator()), id == 1 ? parent.boxColor : parent.disabledBoxColor), imgPos);
 		}
 		else
 		{

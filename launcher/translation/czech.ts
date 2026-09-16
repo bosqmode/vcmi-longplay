@@ -92,42 +92,91 @@
         <translation>Exportovat logy</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="170"/>
-        <source>Save logs</source>
-        <translation>Uložit logy</translation>
+        <location filename="../aboutProject/aboutproject_moc.ui" line="329"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="442"/>
+        <source>Export saves</source>
+        <translation>Exportovat uložené hry</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="170"/>
+        <source>Save logs</source>
+        <translation type="vanished">Uložit logy</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="442"/>
         <source>Zip archives (*.zip)</source>
         <translation>Archivy ZIP (*.zip)</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="272"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="415"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="532"/>
         <source>Error</source>
         <translation>Chyba</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="272"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="411"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="448"/>
+        <source>Saves exported to %1</source>
+        <translation>Uložené hry exportovány do %1</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="415"/>
+        <source>Failed to save archive to selected destination</source>
+        <translation>Nepodařilo se uložit archiv do vybraného umístění</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="433"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="435"/>
+        <source>Select destination file</source>
+        <translation>Vyberte cílový soubor</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="433"/>
+        <source>Please select destination file and save the archive as vcmi-saves.zip.</source>
+        <translation>Vyberte prosím cílový soubor a uložte archiv jako vcmi-saves.zip.</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="435"/>
+        <source>Zip archives (*.zip);;All files (*.*)</source>
+        <translation>Archivy ZIP (*.zip);;Všechny soubory (*.*)</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="464"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="465"/>
+        <source>Exporting logs...</source>
+        <translation>Exportují se logy...</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="464"/>
+        <source>Cancel</source>
+        <translation>Zrušit</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="465"/>
+        <source>Log export</source>
+        <translation>Export logů</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="532"/>
         <source>Failed to create archive: %1</source>
         <translation>Nepodařilo se vytvořit archiv: %1</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="277"/>
         <source>Send logs</source>
-        <translation>Odeslat logy</translation>
+        <translation type="vanished">Odeslat logy</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="277"/>
         <source>The archive will be sent via another application. Share your logs e.g. over discord to developers.</source>
-        <translation>Archiv bude odeslán prostřednictvím jiné aplikace. Sdílejte své logy s vývojáři, např. přes Discord.</translation>
+        <translation type="vanished">Archiv bude odeslán prostřednictvím jiné aplikace. Sdílejte své logy s vývojáři, např. přes Discord.</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="281"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="411"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="448"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="541"/>
         <source>Success</source>
         <translation>Dokončeno</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="281"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="541"/>
         <source>Logs saved to %1, please send them to the developers</source>
         <translation>Logy byly uloženy do %1, pošlete je prosím vývojářům</translation>
     </message>
@@ -269,7 +318,7 @@
     <message>
         <location filename="../modManager/cmodlistview_moc.cpp" line="393"/>
         <source>Compatibility</source>
-        <translation>Kompabilita</translation>
+        <translation>Kompatibilita</translation>
     </message>
     <message>
         <location filename="../modManager/cmodlistview_moc.cpp" line="395"/>
@@ -289,8 +338,8 @@
     </message>
     <message>
         <location filename="../modManager/cmodlistview_moc.cpp" line="217"/>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1038"/>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1043"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1124"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1129"/>
         <source>mods repository index</source>
         <translation>index repozitáře modifikací</translation>
     </message>
@@ -406,7 +455,7 @@ Install successfully downloaded?</source>
 Nainstalovat úspěšně stažené?</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1013"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1097"/>
         <source>Failed to install file %1.
 Reason: %2.
 Please report this issue to developers</source>
@@ -415,57 +464,103 @@ Důvod: %2.
 Nahlaste prosím tento problém vývojářům</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1107"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1200"/>
         <source>Installing Heroes Chronicles</source>
         <translation>Instalování Heroes Chronicles</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1139"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1232"/>
         <source>Extracting error!</source>
         <translation>Chyba při extrakci!</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1141"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1234"/>
         <source>Invalid file selected</source>
         <translation>Vybrán neplatný soubor</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1141"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1234"/>
         <source>You have to select a Heroes Chronicles installer file!</source>
         <translation>Musíte vybrat instalační soubor Heroes Chronicles!</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1202"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1366"/>
+        <source>Save exists</source>
+        <translation>Uložená hra existuje</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1367"/>
+        <source>Save &apos;%1&apos; already exists. Do you want to overwrite it?</source>
+        <translation>Uložená hra &apos;%1&apos; již existuje. Chcete ji přepsat?</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1387"/>
+        <source>Failed to import saves from %1.
+Reason: %2</source>
+        <translation>Nepodařilo se importovat uložené hry z %1.
+Důvod: %2</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1400"/>
+        <source>Success</source>
+        <translation>Dokončeno</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1400"/>
+        <source>Imported %1 save files</source>
+        <translation>Importováno %1 souborů uložených her</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1457"/>
         <source>Installing mod %1</source>
         <translation>Instalování modifikace %1</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1290"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1489"/>
+        <source>%1 requires: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1492"/>
+        <source>Failed to enable mod</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1493"/>
+        <source>One or more installed mods could not be enabled:
+
+%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1582"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1610"/>
         <source>Map exists</source>
         <translation>Mapa již existuje</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1291"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1582"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1610"/>
         <source>Map &apos;%1&apos; already exists. Do you want to overwrite it?</source>
         <translation>Mapa &apos;%1&apos; již existuje. Chcete ji přepsat?</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1300"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1003"/>
         <source>Yes to All</source>
         <translation>Ano pro všechny</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1301"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1004"/>
         <source>No to All</source>
         <translation>Ne pro všechny</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1390"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1629"/>
         <source>Import complete</source>
         <translation>Import dokončen</translation>
     </message>
     <message numerus="yes">
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1390"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1629"/>
         <source>%n map(s) successfully imported.</source>
         <translation>
             <numerusform>%n mapa byla úspěšně importována.</numerusform>
@@ -474,18 +569,19 @@ Nahlaste prosím tento problém vývojářům</translation>
         </translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1526"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1765"/>
         <source>Uninstall mod</source>
         <translation>Odinstalování modifikace</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1526"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1765"/>
         <source>Are you sure you want to uninstall %1?</source>
         <translation>Opravdu chcete odinstalovat modifikaci %1?</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1013"/>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1393"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1097"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1387"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1632"/>
         <source>Import failed</source>
         <translation>Import se nezdařil</translation>
     </message>
@@ -494,34 +590,36 @@ Nahlaste prosím tento problém vývojářům</translation>
         <source>
 
 Process successfully downloaded files?</source>
-        <translation type="unfinished"></translation>
+        <translation>
+
+Zpracovat úspěšně stažené soubory?</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1393"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1632"/>
         <source>Failed to import the following maps:
 %1</source>
         <translation>Nepodařilo se importovat následující mapy:
 %1</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1423"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1662"/>
         <source>Operation failed</source>
         <translation>Operace selhala</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1424"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1663"/>
         <source>Encountered errors:
 </source>
         <translation>Vyskytly se chyby:
 </translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1476"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1715"/>
         <source>screenshots</source>
         <translation>snímky obrazovky</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1482"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1721"/>
         <source>Screenshot %1</source>
         <translation>Snímek obrazovky %1</translation>
     </message>
@@ -535,7 +633,7 @@ Process successfully downloaded files?</source>
     <name>CSettingsView</name>
     <message>
         <location filename="../settingsView/csettingsview_moc.ui" line="166"/>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="115"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="128"/>
         <source>Off</source>
         <translation>Vypnuto</translation>
     </message>
@@ -545,22 +643,22 @@ Process successfully downloaded files?</source>
         <translation>Umělá inteligence</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="552"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="589"/>
         <source>Interface Scaling</source>
         <translation>Škálování rozhraní</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1328"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1335"/>
         <source>Neutral AI in battles</source>
         <translation>Neutrální AI v bitvách</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="904"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="911"/>
         <source>Enemy AI in battles</source>
         <translation>Nepřátelská AI v bitvách</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="941"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="948"/>
         <source>Additional repository</source>
         <translation>Další repozitáře</translation>
     </message>
@@ -575,7 +673,7 @@ Process successfully downloaded files?</source>
         <translation>Port online lobby</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1193"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1200"/>
         <source>Autocombat AI in battles</source>
         <translation>AI automatického boje v bitvách</translation>
     </message>
@@ -585,24 +683,24 @@ Process successfully downloaded files?</source>
         <translation>Citlivost páček</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1240"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1247"/>
         <source>Automatic (Linear)</source>
         <translation>Automaticky (Lineárně)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="733"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="754"/>
         <source>Haptic Feedback</source>
         <translation>Zpětná odezva</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="875"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="882"/>
         <source>Software Cursor</source>
         <translation>Softwarový kurzor</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="498"/>
-        <location filename="../settingsView/csettingsview_moc.ui" line="654"/>
-        <location filename="../settingsView/csettingsview_moc.ui" line="888"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="520"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="675"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="895"/>
         <source>Automatic</source>
         <translation>Automaticky</translation>
     </message>
@@ -612,7 +710,7 @@ Process successfully downloaded files?</source>
         <translation>Validace modifikací</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1378"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1385"/>
         <source>Config editor</source>
         <translation>Editor konfigurací</translation>
     </message>
@@ -622,22 +720,22 @@ Process successfully downloaded files?</source>
         <translation>Otevřít editor</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="503"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="525"/>
         <source>None</source>
         <translation>Nic</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="508"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="530"/>
         <source>xBRZ x2</source>
         <translation>xBRZ x2</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="513"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="540"/>
         <source>xBRZ x3</source>
         <translation>xBRZ x3</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="518"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="550"/>
         <source>xBRZ x4</source>
         <translation>xBRZ x4</translation>
     </message>
@@ -647,22 +745,22 @@ Process successfully downloaded files?</source>
         <translation>Plné</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="911"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="918"/>
         <source>Allow portrait mode</source>
         <translation>Povolit zobrazení na výšku</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1032"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1039"/>
         <source>Use scalable fonts</source>
         <translation>Použít škálovatelná písma</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1335"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1342"/>
         <source>Online Lobby address</source>
         <translation>Adresa online lobby</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="678"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="699"/>
         <source>Handle back as right mouse button</source>
         <translation>Funkci tlačítka zpět namapovat na pravé tlačítko myši</translation>
     </message>
@@ -672,17 +770,17 @@ Process successfully downloaded files?</source>
         <translation>Škálování kurzoru</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="954"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="961"/>
         <source>Scalable</source>
         <translation>Škálovatelné</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="583"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="620"/>
         <source>Miscellaneous</source>
         <translation>Ostatní</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1436"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1443"/>
         <source>Select a display mode for the game
 
 Windowed - the game will run inside a window that covers part of your screen.
@@ -704,12 +802,12 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Škálování písma (experimentální)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1013"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1020"/>
         <source>Original</source>
         <translation>Původní</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="723"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="744"/>
         <source>Upscaling Filter</source>
         <translation>Filtr škálování</translation>
     </message>
@@ -729,37 +827,62 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Úplné rozbalení modifikací</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="593"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="497"/>
+        <source>Sharpening strength for the xBRZ + Sharpen upscaling filters</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsView/csettingsview_moc.ui" line="535"/>
+        <source>xBRZ x2 + Sharpen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsView/csettingsview_moc.ui" line="545"/>
+        <source>xBRZ x3 + Sharpen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsView/csettingsview_moc.ui" line="555"/>
+        <source>xBRZ x4 + Sharpen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsView/csettingsview_moc.ui" line="630"/>
         <source>Show Status in Discord</source>
         <translation>Zobrazovat stav na Discordu</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="685"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="706"/>
         <source>Use Relative Pointer Mode</source>
         <translation>Použít režim relativního ukazatele</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1230"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1222"/>
+        <source>Autosaves per game (0 = unlimited)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1237"/>
         <source>Nearest</source>
         <translation>Nejbližší</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1235"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1242"/>
         <source>Linear</source>
         <translation>Lineární</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1275"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1282"/>
         <source>Input - Touchscreen</source>
         <translation>Vstup - dotyková obrazovka</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1543"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1550"/>
         <source>Save Before Visit</source>
         <translation>Uložit před návštěvou objektu</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="822"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="829"/>
         <source>Adventure Map Enemies</source>
         <translation>Nepřátelé na mapě světa</translation>
     </message>
@@ -779,27 +902,27 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Síť</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="982"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="989"/>
         <source>Audio</source>
         <translation>Zvuk</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1429"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1436"/>
         <source>Relative Pointer Speed</source>
         <translation>Relativní rychlost myši</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="934"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="941"/>
         <source>Music Volume</source>
         <translation>Hlasitost hudby</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1308"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1315"/>
         <source>Ignore SSL errors</source>
         <translation>Ignorovat chyby SSL</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1260"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1267"/>
         <source>Input - Mouse</source>
         <translation>Vstup - Myš</translation>
     </message>
@@ -809,47 +932,46 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Doba dlouhého podržení</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1371"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1378"/>
         <source>Controller Click Tolerance</source>
         <translation>Odchylka klepnutí ovladače</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="664"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="685"/>
         <source>Touch Tap Tolerance</source>
         <translation>Odchylka klepnutí dotykem</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1205"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1212"/>
         <source>Input - Controller</source>
         <translation>Vstup - ovladač</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1301"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1308"/>
         <source>Sound Volume</source>
         <translation>Hlasitost zvuků</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1449"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1456"/>
         <source>Windowed</source>
         <translation>V okně</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1454"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1461"/>
         <source>Borderless fullscreen</source>
         <translation>Celá obrazovka bez okrajů</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1459"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1466"/>
         <source>Exclusive fullscreen</source>
         <translation>Exkluzivní celá obrazovka</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1215"/>
         <source>Autosave limit (0 = off)</source>
-        <translation>Limit aut. uložení (0=vypnuto)</translation>
+        <translation type="vanished">Limit aut. uložení (0=vypnuto)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="671"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="692"/>
         <source>Downscaling Filter</source>
         <translation>Filtr pro zmenšování</translation>
     </message>
@@ -859,24 +981,22 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Omezení snímků za sekundu</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="747"/>
         <source>Autosave prefix</source>
-        <translation>Předpona aut. uložení</translation>
+        <translation type="vanished">Předpona aut. uložení</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="740"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="761"/>
         <source>Mouse Click Tolerance</source>
         <translation>Odchylka klepnutí myší</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1129"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1136"/>
         <source>Sticks Acceleration</source>
         <translation>Zrychlení páček</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="782"/>
         <source>empty = map name prefix</source>
-        <translation>prázná = předpona - název mapy</translation>
+        <translation type="vanished">prázná = předpona - název mapy</translation>
     </message>
     <message>
         <location filename="../settingsView/csettingsview_moc.ui" line="490"/>
@@ -889,17 +1009,17 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Výchozí repozitář</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1222"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1229"/>
         <source>Renderer</source>
         <translation>Vykreslovač</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="113"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="126"/>
         <source>On</source>
         <translation>Zapnuto</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1248"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1255"/>
         <source>Reserved screen area</source>
         <translation>Vyhrazená část obrazovky</translation>
     </message>
@@ -914,7 +1034,7 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Zkontrolovat při zapnutí</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1186"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1193"/>
         <source>Fullscreen</source>
         <translation>Celá obrazovka</translation>
     </message>
@@ -929,7 +1049,7 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Jazyk VCMI</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="845"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="852"/>
         <source>Resolution</source>
         <translation>Rozlišení</translation>
     </message>
@@ -944,7 +1064,7 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>VSync</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="852"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="859"/>
         <source>Display index</source>
         <translation>Monitor</translation>
     </message>
@@ -954,27 +1074,27 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Síťový port</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="997"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1004"/>
         <source>Video</source>
         <translation>Zobrazení</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="970"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="977"/>
         <source>Show intro</source>
         <translation>Zobrazit intro</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="124"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="137"/>
         <source>StupidAI (deprecated)</source>
         <translation>StupidAI (zastaralé)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="128"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="141"/>
         <source>BattleAI (default, recommended)</source>
         <translation>BattleAI (výchozí, doporučeno)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="132"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="145"/>
         <source>MMAI (experimental)</source>
         <translation>MMAI (experimentální)</translation>
     </message>
@@ -983,37 +1103,37 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation type="vanished">Nullkiller (nahrazeno verzí Nullkiller2)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="145"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="158"/>
         <source>Nullkiller2 (default, recommended)</source>
         <translation>Nullkiller2 (výchozí, doporučeno)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="155"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="168"/>
         <source>EmptyAI - No valid AI libraries found!</source>
         <translation>EmptyAI – Nebyly nalezeny žádné platné AI knihovny!</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="676"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="763"/>
         <source>Active</source>
         <translation>Aktivní</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="681"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="768"/>
         <source>Disabled</source>
         <translation>Zakázáno</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="682"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="769"/>
         <source>Enable</source>
         <translation>Povolit</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="687"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="774"/>
         <source>Not Installed</source>
         <translation>Nenainstalováno</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="688"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="775"/>
         <source>Install</source>
         <translation>Instalovat</translation>
     </message>
@@ -1129,12 +1249,12 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
     <message>
         <location filename="../firstLaunch/firstlaunch_moc.ui" line="482"/>
         <source>No Heroes III data? Download the free demo to try VCMI</source>
-        <translation type="unfinished"></translation>
+        <translation>Nemáte data Heroes III? Stáhněte si bezplatné demo a vyzkoušejte VCMI</translation>
     </message>
     <message>
         <location filename="../firstLaunch/firstlaunch_moc.ui" line="498"/>
         <source>Download Demo</source>
-        <translation type="unfinished"></translation>
+        <translation>Stáhnout demo</translation>
     </message>
     <message>
         <location filename="../firstLaunch/firstlaunch_moc.ui" line="527"/>
@@ -1142,7 +1262,7 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Vaše soubory dat Heroes III byly úspěšně nalezeny.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="665"/>
+        <location filename="../firstLaunch/firstlaunch_moc.ui" line="739"/>
         <source>Install a translation of Heroes III in your preferred language</source>
         <translation>Nainstalujte si překlad Heroes III dle preferovaného jazyka</translation>
     </message>
@@ -1167,32 +1287,30 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation>Nainstalovat doporučené modifikace pro VCMI</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="739"/>
+        <location filename="../firstLaunch/firstlaunch_moc.ui" line="681"/>
         <source>Optionally, you can install additional mods either now, or at any point later, using the VCMI Launcher</source>
         <translation>Můžete si nyní, nebo kdykoliv později, nainstalovat další mody pomocí VCMI Launcheru, podle svých preferencí</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="723"/>
         <source>Install compatible version of &quot;Horn of the Abyss&quot;, a fan-made Heroes III expansion ported by the VCMI team</source>
-        <translation>Fanouškovské rozšíření přidávající nová města Zátoku, Továrnu a Bulwark spolu s novými terény, objekty, schopnostmi a herními mechanikami</translation>
+        <translation type="vanished">Fanouškovské rozšíření přidávající nová města Zátoku, Továrnu a Bulwark spolu s novými terény, objekty, schopnostmi a herními mechanikami</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="806"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="802"/>
         <source>VCMI Extras</source>
         <translation>VCMI Extras</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="836"/>
         <source>Install compatible version of &quot;In The Wake of Gods&quot;, a fan-made Heroes III expansion</source>
-        <translation>Modifikace rozšiřující hru o velitele armády, nové artefakty, objekty, dekorace a další herní prvky</translation>
+        <translation type="vanished">Modifikace rozšiřující hru o velitele armády, nové artefakty, objekty, dekorace a další herní prvky</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="852"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="819"/>
         <source>A feature-rich expansion that expands gameplay with one alternative unit for each of the 9 standard towns, plus new neutral creatures, creature banks, skills and spells</source>
         <translation>Rozsáhlé rozšíření, které obohacuje hratelnost o alternativní jednotku pro každé z 9 základních měst, a navíc přidává nové neutrální jednotky, obydlí, dovednosti a kouzla</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="868"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="824"/>
         <source>Descend into the underground realm and uncover Casemate — a new faction where mushrooms, stone and rune magic thrive in the dark, created for VCMI</source>
         <translation>Sestupte do podzemní říše a objevte Casemate — novou frakci vytvořenou pro VCMI, kde ve tmě vzkvétají houby, kámen a runová magie</translation>
     </message>
@@ -1201,17 +1319,16 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation type="vanished">Byly nalezeny soubory Heroes III Demo. Tato modifikace je nutná pro použití demo dat ve VCMI, jinak může hra spadnout</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="885"/>
         <source>Install mod that provides various interface improvements, such as a better interface for random maps and selectable actions in battles</source>
-        <translation>Nainstalujte modifikaci, která přináší různá vylepšení, jako je lepší rozhraní pro náhodné mapy a možnost výběru akcí v bitvách</translation>
+        <translation type="vanished">Nainstalujte modifikaci, která přináší různá vylepšení, jako je lepší rozhraní pro náhodné mapy a možnost výběru akcí v bitvách</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="951"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="818"/>
         <source>Tides of War</source>
         <translation>Tides of War</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="989"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="823"/>
         <source>Fallen of the Depth</source>
         <translation>Fallen of the Depth</translation>
     </message>
@@ -1220,7 +1337,7 @@ Režim celé obrazovky - hra pokryje celou vaši obrazovku a použije vybrané r
         <translation type="vanished">Podpora demoverze</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="1048"/>
+        <location filename="../firstLaunch/firstlaunch_moc.ui" line="788"/>
         <source>Finish</source>
         <translation>Dokončit</translation>
     </message>
@@ -1281,179 +1398,205 @@ Heroes® of Might and Magic® III HD není podporována!</translation>
         <location filename="../firstLaunch/firstlaunch_moc.ui" line="543"/>
         <source>If you own Heroes III on gog.com, you can download a backup offline installer from gog.com. VCMI will then import Heroes III data using the offline installer. 
 Offline installer consists of two files: &quot;.exe&quot; and &quot;.bin&quot; - you must download both.</source>
-        <translation>Pokud vlastníte Heroes III na gog.com, můžete si stáhnout záložní offline instalační program z gog.com. VCMI poté importuje data Heroes III pomocí tohoto offline instalačního programu. Offline instalační program se skládá ze dvou souborů: &quot;.exe&quot; a &quot;.bin&quot; – musíte stáhnout oba.</translation>
+        <translation>Pokud vlastníte Heroes III na gog.com, můžete si stáhnout záložní offline instalační program z gog.com. VCMI poté importuje data Heroes III pomocí tohoto offline instalačního programu. 
+Offline instalační program se skládá ze dvou souborů: &quot;.exe&quot; a &quot;.bin&quot; – musíte stáhnout oba.</translation>
     </message>
     <message>
         <location filename="../firstLaunch/firstlaunch_moc.ui" line="596"/>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="1041"/>
+        <location filename="../firstLaunch/firstlaunch_moc.ui" line="781"/>
         <source>Back</source>
         <translation>Zpět</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="767"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="808"/>
         <source>Horn of the Abyss</source>
         <translation>Horn of the Abyss</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="693"/>
+        <location filename="../firstLaunch/firstlaunch_moc.ui" line="709"/>
         <source>Heroes III Translation</source>
         <translation>Překlady Heroes III</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="913"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="813"/>
         <source>In The Wake of Gods</source>
         <translation>In The Wake of Gods</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="215"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="220"/>
         <source>Heroes III installation found!</source>
         <translation>Instalace Heroes III nalezena!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="215"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="220"/>
         <source>Copy data to VCMI folder?</source>
         <translation>Zkopírovat data do složky VCMI?</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="451"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="460"/>
         <source>GOG file (*.*)</source>
         <translation>GOG soubor (*.*)</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="452"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="461"/>
         <source>File selection</source>
         <translation>Výběr souboru</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="463"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="663"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="472"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="681"/>
         <source>GOG installer</source>
         <translation>Instalátor GOG</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="556"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="565"/>
         <source>Heroes III: HD Edition files are not supported by VCMI.
 Please select the directory with Heroes III: Complete Edition or Heroes III: Shadow of Death.</source>
         <translation>Soubory z Heroes III: HD Edition nejsou ve VCMI podporovány.
 Vyberte prosím složku s Heroes III: Complete Edition nebo Heroes III: Shadow of Death.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="558"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="567"/>
         <source>Unknown or unsupported Heroes III version found.
 Please select the directory with Heroes III: Complete Edition or Heroes III: Shadow of Death.</source>
         <translation>Byla nalezena neznámá nebo nepodporovaná verze Heroes III.
 Vyberte prosím složku s Heroes III: Complete Edition nebo Heroes III: Shadow of Death.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="479"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="676"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="488"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="694"/>
         <source>GOG data</source>
         <translation>Data GOG</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="149"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="154"/>
         <source>Downloading Heroes III Demo...</source>
-        <translation type="unfinished"></translation>
+        <translation>Stahuje se demo Heroes III...</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="395"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="404"/>
         <source>Failed to open file: %1</source>
         <translation>Nepodařilo se otevřít soubor: %1</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="415"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="441"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="424"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="450"/>
         <source>You need to select a %1 file!</source>
         <comment>param is file extension</comment>
         <translation>Musíte vybrat soubor %1!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="423"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="432"/>
         <source>Unknown installer selected.
 You need to select the offline GOG installer.</source>
         <translation>Byl vybrán neznámý instalátor.
 Je nutné vybrat offline instalátor z GOGu.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="435"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="444"/>
         <source>You selected a GOG Galaxy installer. This file does not contain the game. Please download the offline backup game installer instead.</source>
         <translation>Vybrali jste instalátor GOG Galaxy. Tento soubor neobsahuje hru. Stáhněte si prosím místo něj offline instalátor hry.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="464"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="473"/>
         <source>Select the offline GOG installer (.exe)</source>
         <translation>Vyberte offline instalátor z GOGu (.exe)</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="473"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="666"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="482"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="684"/>
         <source>Invalid file selected</source>
         <translation>Vybrán neplatný soubor</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="480"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="489"/>
         <source>Select the offline GOG installer data file: %1</source>
         <comment>param is file name</comment>
         <translation>Vyberte datový soubor offline instalátoru z GOGu: %1</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="500"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="679"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="509"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="697"/>
         <source>Invalid data file</source>
         <translation>Neplatný datový soubor</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="595"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="731"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="604"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="759"/>
         <source>Importing Heroes III data...</source>
         <translation>Importují se Heroes III data...</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="628"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="643"/>
         <source>Preparing installer...</source>
         <translation>Připravování instalátoru...</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="688"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="706"/>
         <source>Extracting installer...</source>
         <translation>Rozbalování instalátoru...</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="715"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="743"/>
         <source>Extracting error!</source>
         <translation>Chyba při rozbalování!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="719"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="747"/>
         <source>Hash error!</source>
         <translation>Nesouhlasí kontrolní součet!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="723"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="751"/>
         <source>No Heroes III data!</source>
         <translation>Chybí data Heroes III!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="723"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="751"/>
         <source>Selected files do not contain Heroes III data!</source>
         <translation>Vybrané soubory neobsahují data Heroes III!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="745"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="776"/>
         <source>Scanning selected folder...</source>
         <translation>Prohledávání vybrané složky...</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="520"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="553"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="803"/>
+        <source>Adds interface and gameplay improvements such as a better interface for random maps, revisit and search buttons for the adventure map, quick exchange for heroes, bonus and immunity icons, and actions in battle</source>
+        <translation>Přidává vylepšení rozhraní a hratelnosti, například lepší rozhraní pro náhodné mapy, tlačítka pro opětovnou návštěvu a vyhledávání na mapě dobrodružství, rychlou výměnu mezi hrdiny, ikony bonusů a imunit a akce v bitvě</translation>
+    </message>
+    <message>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="809"/>
+        <source>A polished fan-made expansion that adds Cove, Factory and Bulwark towns, new campaigns, heroes, artifacts, map objects, Interference and Runes skills, balance fixes and new terrains while staying faithful to Heroes III</source>
+        <translation>Vyladěné fanouškovské rozšíření, které přidává města Zátoku, Továrnu a Bulwark, nové kampaně, hrdiny, artefakty, objekty na mapě, dovednosti Interference a Runes, úpravy vyvážení a nové terény, přičemž zůstává věrné Heroes III</translation>
+    </message>
+    <message>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="814"/>
+        <source>Deepens Heroes III with Commanders, stack experience, stack artifacts, many new hero and commander artifacts, extra progression systems and interactive adventure map objects</source>
+        <translation>Rozšiřuje Heroes III o velitele, zkušenosti oddílů a artefakty jednotek, mnoho nových artefaktů pro hrdiny a velitele, další systémy rozvoje a interaktivní objekty na mapě dobrodružství</translation>
+    </message>
+    <message>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="828"/>
+        <source>Tears of Ashan</source>
+        <translation>Tears of Ashan</translation>
+    </message>
+    <message>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="829"/>
+        <source>A fan-made expansion inspired by Heroes V that adds alternate creature upgrades, Light and Dark Magic, Gating, a higher secondary skill cap and redesigned Conflux gameplay to Heroes III</source>
+        <translation>Fanouškovské rozšíření inspirované Heroes V, které do Heroes III přidává alternativní vylepšení jednotek, magii světla a temnoty, dovednost Gating, vyšší limit sekundárních dovedností a přepracovanou hratelnost frakce Conflux</translation>
+    </message>
+    <message>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="529"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="562"/>
         <source>Failed to detect valid Heroes III data in chosen directory.
 Please select the directory with installed Heroes III data.</source>
         <translation>Nepodařilo se detekovat platná data Heroes III ve vybrané složce.
 Vyberte prosím složku s nainstalovanými daty Heroes III.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="520"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="564"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="529"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="573"/>
         <source>Heroes III data not found!</source>
         <translation>Data Heroes III nenalezena!</translation>
     </message>
@@ -1461,27 +1604,37 @@ Vyberte prosím složku s nainstalovanými daty Heroes III.</translation>
 <context>
     <name>HdExtractor</name>
     <message>
-        <location filename="../modManager/hdextractor.cpp" line="38"/>
+        <location filename="../modManager/hdextractor.cpp" line="42"/>
+        <source>HD Edition installation found!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../modManager/hdextractor.cpp" line="42"/>
+        <source>Heroes III HD Edition installation was found. Install HD graphics mod using this installation?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../modManager/hdextractor.cpp" line="49"/>
         <source>Select Directory with HD Edition (Steam folder)</source>
         <translation>Vyberte složku s HD edicí (složka ze Steamu)</translation>
     </message>
     <message>
-        <location filename="../modManager/hdextractor.cpp" line="46"/>
+        <location filename="../modManager/hdextractor.cpp" line="58"/>
         <source>Invalid folder</source>
         <translation>Neplatná složka</translation>
     </message>
     <message>
-        <location filename="../modManager/hdextractor.cpp" line="46"/>
+        <location filename="../modManager/hdextractor.cpp" line="58"/>
         <source>The selected folder does not contain HOMM3 2.0.exe! Please select the HD Edition installation folder.</source>
         <translation>Vybraná složka neobsahuje soubor HOMM3_2.0.exe! Vyberte prosím instalační složku HD edice.</translation>
     </message>
     <message>
-        <location filename="../modManager/hdextractor.cpp" line="98"/>
+        <location filename="../modManager/hdextractor.cpp" line="110"/>
         <source>Extraction error</source>
         <translation>Chyba při rozbalování</translation>
     </message>
     <message>
-        <location filename="../modManager/hdextractor.cpp" line="98"/>
+        <location filename="../modManager/hdextractor.cpp" line="110"/>
         <source>Please delete mod and try again! Failed to copy file %1 to %2</source>
         <translation>Smažte prosím modifikaci a zkuste to znovu. Nepodařilo se zkopírovat soubor %1 do %2</translation>
     </message>
@@ -1542,7 +1695,7 @@ Bin (%n bytes):
 Bin (%n bajtů):
 %1</numerusform>
             <numerusform>
-Bin (%n bajtů):
+Bin (%n bajty):
 %1</numerusform>
             <numerusform>
 Bin (%n bajtů):
@@ -1620,12 +1773,12 @@ Bin (%n bajtů):
     <message>
         <location filename="../languages.cpp" line="26"/>
         <source>Simplified Chinese</source>
-        <translation type="unfinished"></translation>
+        <translation>Zjednodušená čínština</translation>
     </message>
     <message>
         <location filename="../languages.cpp" line="27"/>
         <source>Traditional Chinese</source>
-        <translation type="unfinished"></translation>
+        <translation>Tradiční čínština</translation>
     </message>
     <message>
         <location filename="../languages.cpp" line="28"/>
@@ -1689,61 +1842,66 @@ Bin (%n bajtů):
     </message>
     <message>
         <location filename="../languages.cpp" line="40"/>
+        <source>Lithuanian</source>
+        <translation>Litevština</translation>
+    </message>
+    <message>
+        <location filename="../languages.cpp" line="41"/>
         <source>Norwegian</source>
         <translation>Norština</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="41"/>
+        <location filename="../languages.cpp" line="42"/>
         <source>Polish</source>
         <translation>Polština</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="42"/>
+        <location filename="../languages.cpp" line="43"/>
         <source>Portuguese</source>
         <translation>Portugalština</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="43"/>
+        <location filename="../languages.cpp" line="44"/>
         <source>Romanian</source>
         <translation>Rumunština</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="44"/>
+        <location filename="../languages.cpp" line="45"/>
         <source>Russian</source>
         <translation>Ruština</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="45"/>
+        <location filename="../languages.cpp" line="46"/>
         <source>Serbian</source>
         <translation>Srbština</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="46"/>
+        <location filename="../languages.cpp" line="47"/>
         <source>Spanish</source>
         <translation>Španělština</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="47"/>
+        <location filename="../languages.cpp" line="48"/>
         <source>Swedish</source>
         <translation>Švédština</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="48"/>
+        <location filename="../languages.cpp" line="49"/>
         <source>Turkish</source>
         <translation>Turečtina</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="49"/>
+        <location filename="../languages.cpp" line="50"/>
         <source>Ukrainian</source>
         <translation>Ukrajinština</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="50"/>
+        <location filename="../languages.cpp" line="51"/>
         <source>Vietnamese</source>
         <translation>Vietnamština</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="72"/>
+        <location filename="../languages.cpp" line="73"/>
         <source>Auto (%1)</source>
         <translation>Automaticky (%1)</translation>
     </message>
@@ -1776,17 +1934,17 @@ Bin (%n bajtů):
         <translation>Modifikace</translation>
     </message>
     <message>
-        <location filename="../mainwindow_moc.cpp" line="52"/>
+        <location filename="../mainwindow_moc.cpp" line="53"/>
         <source>Error starting executable</source>
         <translation>Chyba při spouštění souboru</translation>
     </message>
     <message>
-        <location filename="../mainwindow_moc.cpp" line="290"/>
+        <location filename="../mainwindow_moc.cpp" line="460"/>
         <source>Replace config file?</source>
         <translation>Chcete nahradit konfigurační soubor?</translation>
     </message>
     <message>
-        <location filename="../mainwindow_moc.cpp" line="290"/>
+        <location filename="../mainwindow_moc.cpp" line="460"/>
         <source>Do you want to replace %1?</source>
         <translation>Chcete nahradit %1?</translation>
     </message>
@@ -2002,22 +2160,38 @@ Bin (%n bajtů):
     <message>
         <location filename="../modManager/modstateitemmodel_moc.cpp" line="59"/>
         <source>Demo</source>
-        <translation type="unfinished"></translation>
+        <translation>Demo</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../main.cpp" line="154"/>
+        <location filename="../main.cpp" line="158"/>
         <source>Error starting executable</source>
         <translation>Chyba při spouštění souboru</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="155"/>
+        <location filename="../main.cpp" line="159"/>
         <source>Failed to start %1
 Reason: %2</source>
         <translation>Selhal start %1
 Důvod: %2</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1319"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1338"/>
+        <source>Import failed</source>
+        <translation>Import se nezdařil</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1319"/>
+        <source>Failed to import save %1 from %2</source>
+        <translation>Nepodařilo se importovat uloženou hru %1 z %2</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1338"/>
+        <source>Failed to import save file %1</source>
+        <translation>Nepodařilo se importovat soubor uložené hry %1</translation>
     </message>
 </context>
 <context>
@@ -2134,7 +2308,7 @@ Důvod: %2</translation>
     <message>
         <location filename="../startGame/StartGameTab.ui" line="318"/>
         <source>Install game</source>
-        <translation type="unfinished"></translation>
+        <translation>Instalovat hru</translation>
     </message>
     <message>
         <location filename="../startGame/StartGameTab.ui" line="831"/>
@@ -2152,7 +2326,7 @@ Důvod: %2</translation>
         <translation>Editor</translation>
     </message>
     <message numerus="yes">
-        <location filename="../startGame/StartGameTab.cpp" line="205"/>
+        <location filename="../startGame/StartGameTab.cpp" line="212"/>
         <source>Update %n mods</source>
         <translation>
             <numerusform>Aktualizovat %n modifikaci</numerusform>
@@ -2161,7 +2335,7 @@ Důvod: %2</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../startGame/StartGameTab.cpp" line="209"/>
+        <location filename="../startGame/StartGameTab.cpp" line="216"/>
         <source>Heroes Chronicles:
 %n/%1 installed</source>
         <translation>
@@ -2174,62 +2348,70 @@ nainstalováno %n/%1</numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="234"/>
+        <location filename="../startGame/StartGameTab.cpp" line="241"/>
         <source>Update to %1 available</source>
         <translation>Dostupná aktualizace na %1</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="268"/>
+        <location filename="../startGame/StartGameTab.cpp" line="289"/>
+        <source>Select files (configs, mods, saves, maps, campaigns, gog files) to install...</source>
+        <translation>Vyberte soubory k instalaci (konfigurace, modifikace, uložené hry, mapy, kampaně, soubory GOG)...</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="298"/>
         <source>Install Heroes III</source>
-        <translation type="unfinished"></translation>
+        <translation>Instalovat Heroes III</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="269"/>
+        <location filename="../startGame/StartGameTab.cpp" line="299"/>
         <source>This will remove all demo game data (Data, Maps, Mp3, Video folders) and restart the setup wizard. Are you sure?</source>
-        <translation type="unfinished"></translation>
+        <translation>Tím odstraníte všechna herní data dema (složky Data, Maps, Mp3 a Video) a znovu spustíte průvodce nastavením. Opravdu chcete pokračovat?</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="293"/>
+        <location filename="../startGame/StartGameTab.cpp" line="276"/>
         <source>All supported files</source>
         <translation>Všechny podporované soubory</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="294"/>
+        <location filename="../startGame/StartGameTab.cpp" line="277"/>
         <source>Maps</source>
         <translation>Mapy</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="295"/>
+        <location filename="../startGame/StartGameTab.cpp" line="278"/>
         <source>Campaigns</source>
         <translation>Kampaně</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="296"/>
+        <location filename="../startGame/StartGameTab.cpp" line="279"/>
+        <source>Saves</source>
+        <translation>Uložené hry</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="280"/>
         <source>Configs</source>
         <translation>Konfigurace</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="297"/>
+        <location filename="../startGame/StartGameTab.cpp" line="281"/>
         <source>Mods</source>
         <translation>Modifikace</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="298"/>
+        <location filename="../startGame/StartGameTab.cpp" line="282"/>
         <source>Gog files</source>
         <translation>Soubory GOG</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="301"/>
+        <location filename="../startGame/StartGameTab.cpp" line="285"/>
         <source>All files (*.*)</source>
         <translation>Všechny soubory (*.*)</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="303"/>
         <source>Select files (configs, mods, maps, campaigns, gog files) to install...</source>
-        <translation>Vyberte soubory (konfigurace, modifikace, mapy, kampaně, soubory GOG) k instalaci...</translation>
+        <translation type="vanished">Vyberte soubory (konfigurace, modifikace, mapy, kampaně, soubory GOG) k instalaci...</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="346"/>
         <source>This option allows you to import additional data files into your VCMI installation. At the moment, following options are supported:
 
  - Heroes III Maps (.h3m or .vmap).
@@ -2238,7 +2420,7 @@ nainstalováno %n/%1</numerusform>
  - VCMI mods in zip format (.zip)
  - VCMI configuration files (.json)
 </source>
-        <translation>Tato možnost vám umožňuje importovat další datové soubory do vaší instalace VCMI. V současnosti jsou podporovány následující možnosti:
+        <translation type="vanished">Tato možnost vám umožňuje importovat další datové soubory do vaší instalace VCMI. V současnosti jsou podporovány následující možnosti:
 
 Mapy pro Heroes III (.h3m nebo .vmap).
 Kampaně pro Heroes III (.h3c nebo .vcmp).
@@ -2248,17 +2430,61 @@ Konfigurační soubory pro VCMI (.json)
 </translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="361"/>
+        <location filename="../startGame/StartGameTab.cpp" line="333"/>
+        <location filename="../startGame/StartGameTab.cpp" line="368"/>
+        <source>Preparing selected files for import...</source>
+        <translation>Připravují se vybrané soubory k importu...</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="338"/>
+        <source>Preparing selected files for import... %1/%2</source>
+        <translation>Připravují se vybrané soubory k importu... %1/%2</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="359"/>
+        <source>Import failed</source>
+        <translation>Import se nezdařil</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="359"/>
+        <source>Failed to prepare file for import: %1</source>
+        <translation>Nepodařilo se připravit soubor k importu: %1</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="427"/>
+        <source>This option allows you to import additional data files into your VCMI installation. At the moment, following options are supported:
+
+ - Heroes III Maps (.h3m or .vmap).
+ - Heroes III Campaigns (.h3c or .vcmp).
+ - Heroes III Chronicles using offline backup installer from GOG.com (.exe).
+ - VCMI mods in zip format (.zip)
+ - VCMI saves archive in zip format (.zip)
+ - VCMI save files (.vsgm1)
+ - VCMI configuration files (.json)
+</source>
+        <translation>Tato volba umožňuje importovat další soubory do vaší instalace VCMI. V současnosti jsou podporovány následující možnosti:
+
+ - Mapy Heroes III (.h3m nebo .vmap).
+ - Kampaně Heroes III (.h3c nebo .vcmp).
+ - Heroes Chronicles pomocí offline instalátoru z GOG.com (.exe).
+ - Modifikace VCMI ve formátu zip (.zip)
+ - Archiv uložených her VCMI ve formátu zip (.zip)
+ - Soubory uložených her VCMI (.vsgm1)
+ - Konfigurační soubory VCMI (.json)
+</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="444"/>
         <source>Your Heroes III version uses different language. VCMI provides translations of the game into various languages that you can use. Use this option to automatically install such translation to your language.</source>
         <translation>Vaše verze Heroes III používá jiný jazyk. VCMI poskytuje překlady hry do různých jazyků, které můžete použít. Použijte tuto možnost pro automatickou instalaci překladu do vašeho jazyka.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="371"/>
+        <location filename="../startGame/StartGameTab.cpp" line="454"/>
         <source>Translation of Heroes III into your language is installed, but has been turned off. Use this option to enable it.</source>
         <translation>Překlad Heroes III do vašeho jazyka je nainstalován, ale byl vypnut. Použijte tuto možnost k jeho aktivaci.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="381"/>
+        <location filename="../startGame/StartGameTab.cpp" line="464"/>
         <source>A new version of some of the mods that you have installed is now available in mod repository. Use this option to automatically update all your mods to latest version.
 
 WARNING: In some cases, updated versions of mods may not be compatible with your existing saves. You may want to postpone mod update until you finish any of your ongoing games.</source>
@@ -2267,14 +2493,14 @@ WARNING: In some cases, updated versions of mods may not be compatible with your
 UPOZORNĚNÍ: Aktualizované verze modifikací nemusí být v některých případech kompatibilní s vašimi uloženými hrami. Doporučujeme odložit aktualizaci, dokud nedokončíte rozehrané hry.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="393"/>
+        <location filename="../startGame/StartGameTab.cpp" line="476"/>
         <source>If you own Heroes Chronicles on gog.com, you can use offline backup installers provided by gog to import Heroes Chronicles data into VCMI as custom campaigns.
 To import Heroes Chronicles, download offline backup installer of each chronicle that you wish to install, select &apos;Import files&apos; option and select downloaded file. This will generate and install mod for VCMI that contains imported chronicles.</source>
         <translation>Pokud vlastníte Heroes Chronicles na GOG.com, můžete pomocí offline instalačních balíčků z GOG importovat data Heroes Chronicles do VCMI jako vlastní kampaně.
 Pro import Heroes Chronicles stáhněte offline instalační balíček každé kroniky, kterou chcete nainstalovat, poté zvolte možnost „Importovat soubory“ a vyberte stažený soubor. Tím se vytvoří a nainstaluje modifikace pro VCMI obsahující importované kroniky.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="406"/>
+        <location filename="../startGame/StartGameTab.cpp" line="489"/>
         <source>VCMI has detected that Heroes III music files are missing from your installation. VCMI will run, but in-game music will not be available.
 
 To resolve this problem, please copy missing mp3 files from Heroes III to VCMI data files directory manually or reinstall VCMI and re-import Heroes III data files.</source>
@@ -2283,7 +2509,7 @@ To resolve this problem, please copy missing mp3 files from Heroes III to VCMI d
 Chybějící soubory MP3 zkopírujte z Heroes III do datového adresáře hry nebo přeinstalujte hru a znovu importujte data Heroes III.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="417"/>
+        <location filename="../startGame/StartGameTab.cpp" line="500"/>
         <source>VCMI has detected that Heroes III video files are missing from your installation. VCMI will run, but in-game cutscenes will not be available.
 
 To resolve this problem, please copy VIDEO.VID file from Heroes III to VCMI data files directory manually or reinstall VCMI and re-import Heroes III data files.</source>
@@ -2292,7 +2518,7 @@ To resolve this problem, please copy VIDEO.VID file from Heroes III to VCMI data
 Soubor VIDEO.VID zkopírujte z Heroes III do datového adresáře hry nebo přeinstalujte hru a znovu importujte data Heroes III.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="428"/>
+        <location filename="../startGame/StartGameTab.cpp" line="511"/>
         <source>VCMI has detected that some of Heroes III data files are missing from your installation. You may attempt to run VCMI, but game may not work as expected or crash.
 
 To resolve this problem, please reinstall game and reimport data files using supported version of Heroes III. VCMI requires Heroes III: Shadow of Death or Complete Edition to run, which you can get (for example) from gog.com.</source>
@@ -2301,7 +2527,7 @@ To resolve this problem, please reinstall game and reimport data files using sup
 Pro vyřešení problému přeinstalujte hru a znovu importujte data z podporované verze Heroes III. Ke spuštění je vyžadováno Heroes III Complete Edition, které lze získat například na GOG.com.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="439"/>
+        <location filename="../startGame/StartGameTab.cpp" line="522"/>
         <source>VCMI has detected that some of Heroes III: Armageddon&apos;s Blade data files are missing from your installation. VCMI will work, but Armageddon&apos;s Blade campaigns will not be available.
 
 To resolve this problem, please copy missing data files from Heroes III to VCMI data files directory manually or reinstall VCMI and re-import Heroes III data files.</source>
@@ -2310,7 +2536,7 @@ To resolve this problem, please copy missing data files from Heroes III to VCMI 
 Chybějící soubory zkopírujte z Heroes III do datového adresáře hry nebo přeinstalujte hru a znovu importujte data Heroes III.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="450"/>
+        <location filename="../startGame/StartGameTab.cpp" line="533"/>
         <source>To improve graphics quality in VCMI, you can install files from the official Heroes III HD version on Steam.Select the Heroes HD folder from Steam.
 
 After installation, you need to set the upscaling filter to x2 or higher in order to actually see the HD graphics.</source>
@@ -2319,24 +2545,24 @@ After installation, you need to set the upscaling filter to x2 or higher in orde
 Po instalaci je nutné nastavit filtr zvětšení alespoň na x2, aby se HD grafika skutečně projevila.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="489"/>
-        <location filename="../startGame/StartGameTab.cpp" line="498"/>
+        <location filename="../startGame/StartGameTab.cpp" line="572"/>
+        <location filename="../startGame/StartGameTab.cpp" line="581"/>
         <source>Preset import failed</source>
         <translation>Import konfigurace se nezdařil</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="489"/>
-        <location filename="../startGame/StartGameTab.cpp" line="498"/>
+        <location filename="../startGame/StartGameTab.cpp" line="572"/>
+        <location filename="../startGame/StartGameTab.cpp" line="581"/>
         <source>Failed to import preset - data in clipboard does not looks like mod preset!</source>
         <translation>Nepodařilo se importovat konfiguraci – data ve schránce nevypadají jako konfigurace modifikací!</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="514"/>
+        <location filename="../startGame/StartGameTab.cpp" line="597"/>
         <source>Enter preset name:</source>
         <translation>Zadejte název konfigurace:</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="557"/>
+        <location filename="../startGame/StartGameTab.cpp" line="640"/>
         <source>Rename preset &apos;%1&apos; to:</source>
         <translation>Přejmenovat konfiguraci &apos;%1&apos; na:</translation>
     </message>

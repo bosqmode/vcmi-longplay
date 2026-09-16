@@ -37,9 +37,11 @@
 #include "questwidget.h"
 #include "rewardswidget.h"
 #include "scholarwidget.h"
+#include "shrinewidget.h"
 #include "townbuildingswidget.h"
 #include "towneventswidget.h"
 #include "townspellswidget.h"
+#include "../translator.h"
 
 //===============IMPLEMENT OBJECT INITIALIZATION FUNCTIONS================
 Initializer::Initializer(MapController & controller, CGObjectInstance * o, const PlayerColor & pl)
@@ -65,7 +67,7 @@ Initializer::Initializer(MapController & controller, CGObjectInstance * o, const
 	//INIT_OBJ_TYPE(CRewardableObject);
 	//INIT_OBJ_TYPE(CGPandoraBox);
 	//INIT_OBJ_TYPE(CGEvent);
-	//INIT_OBJ_TYPE(CGSeerHut);
+	//INIT_OBJ_TYPE(SeerHut);
 }
 
 void Initializer::initialize(CArmedInstance * o)
@@ -330,8 +332,8 @@ void Inspector::updateProperties(CGHeroInstance * o)
 		delegate->options = {{QObject::tr("MALE"), QVariant::fromValue(static_cast<int>(EHeroGender::MALE))}, {QObject::tr("FEMALE"), QVariant::fromValue(static_cast<int>(EHeroGender::FEMALE))}};
 		addProperty<std::string>(QObject::tr("Gender"), (o->gender == EHeroGender::FEMALE ? QObject::tr("FEMALE") : QObject::tr("MALE")).toStdString(), delegate , false);
 	}
-	addProperty(QObject::tr("Name"), o->getNameTranslated(), false);
-	addProperty(QObject::tr("Biography"), o->getBiographyTranslated(), new MessageDelegate, false);
+	addProperty(QObject::tr("Name"), Translator::instance().translate(o->getNameTextID()), false);
+	addProperty(QObject::tr("Biography"), Translator::instance().translate(o->getBiographyTextID()), new MessageDelegate, false);
 	addProperty(QObject::tr("Portrait"), PropertyEditorPlaceholder(), new PortraitDelegate(*o), false);
 
 	auto * delegate = new HeroSkillsDelegate(*o);
@@ -369,7 +371,7 @@ void Inspector::updateProperties(CGTownInstance * o)
 {
 	if(!o) return;
 
-	addProperty(QObject::tr("Town name"), o->getNameTranslated(), false);
+	addProperty(QObject::tr("Town name"), Translator::instance().translate(o->getNameTextID()), false);
 
 	auto * delegate = new TownBuildingsDelegate(*o);
 	addProperty(QObject::tr("Buildings"), PropertyEditorPlaceholder(), delegate, false);
@@ -470,6 +472,13 @@ void Inspector::updateProperties(CRewardableObject * o)
 			delegate = new ScholarDelegate(controller, *o);
 			break;
 		}
+		case MapObjectID::SHRINE_OF_MAGIC_INCANTATION:
+		case MapObjectID::SHRINE_OF_MAGIC_GESTURE:
+		case MapObjectID::SHRINE_OF_MAGIC_THOUGHT:
+		{
+			delegate = new ShrineDelegate(controller, *o);
+			break;
+		}
 		default:
 			delegate = new RewardsDelegate(*controller.map(), *o);
 	}
@@ -494,7 +503,7 @@ void Inspector::updateProperties(CGEvent * o)
 	addProperty(QObject::tr("Available for"), o->availableFor, new PlayerSelectionDelegate(o->availableFor), false);
 }
 
-void Inspector::updateProperties(CGSeerHut * o)
+void Inspector::updateProperties(SeerHut * o)
 {
 	if(!o) return;
 
@@ -510,7 +519,7 @@ void Inspector::updateProperties(CGSeerHut * o)
 	}
 }
 
-void Inspector::updateProperties(CGQuestGuard * o)
+void Inspector::updateProperties(QuestGuard * o)
 {
 	if(!o) return;
 
@@ -553,8 +562,8 @@ void Inspector::updateProperties()
 	UPDATE_OBJ_PROPERTIES(CRewardableObject);
 	UPDATE_OBJ_PROPERTIES(CGPandoraBox);
 	UPDATE_OBJ_PROPERTIES(CGEvent);
-	UPDATE_OBJ_PROPERTIES(CGSeerHut);
-	UPDATE_OBJ_PROPERTIES(CGQuestGuard);
+	UPDATE_OBJ_PROPERTIES(SeerHut);
+	UPDATE_OBJ_PROPERTIES(QuestGuard);
 
 	table->show();
 }
@@ -601,8 +610,8 @@ void Inspector::setProperty(const QString & key, const QVariant & value)
 	SET_PROPERTIES(CRewardableObject);
 	SET_PROPERTIES(CGPandoraBox);
 	SET_PROPERTIES(CGEvent);
-	SET_PROPERTIES(CGSeerHut);
-	SET_PROPERTIES(CGQuestGuard);
+	SET_PROPERTIES(SeerHut);
+	SET_PROPERTIES(QuestGuard);
 }
 
 void Inspector::setProperty(CArmedInstance * o, const QString & key, const QVariant & value)
@@ -825,7 +834,7 @@ void Inspector::setProperty(CGCreature * o, const QString & key, const QVariant 
 		o->stacks[SlotID(0)]->setCount(value.toString().toInt());
 }
 
-void Inspector::setProperty(CGSeerHut * o, const QString & key, const QVariant & value)
+void Inspector::setProperty(SeerHut * o, const QString & key, const QVariant & value)
 {
 	if(!o) return;
 
@@ -844,7 +853,7 @@ void Inspector::setProperty(CGSeerHut * o, const QString & key, const QVariant &
 		o->getQuest().lastDay = value.toString().toInt();
 }
 
-void Inspector::setProperty(CGQuestGuard * o, const QString & key, const QVariant & value)
+void Inspector::setProperty(QuestGuard * o, const QString & key, const QVariant & value)
 {
 	if(!o) return;
 }
@@ -901,7 +910,7 @@ QTableWidgetItem * Inspector::addProperty(const TextIdentifier & value)
 
 QTableWidgetItem * Inspector::addProperty(const MetaString & value)
 {
-	return addProperty(value.toString());
+	return addProperty(value.toString(&Translator::instance()));
 }
 
 QTableWidgetItem * Inspector::addProperty(const QString & value)
@@ -928,7 +937,7 @@ QTableWidgetItem * Inspector::addProperty(const PlayerColor & value)
 	MetaString playerStr;
 	playerStr.appendName(value);
 	if(value.isValidPlayer())
-		str = QString::fromStdString(playerStr.toString());
+		str = QString::fromStdString(playerStr.toString(&Translator::instance()));
 
 	auto * item = new QTableWidgetItem(str);
 	item->setFlags(Qt::NoItemFlags);
@@ -940,7 +949,7 @@ QTableWidgetItem * Inspector::addProperty(const GameResID & value)
 {
 	MetaString str;
 	str.appendName(value);
-	auto * item = new QTableWidgetItem(QString::fromStdString(str.toString()));
+	auto * item = new QTableWidgetItem(QString::fromStdString(str.toString(&Translator::instance())));
 	item->setFlags(Qt::NoItemFlags);
 	item->setData(Qt::UserRole, QVariant::fromValue(value.getNum()));
 	return item;
@@ -1057,6 +1066,6 @@ OwnerDelegate::OwnerDelegate(MapController & controller, bool addNeutral)
 		{
 			MetaString str;
 			str.appendName(PlayerColor(p));
-			options.push_back({QString::fromStdString(str.toString()), QVariant::fromValue(PlayerColor(p).getNum()) });
+			options.push_back({QString::fromStdString(str.toString(&Translator::instance())), QVariant::fromValue(PlayerColor(p).getNum()) });
 		}
 }

@@ -17,11 +17,11 @@
 #include "../GameInstance.h"
 #include "../gui/Shortcut.h"
 #include "../gui/WindowHandler.h"
-#include "../render/CAnimation.h"
-#include "../render/CanvasImage.h"
-#include "../render/IImage.h"
-#include "../render/IRenderHandler.h"
-#include "../render/ImageLocator.h"
+#include "render/CAnimation.h"
+#include "render/CanvasImage.h"
+#include "render/IImage.h"
+#include "render/IRenderHandler.h"
+#include "render/ImageLocator.h"
 #include "../widgets/Buttons.h"
 #include "../widgets/GraphicalPrimitiveCanvas.h"
 #include "../widgets/Images.h"
@@ -343,7 +343,7 @@ CStackWindow::StackExperienceDetailsWindow::StackExperienceDetailsWindow(const C
 	{
 		std::string rowLabel;
 		if(!bonus->description.empty())
-			rowLabel = bonus->description.toString();
+			rowLabel = bonus->description.toString(&GAME->translator());
 		else
 		{
 			auto mutableBonus = std::const_pointer_cast<Bonus>(bonus);
@@ -367,7 +367,7 @@ CStackWindow::StackExperienceDetailsWindow::StackExperienceDetailsWindow(const C
 	auto getBonusTooltipText = [&](const std::shared_ptr<const Bonus> & bonus)
 	{
 		if(!bonus->description.empty())
-			return bonus->description.toString();
+			return bonus->description.toString(&GAME->translator());
 
 		auto tooltip = sourceStack->bonusToString(std::const_pointer_cast<Bonus>(bonus));
 		if(!tooltip.empty())
@@ -382,7 +382,7 @@ CStackWindow::StackExperienceDetailsWindow::StackExperienceDetailsWindow(const C
 	
 	auto isPercentBonus = [](const std::shared_ptr<const Bonus> & bonus)
 	{
-		const std::string descriptionText = bonus->description.toString();
+		const std::string descriptionText = bonus->description.toString(&GAME->translator());
 		if(descriptionText.find('%') != std::string::npos)
 			return true;
 

@@ -16,7 +16,7 @@
 #include "../../lib/entities/artifact/CArtifactInstance.h"
 #include "../../lib/filesystem/CMemoryBuffer.h"
 #include "../../lib/mapObjects/CGHeroInstance.h"
-#include "../../lib/mapObjects/CQuest.h"
+#include "../../lib/mapObjects/Quest.h"
 #include "../../lib/mapObjects/MiscObjects.h"
 #include "../../lib/mapping/CMap.h"
 #include "../../lib/mapping/CMapHeader.h"
@@ -194,6 +194,7 @@ TEST(TinyH3MBuilderTest, HeroesPlacement)
 	EXPECT_EQ(fixed->getHeroTypeID(), HeroTypeID(0));
 	EXPECT_EQ(fixed->anchorPos(), int3(5, 5, 0));
 	EXPECT_EQ(random->anchorPos(), int3(6, 6, 0));
+	EXPECT_EQ(loaded.map->getObjectiveObjectFrom(fixed->anchorPos(), Obj::HERO), fixed);
 }
 
 TEST(TinyH3MBuilderTest, SpellScrollLoads)
@@ -246,6 +247,33 @@ TEST(TinyH3MBuilderTest, HeroCustomisation)
 	EXPECT_EQ(hero->getStackCount(SlotID(1)), 5);
 }
 
+TEST(TinyH3MBuilderTest, DimensionDoorHeroLoadout)
+{
+	// SpellID 8 = Dimension Door. Keep this tiny generated map as an in-repo
+	// DD fixture foundation instead of relying only on external test maps.
+	const SpellID dimensionDoor{8};
+
+	auto bytes = TinyH3M::TinyH3MBuilder(EMapFormat::SOD)
+		.size(36, /*twoLevel*/ false)
+		.name("DimensionDoorHero")
+		.playerActive(PlayerColor(0))
+		.hero({5, 5, 0}, HeroTypeID(0), PlayerColor(0))
+		.heroPrimary(10, 10, 10, 50)
+		.heroSecondarySkills({{SecondarySkill::AIR_MAGIC, 3}})
+		.heroEquipped({{ArtifactPosition::SPELLBOOK, ArtifactID::SPELLBOOK}})
+		.heroSpells({dimensionDoor})
+		.buildAndDump("DimensionDoorHeroLoadout");
+
+	auto loaded = loadMap(std::move(bytes));
+	ASSERT_NE(loaded.map, nullptr);
+
+	const auto * hero = findFirst<CGHeroInstance>(*loaded.map);
+	ASSERT_NE(hero, nullptr);
+	EXPECT_TRUE(hero->hasSpellbook());
+	EXPECT_TRUE(hero->spellbookContainsSpell(dimensionDoor));
+	EXPECT_EQ(hero->getSecSkillLevel(SecondarySkill::AIR_MAGIC), 3);
+}
+
 TEST(TinyH3MBuilderTest, KillCreatureQuest)
 {
 	// Monster + quest guard that targets the monster's wire identifier.
@@ -264,10 +292,10 @@ TEST(TinyH3MBuilderTest, KillCreatureQuest)
 	auto loaded = loadMap(b.buildAndDump("KillCreatureQuest"));
 	ASSERT_NE(loaded.map, nullptr);
 
-	const auto * guard = findFirst<CGQuestGuard>(*loaded.map);
+	const auto * guard = findFirst<QuestGuard>(*loaded.map);
 	ASSERT_NE(guard, nullptr);
 	EXPECT_EQ(guard->getQuest().lastDay, 10);
 	// Loader resolves the uint32 wire id to an ObjectInstanceID in afterRead;
-	// the resolved target lives on quest.killTarget once mapping completes.
-	EXPECT_TRUE(guard->getQuest().killTarget.hasValue());
+	// the resolved target lives in quest.mission.destroyedObjects once mapping completes.
+	EXPECT_FALSE(guard->getQuest().mission.destroyedObjects.empty());
 }

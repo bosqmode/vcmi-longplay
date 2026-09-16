@@ -11,14 +11,13 @@
 #include "StdInc.h"
 #include "VCMIDirs.h"
 #include "json/JsonNode.h"
+#include "texts/TextOperations.h"
 
 #ifdef VCMI_IOS
 #include "iOS_utils.h"
 #elif defined(VCMI_ANDROID)
 #include "CAndroidVMHelper.h"
 #endif
-
-VCMI_LIB_NAMESPACE_BEGIN
 
 namespace bfs = boost::filesystem;
 
@@ -32,19 +31,19 @@ std::string IVCMIDirs::genHelpString() const
 {
 	std::vector<std::string> tempVec;
 	for (const bfs::path & path : dataPaths())
-		tempVec.push_back(path.string());
+		tempVec.push_back(TextOperations::filesystemPathToUtf8(path));
 	const auto gdStringA = boost::algorithm::join(tempVec, ":");
 
 	return
 		"  game data:		" + gdStringA + "\n"
-		"  server:			" + serverPath().string() + "\n"
+		"  server:			" + TextOperations::filesystemPathToUtf8(serverPath()) + "\n"
 		"\n"
-		"  user data:		" + userDataPath().string() + "\n"
-		"  user cache:		" + userCachePath().string() + "\n"
-		"  user config:		" + userConfigPath().string() + "\n"
-		"  user logs:		" + userLogsPath().string() + "\n"
-		"  user saves:		" + userSavePath().string() + "\n"
-		"  user extracted:	" + userExtractedPath().string() + "\n";
+		"  user data:		" + TextOperations::filesystemPathToUtf8(userDataPath()) + "\n"
+		"  user cache:		" + TextOperations::filesystemPathToUtf8(userCachePath()) + "\n"
+		"  user config:		" + TextOperations::filesystemPathToUtf8(userConfigPath()) + "\n"
+		"  user logs:		" + TextOperations::filesystemPathToUtf8(userLogsPath()) + "\n"
+		"  user saves:		" + TextOperations::filesystemPathToUtf8(userSavePath()) + "\n"
+		"  user extracted:	" + TextOperations::filesystemPathToUtf8(userExtractedPath()) + "\n";
 }
 
 void IVCMIDirs::init()
@@ -108,7 +107,7 @@ VCMIDirsWIN32::VCMIDirsWIN32()
 	if (!bfs::exists(configPath))
 		return;
 
-	std::ifstream in(pathToUtf8(configPath), std::ios::binary);
+	std::ifstream in(configPath.wstring(), std::ios::binary);
 	if (!in)
 		return;
 
@@ -212,7 +211,11 @@ bool IVCMIDirsUNIX::developmentMode() const
 {
 	// We want to be able to run VCMI from single directory. E.g to run from build output directory
 	const bool hasConfigs = bfs::exists("config") && bfs::exists("Mods");
-	const bool hasBinaries = bfs::exists("vcmiclient") || bfs::exists("vcmiserver") || bfs::exists("vcmilobby") || bfs::exists("vcmieditor");
+	const bool hasBinaries = bfs::exists("vcmiclient")
+		|| bfs::exists("vcmiserver")
+		|| bfs::exists("vcmilobby")
+		|| bfs::exists("vcmieditor")
+		|| bfs::exists("vcmitest");
 	return hasConfigs && hasBinaries;
 }
 
@@ -537,7 +540,7 @@ std::vector<bfs::path> VCMIDirsXDG::dataPaths() const
 			std::string dataDirsEnv = tempResult;
 			std::vector<std::string> dataDirs;
 			boost::split(dataDirs, dataDirsEnv, boost::is_any_of(":"));
-			for (auto & entry : boost::adaptors::reverse(dataDirs))
+			for (auto & entry : std::views::reverse(dataDirs))
 				ret.push_back(bfs::path(entry) / "vcmi");
 		}
 		else
@@ -588,5 +591,3 @@ namespace VCMIDirs
 		return singleton;
 	}
 }
-
-VCMI_LIB_NAMESPACE_END

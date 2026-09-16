@@ -4,11 +4,27 @@ Represents a creature stack participating in the current battle. Provides access
 
 ### getBonuses
 
-Returns all bonuses affecting the bearer for which the predicate returns true.
+Returns the bonuses of the bearer that match the filter. Say as much as the filter can express, since that is also what the engine can cache; narrow whatever is left with `BonusList:filter`.
 
-- param `predicate`: `fun(b: Bonus): boolean` — Selector — called for each bonus on the bearer; bonus is kept when it returns true.
+- param `filter`: [`BonusFilter`](BonusFilter.md) — Which bonuses to collect. An empty filter collects every one of them.
 
-- returns [`BonusList`](BonusList.md) — Bonuses for which the predicate returned true.
+- returns [`BonusList`](BonusList.md) — Bonuses of the bearer the filter describes.
+
+### getBonusesValue
+
+Returns what the matching bonuses are worth together. Not a plain sum - percentages, independent floors and ceilings combine by the rules of the engine. Prefer this over adding up `getBonuses` where possible.
+
+- param `filter`: [`BonusFilter`](BonusFilter.md) — Which bonuses to count. An empty filter counts every one of them.
+
+- returns `integer` — Value of the matching bonuses taken together.
+
+### hasBonuses
+
+True if the bearer carries a bonus the filter describes. Prefer this over testing the size of `getBonuses`, which hands the whole list over to the script to answer a question the engine can answer on its own.
+
+- param `filter`: [`BonusFilter`](BonusFilter.md) — Which bonuses to look for. An empty filter asks whether the bearer has any at all.
+
+- returns `boolean` — True if the bearer carries at least one matching bonus.
 
 ### getMinDamage
 
@@ -100,6 +116,12 @@ True if the stack was summoned during battle (e.g. by Summon Elementals).
 
 - returns `boolean`
 
+### isLiving
+
+True if the stack is a living creature - not undead, not a golem-like non-living unit.
+
+- returns `boolean`
+
 ### getOwner
 
 Returns the player color controlling this unit.
@@ -112,7 +134,7 @@ Returns the army slot in the army this unit occupies. NOTE: All summoned units s
 
 - returns `integer`
 
-### unitSide
+### getSide
 
 Returns the battle side (attacker or defender) this unit belongs to.
 
@@ -141,6 +163,30 @@ Returns the current hit points of living creatures of this unit.
 Returns the number of creatures currently alive in the stack.
 
 - returns `integer`
+
+### getFirstHPleft
+
+Returns the health left of the first creature in the unit stack.
+
+- returns `integer`
+
+### isShooter
+
+True if the stack can shoot in general, even if out of ammo. See canShoot to check if unit can shoot right now.
+
+- returns `boolean`
+
+### isTurret
+
+True if the stack is one of the towers of a besieged town.
+
+- returns `boolean`
+
+### getTurretPart
+
+Which of the three towers of a besieged town this stack is.
+
+- returns `string?` — "keep", "upper" or "lower"; nil when the stack is no tower.
 
 ### getMaxHealth
 
@@ -174,6 +220,12 @@ Returns the list of hexes currently occupied by the unit.
 
 - returns [`BattleHexArray`](BattleHexArray.md)
 
+### getSurroundingHexes
+
+Returns the hexes adjacent to the unit - six for a single-hex unit, eight for a double-wide one.
+
+- returns [`BattleHexArray`](BattleHexArray.md)
+
 ### copy
 
 Returns a copy of the unit's state allowing copying or changing this unit via server calls.
@@ -183,6 +235,12 @@ Returns a copy of the unit's state allowing copying or changing this unit via se
 ### creatureLevel
 
 Returns the creature level (1..7) of the unit's type.
+
+- returns `integer`
+
+### getLevel
+
+Returns the level of the stack itself, which for a commander is its own level rather than the tier of its creature. Use `creatureLevel` when the creature type is what matters.
 
 - returns `integer`
 

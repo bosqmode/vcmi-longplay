@@ -16,6 +16,35 @@ namespace NK2AI
 
 class AIGateway;
 class FuzzyHelper;
+class Nullkiller;
+
+struct NeighbourExplorationCandidate
+{
+	bool sameDay = false;
+	bool accessible = false;
+	bool safe = false;
+	int tilesDiscovered = 0;
+	float strategicProgress = 0.0f;
+	float movementCost = 0.0f;
+};
+
+struct NeighbourExplorationEvaluation
+{
+	bool accepted = false;
+	float value = 0.0f;
+};
+
+struct NeighbourExplorationTarget
+{
+	int3 tile = int3(-1);
+	int tilesDiscovered = 0;
+	float movementCost = 0.0f;
+	float strategicProgress = 0.0f;
+	float value = 0.0f;
+};
+
+NeighbourExplorationEvaluation evaluateNeighbourExplorationCandidate(
+	const NeighbourExplorationCandidate & candidate);
 
 namespace Goals
 {
@@ -23,10 +52,12 @@ namespace Goals
 	{
 	private:
 		int tilesToExplore;
+		bool lockAfterMove;
 
 	public:
-		ExploreNeighbourTile(const CGHeroInstance * hero,  int amount)
+		ExploreNeighbourTile(const CGHeroInstance * hero, int amount, bool lockAfterMove = false)
 			: ElementarGoal(Goals::EXPLORE_NEIGHBOUR_TILE)
+			, lockAfterMove(lockAfterMove)
 		{
 			tilesToExplore = amount;
 			sethero(hero);
@@ -41,6 +72,9 @@ namespace Goals
 
 		void accept(AIGateway * aiGw) override;
 		std::string toString() const override;
+		static std::optional<NeighbourExplorationTarget> findTarget(
+			const CGHeroInstance * hero,
+			const Nullkiller * aiNk);
 
 	private:
 		//TSubgoal decomposeSingle() const override;

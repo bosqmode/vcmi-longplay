@@ -44,6 +44,12 @@ Combination rules used by Bonus / BonusDescriptor `valueType`.
 
 - type: [`BonusValueType`](BonusValueType.md)
 
+### BonusLimitEffect
+
+Kinds of combat a bonus is limited to, used by Bonus `effectRange`.
+
+- type: [`BonusLimitEffect`](BonusLimitEffect.md)
+
 ### ObstacleType
 
 Obstacle categories used by SpellObstacleDescriptor `obstacleType`.
@@ -61,3 +67,27 @@ Town-wall sections referenced by siege APIs and `catapultAttack`.
 Battlefield side identifiers: none / attacker / defender.
 
 - type: [`BattleSide`](BattleSide.md)
+
+### Difficulty
+
+Game difficulty levels, named after chess pieces (pawn = easiest, king = hardest).
+
+- type: [`Difficulty`](Difficulty.md)
+
+### PrimarySkill
+
+The four primary hero skills.
+
+- type: [`PrimarySkill`](PrimarySkill.md)
+
+### PlayerColor
+
+Player colours, plus the neutral owner used by unowned objects.
+
+- type: [`PlayerColor`](PlayerColor.md)
+
+### PlayerStatus
+
+Whether a player is still playing, has won, or has lost.
+
+- type: [`PlayerStatus`](PlayerStatus.md)

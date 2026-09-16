@@ -13,13 +13,9 @@
 #include "PotentialTargets.h"
 #include "BattleExchangeVariant.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 class CSpell;
 class CBattleCallback;
 class BattleAction;
-
-VCMI_LIB_NAMESPACE_END
 
 struct CachedAttack
 {
@@ -50,12 +46,20 @@ public:
 	bool attemptCastingSpell(const CStack * stack);
 	bool canCastSpell();
 	std::optional<PossibleSpellcast> findBestCreatureSpell(const CStack * stack);
-	BattleAction goTowardsNearest(const CStack * stack, const BattleHexArray & hexes, const PotentialTargets & targets);
+	BattleAction goTowardsNearest(
+		const CStack * stack,
+		const BattleHexArray & movementTargets,
+		const PotentialTargets & targets,
+		const BattleHexArray & finalDestinationHexes);
 	std::vector<BattleHex> getBrokenWallMoatHexes() const;
 	bool hasWorkingTowers() const;
 	void evaluateCreatureSpellcast(const CStack * stack, PossibleSpellcast & ps); //for offensive damaging spells only
 	void print(const std::string & text) const;
-	BattleAction moveOrAttack(const CStack * stack, const BattleHex & hex, const PotentialTargets & targets);
+	BattleAction moveOrAttack(
+		const CStack * stack,
+		const BattleHex & movementTarget,
+		const PotentialTargets & targets,
+		const BattleHexArray & allowedAttackOrigins = {});
 
 	BattleEvaluator(
 		std::shared_ptr<Environment> env,

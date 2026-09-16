@@ -13,12 +13,6 @@
 #include "CBattleCallback.h"
 #include "IGameActionCallback.h"
 
-#ifdef VCMI_LIB_NAMESPACE
-VCMI_LIB_USING_NAMESPACE
-#endif
-
-VCMI_LIB_NAMESPACE_BEGIN
-
 class IBattleEventsReceiver;
 
 class DLL_LINKAGE CCallback final : public CPlayerSpecificInfoCallback, public CBattleCallback, public IGameActionCallback
@@ -79,6 +73,7 @@ public:
 	void setTownName(const CGTownInstance * town, std::string & name) override;
 	void recruitHero(const CGObjectInstance *townOrTavern, const CGHeroInstance *hero, const HeroTypeID & nextHero=HeroTypeID::NONE) override;
 	void save(const std::string &fname, bool notifySuccess) override;
+	void saveAutosave(const std::string &fname, int autosaveCountLimit);
 	void sendMessage(const std::string &mess, const CGObjectInstance * currentObject = nullptr) override;
 	void gamePause(bool pause) override;
 	void buildBoat(const IShipyard *obj) override;
@@ -89,5 +84,3 @@ public:
 //friends
 	friend class CClient;
 };
-
-VCMI_LIB_NAMESPACE_END

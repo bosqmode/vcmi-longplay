@@ -13,7 +13,9 @@
 #include "QueriesProcessor.h"
 #include "../CGameHandler.h"
 #include "../TurnTimerHandler.h"
+#include "../../lib/GameLibrary.h"
 #include "../../lib/callback/IGameInfoCallback.h"
+#include "../../lib/gameState/CGameState.h"
 #include "../../lib/mapObjects/CGHeroInstance.h"
 #include "../../lib/mapObjects/MiscObjects.h"
 #include "../../lib/networkPacks/PacksForServer.h"
@@ -236,14 +238,15 @@ CHeroLevelUpDialogQuery::CHeroLevelUpDialogQuery(CGameHandler * owner, const Her
 void CHeroLevelUpDialogQuery::onRemoval(PlayerColor color)
 {
 	assert(answer);
+	gh->sendQueryResolved(queryID);
 	if(hlu.skills.empty())
 	{
-		logGlobal->trace("Completing hero level-up query. %s gains no secondary skill", hero->getObjectName());
+		logGlobal->trace("Completing hero level-up query. %s gains no secondary skill", hero->getNameTextID());
 		gh->levelUpHero(hero);
 		return;
 	}
 
-	logGlobal->trace("Completing hero level-up query. %s gains skill %d", hero->getObjectName(), answer.value());
+	logGlobal->trace("Completing hero level-up query. %s gains skill %d", hero->getNameTextID(), answer.value());
 	gh->levelUpHero(hero, hlu.skills[*answer]);
 }
 
@@ -304,14 +307,15 @@ CCommanderLevelUpDialogQuery::CCommanderLevelUpDialogQuery(CGameHandler * owner,
 void CCommanderLevelUpDialogQuery::onRemoval(PlayerColor color)
 {
 	assert(answer);
+	gh->sendQueryResolved(queryID);
 	if(clu.skills.empty())
 	{
-		logGlobal->trace("Completing commander level-up query. Commander of hero %s gains no skill", hero->getObjectName());
+		logGlobal->trace("Completing commander level-up query. Commander of hero %s gains no skill", hero->getNameTextID());
 		gh->levelUpCommander(hero->getCommander());
 		return;
 	}
 
-	logGlobal->trace("Completing commander level-up query. Commander of hero %s gains skill %s", hero->getObjectName(), answer.value());
+	logGlobal->trace("Completing commander level-up query. Commander of hero %s gains skill %s", hero->getNameTextID(), answer.value());
 	gh->levelUpCommander(hero->getCommander(), clu.skills[*answer]);
 }
 
@@ -368,7 +372,7 @@ void CHeroMovementQuery::onExposure(QueryPtr topQuery)
 
 	if(visitDestAfterVictory && hero->tempOwner == players[0]) //hero still alive, so he won with the guard
 	{
-		logGlobal->trace("Hero %s after victory over guard finishes visit to %s", hero->getNameTranslated(), tmh.end.toString());
+		logGlobal->trace("Hero %s after victory over guard finishes visit to %s", hero->getNameTextID(), tmh.end.toString());
 		//finish movement
 		visitDestAfterVictory = false;
 		gh->visitObjectOnTile(*gh->gameInfo().getTile(hero->convertToVisitablePos(tmh.end)), hero);

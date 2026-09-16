@@ -15,33 +15,88 @@
 #include "MapRenderer.h"
 #include "MapViewModel.h"
 
-#include "../render/CAnimation.h"
-#include "../render/Canvas.h"
-#include "../render/IImage.h"
-#include "../render/IFont.h"
-#include "../render/IRenderHandler.h"
-#include "../render/Graphics.h"
+#include "render/CAnimation.h"
+#include "render/Canvas.h"
+#include "render/IImage.h"
+#include "render/IFont.h"
+#include "render/IRenderHandler.h"
+#include "render/Graphics.h"
 
 #include "../GameEngine.h"
+#include "render/IScreenHandler.h"
 #include "../widgets/TextControls.h"
 
 #include "../../lib/int3.h"
 
-MapViewCache::~MapViewCache() = default;
+MapViewCache::~MapViewCache()
+{
+	// the canvases go with this object, so nothing may be left pointing at them
+	ENGINE->screenHandler().clearPresentedCanvas(GpuRenderLayer::MAP);
+}
 
-MapViewCache::MapViewCache(const std::shared_ptr<MapViewModel> & model)
+MapViewCache::MapViewCache(const std::shared_ptr<MapViewModel> & model, bool useGpuLayer)
 	: model(model)
+	, useGpuLayer(useGpuLayer)
 	, cachedLevel(0)
 	, overlayWasVisible(false)
 	, mapRenderer(new MapRenderer())
 	, iconsStorage(ENGINE->renderHandler().loadAnimation(AnimationPath::builtin("VwSymbol"), EImageBlitMode::COLORKEY))
-	, intermediate(new Canvas(Point(32, 32), CanvasScalingPolicy::AUTO))
-	, terrain(new Canvas(model->getCacheDimensionsPixels(), CanvasScalingPolicy::AUTO))
-	, terrainTransition(new Canvas(model->getPixelsVisibleDimensions(), CanvasScalingPolicy::AUTO))
 {
 	Point visibleSize = model->getTilesVisibleDimensions();
 	terrainChecksum.resize(boost::extents[visibleSize.x][visibleSize.y]);
 	tilesUpToDate.resize(boost::extents[visibleSize.x][visibleSize.y]);
+}
+
+std::unique_ptr<Canvas> MapViewCache::createCanvas(const Point & size) const
+{
+	// a view drawn into the software screen cannot read from a GPU-backed cache
+	if(canvasesOnGpu)
+		return std::make_unique<Canvas>(ENGINE->screenHandler().createOffscreenCanvas(size));
+
+	return std::make_unique<Canvas>(size, CanvasScalingPolicy::AUTO);
+}
+
+void MapViewCache::ensureCanvases()
+{
+	const bool useGpu = useGpuLayer && ENGINE->screenHandler().isGpuRenderingEnabled();
+
+	// On the GPU the cache normally keeps its tiles unscaled and scales them while blitting,
+	// which spares the per-tile render target the scaling used to go through. But that texture
+	// follows the number of visible tiles, which on a fully zoomed out Giant map can ask for
+	// more pixels than the driver allows - so it falls back to the bounded, ready-scaled size,
+	// same as the non-GPU path, rather than risk an oversized render target.
+	const Point nativeSizeDimensions = model->getTilesVisibleDimensions() * model->getCacheTileSize();
+	const int maxCanvasSize = ENGINE->screenHandler().maxOffscreenCanvasSize();
+	const bool nativeSizeFits = nativeSizeDimensions.x <= maxCanvasSize && nativeSizeDimensions.y <= maxCanvasSize;
+	const bool cacheAtNativeSize = useGpu && nativeSizeFits;
+
+	model->setCacheAtNativeSize(cacheAtNativeSize);
+
+	const Point cacheDimensions = model->getCacheDimensionsPixels();
+
+	// only the native cache changes size during play - it follows the number of visible tiles,
+	// while the ready-scaled one is measured from the window and stays as it was
+	const bool dimensionsStale = cacheAtNativeSize && cachedCanvasDimensions != cacheDimensions;
+
+	if(terrain && canvasesOnGpu == useGpu && cachedAtNativeSize == cacheAtNativeSize && !dimensionsStale)
+		return;
+
+	// Must run on the rendering thread: this object is constructed while handling a
+	// netpack, and creating a texture there would move the GL context off the GUI thread
+	// what the screen handler was told to draw refers to the canvas about to be replaced
+	ENGINE->screenHandler().clearPresentedCanvas(GpuRenderLayer::MAP);
+
+	canvasesOnGpu = useGpu;
+	cachedAtNativeSize = cacheAtNativeSize;
+	cachedCanvasDimensions = cacheDimensions;
+
+	intermediate = createCanvas(MapViewModel::getNativeTileSize());
+	terrain = createCanvas(cacheDimensions);
+	terrainTransition = createCanvas(model->getPixelsVisibleDimensions());
+
+	// the new canvases are empty, so nothing cached about the old ones still holds
+	std::fill_n(terrainChecksum.data(), terrainChecksum.num_elements(), TileChecksum{});
+	std::fill_n(tilesUpToDate.data(), tilesUpToDate.num_elements(), false);
 }
 
 Canvas MapViewCache::getTile(const int3 & coordinates)
@@ -74,6 +129,28 @@ void MapViewCache::invalidate(const std::shared_ptr<IMapRendererContext> & conte
 	}
 }
 
+/// Terrain animation is unstaggered, so every animated tile goes dirty on the same frame. Drawing
+/// them all at once overruns the frame, so the burst is spread over this many frames.
+static constexpr int animationCatchUpFrames = 4;
+
+/// Smallest share a frame redraws. The share follows the number of dirty tiles, so it only grows
+/// past this when a step dirties more than the old fixed cap could serve before the next one.
+static constexpr int animationRedrawShareMinimum = 64;
+
+/// Indices of the terrain and river components of MapRenderer::getTileChecksum()
+static constexpr size_t terrainChecksumIndex = 1;
+static constexpr size_t riverChecksumIndex = 2;
+
+/// Whether the two checksums differ in nothing but the terrain animation
+static bool differsOnlyInTerrainAnimation(const std::array<uint8_t, 8> & before, const std::array<uint8_t, 8> & after)
+{
+	for(size_t i = 0; i < before.size(); ++i)
+		if(before[i] != after[i] && i != terrainChecksumIndex && i != riverChecksumIndex)
+			return false;
+
+	return true;
+}
+
 void MapViewCache::updateTile(const std::shared_ptr<IMapRendererContext> & context, const int3 & coordinates)
 {
 	int cacheX = (terrainChecksum.shape()[0] + coordinates.x) % terrainChecksum.shape()[0];
@@ -89,27 +166,51 @@ void MapViewCache::updateTile(const std::shared_ptr<IMapRendererContext> & conte
 	if(cachedLevel == coordinates.z && oldCacheEntry == newCacheEntry && !context->tileAnimated(coordinates))
 		return;
 
+	// only an animation step may wait - a scrolled-in or genuinely changed tile is drawn now
+	const bool holdsSameTile = oldCacheEntry.tileX == coordinates.x && oldCacheEntry.tileY == coordinates.y;
+	const bool animationOnly = cachedLevel == coordinates.z && holdsSameTile
+		&& !context->tileAnimated(coordinates)
+		&& differsOnlyInTerrainAnimation(oldCacheEntry.checksum, newCacheEntry.checksum);
+
+	if(animationOnly)
+	{
+		++animatedTilesDirty;
+
+		if(animatedTilesRedrawn >= animatedTileRedrawBudget)
+			return;
+
+		++animatedTilesRedrawn;
+	}
+
 	Canvas target = getTile(coordinates);
 
-	if(model->getSingleTileSize() == Point(32, 32))
+	const uint32_t placeholdersBefore = ENGINE->renderHandler().getPlaceholderDrawCount();
+
+	if(model->getCacheTileSize() == MapViewModel::getNativeTileSize())
 	{
 		mapRenderer->renderTile(*context, target, coordinates);
 	}
 	else
 	{
 		mapRenderer->renderTile(*context, *intermediate, coordinates);
-		target.drawScaled(*intermediate, Point(0, 0), model->getSingleTileSize());
+		target.drawScaled(*intermediate, Point(0, 0), model->getCacheTileSize());
 	}
 
 	if(context->filterGrayscale())
 		target.applyGrayscale();
 
-	oldCacheEntry = newCacheEntry;
+	// A tile drawn from a stretched stand-in is not final. Leaving its checksum empty keeps
+	// it out of the cache, so it is drawn again until the upscale it waits for has finished.
+	const bool usedPlaceholder = ENGINE->renderHandler().getPlaceholderDrawCount() != placeholdersBefore;
+
+	oldCacheEntry = usedPlaceholder ? TileChecksum{} : newCacheEntry;
 	tilesUpToDate[cacheX][cacheY] = false;
 }
 
 void MapViewCache::update(const std::shared_ptr<IMapRendererContext> & context)
 {
+	ensureCanvases();
+
 	Rect dimensions = model->getTilesTotalRect();
 	bool mapResized = cachedSize != model->getSingleTileSize();
 
@@ -129,41 +230,190 @@ void MapViewCache::update(const std::shared_ptr<IMapRendererContext> & context)
 		tilesUpToDate = newCache;
 	}
 
+	// Refresh whatever the renderer can resolve once instead of per tile
+	mapRenderer->prepareFrame(*context);
+
+	const int share = std::max(animationRedrawShareMinimum, (animatedTilesDirtyBefore + animationCatchUpFrames - 1) / animationCatchUpFrames);
+
+	// within a burst the share may only grow - the dirty count falls as tiles are drawn
+	animatedTileRedrawBudget = drainingAnimationBurst ? std::max(animatedTileRedrawBudget, share) : share;
+	animatedTilesRedrawn = 0;
+	animatedTilesDirty = 0;
+
 	for(int y = dimensions.top(); y < dimensions.bottom(); ++y)
 		for(int x = dimensions.left(); x < dimensions.right(); ++x)
 			updateTile(context, {x, y, model->getLevel()});
 
+	drainingAnimationBurst = animatedTilesDirty > animatedTilesRedrawn;
+	animatedTilesDirtyBefore = animatedTilesDirty;
+
 	cachedSize = model->getSingleTileSize();
 	cachedLevel = model->getLevel();
+	updatedTilesRect = dimensions;
+	updatedThisFrame = true;
+}
+
+bool MapViewCache::isUpdatedThisFrame() const
+{
+	return updatedThisFrame
+		&& updatedTilesRect == model->getTilesTotalRect()
+		&& cachedSize == model->getSingleTileSize()
+		&& cachedLevel == model->getLevel();
+}
+
+void MapViewCache::forEachCachedBand(const std::function<void(const Rect &, const Point &, const Point &)> & visit) const
+{
+	const Rect tilesRect = model->getTilesTotalRect();
+	const Point tileSize = model->getSingleTileSize();
+	const Point cacheTileSize = model->getCacheTileSize();
+	const int width = tilesRect.w;
+	const int height = tilesRect.h;
+
+	if(width <= 0 || height <= 0)
+		return;
+
+	// Screen position of the tile in the top left corner of the visible window, always within
+	// one tile of the origin since the view may be scrolled by a fraction of a tile.
+	const Point origin = model->getTargetTileArea(int3(tilesRect.x, tilesRect.y, model->getLevel())).topLeft();
+
+	// Position of that same tile inside the cache, which stores tiles wrapped around
+	// on both axes (tile x lives at slot x modulo width).
+	const int firstSlotX = ((tilesRect.x % width) + width) % width;
+	const int firstSlotY = ((tilesRect.y % height) + height) % height;
+
+	// Because of the wrapping the visible window is split into at most two bands per axis - so
+	// at most four rectangles, each contiguous both in the cache and on screen.
+	const std::array<std::pair<int, int>, 2> columns = {{ // {first slot, slot count}
+		{firstSlotX, width - firstSlotX},
+		{0, firstSlotX}
+	}};
+	const std::array<std::pair<int, int>, 2> rows = {{
+		{firstSlotY, height - firstSlotY},
+		{0, firstSlotY}
+	}};
+
+	int offsetX = 0;
+	for(const auto & column : columns)
+	{
+		int offsetY = 0;
+		for(const auto & row : rows)
+		{
+			if(column.second > 0 && row.second > 0)
+			{
+				Rect cacheArea(
+					column.first * cacheTileSize.x,
+					row.first * cacheTileSize.y,
+					column.second * cacheTileSize.x,
+					row.second * cacheTileSize.y);
+
+				Point targetPosition = origin + Point(offsetX * tileSize.x, offsetY * tileSize.y);
+				Point targetSize(column.second * tileSize.x, row.second * tileSize.y);
+
+				visit(cacheArea, targetPosition, targetSize);
+			}
+			offsetY += row.second;
+		}
+		offsetX += column.second;
+	}
+}
+
+void MapViewCache::renderCachedTiles(Canvas & target)
+{
+	const Point tileSize = model->getSingleTileSize();
+	const Point cacheTileSize = model->getCacheTileSize();
+
+	forEachCachedBand([&](const Rect & cacheArea, const Point & targetPosition, const Point & targetSize)
+	{
+		if(cacheTileSize == tileSize)
+			target.draw(Canvas(*terrain, cacheArea), targetPosition);
+		else
+			target.drawScaled(Canvas(*terrain, cacheArea), targetPosition, targetSize);
+	});
+}
+
+void MapViewCache::present(const Rect & targetArea)
+{
+	ensureCanvases();
+
+	// The cache is handed over rather than copied here: reading this render target in the middle
+	// of a frame makes a tiling GPU resolve it right then, which on some Android drivers stalls
+	// every process on the device. Drawn while the frame is composed, the same read is free.
+	const int scaling = ENGINE->screenHandler().getScalingFactor();
+	std::vector<PresentedRegion> regions;
+
+	forEachCachedBand([&](const Rect & cacheArea, const Point & targetPosition, const Point & targetSize)
+	{
+		// The cache canvas holds its pixels at the scaling factor, so the region inside its
+		// texture is not the logical rectangle. Letting the canvas work it out keeps this
+		// identical to what the blit into a layer would have read.
+		const Canvas band(*terrain, cacheArea);
+
+		regions.push_back({band.getRenderArea(), Rect(targetArea.topLeft() + targetPosition * scaling, targetSize * scaling)});
+	});
+
+	ENGINE->screenHandler().presentFromCanvas(GpuRenderLayer::MAP, *terrain, regions);
+
+	// the whole window was handed over, so nothing is waiting to be drawn from the cache
+	std::fill_n(tilesUpToDate.data(), tilesUpToDate.num_elements(), true);
+
+	cachedPosition = model->getMapViewCenter();
+	overlayWasVisible = false;
+	updatedThisFrame = false;
+}
+
+bool MapViewCache::needsOwnLayer(const std::shared_ptr<IMapRendererContext> & context) const
+{
+	return context->showImageOverlay() || context->showTextOverlay() || !vstd::isAlmostZero(context->viewTransitionProgress());
 }
 
 void MapViewCache::render(const std::shared_ptr<IMapRendererContext> & context, Canvas & target, bool fullRedraw)
 {
+	ensureCanvases();
+
 	bool mapMoved = (cachedPosition != model->getMapViewCenter());
-	bool overlayVisible = context->showImageOverlay() || context->showTextOverlay();
+	bool textOverlayVisible = context->showTextOverlay();
+	bool overlayVisible = context->showImageOverlay() || textOverlayVisible;
 	bool overlayVisibilityChanged = overlayVisible != overlayWasVisible;
-	bool lazyUpdate = !overlayVisibilityChanged && !mapMoved && !fullRedraw && vstd::isAlmostZero(context->viewTransitionProgress());
+	// redraw text overlay backgrounds; track dirty overlay tiles if this becomes expensive.
+	bool lazyUpdate = !textOverlayVisible && !overlayVisibilityChanged && !mapMoved && !fullRedraw && vstd::isAlmostZero(context->viewTransitionProgress());
 
 	Rect dimensions = model->getTilesTotalRect();
 
-	for(int y = dimensions.top(); y < dimensions.bottom(); ++y)
+	if(lazyUpdate)
 	{
-		for(int x = dimensions.left(); x < dimensions.right(); ++x)
+		// Only the handful of tiles that actually changed need repainting
+		for(int y = dimensions.top(); y < dimensions.bottom(); ++y)
 		{
-			int cacheX = (terrainChecksum.shape()[0] + x) % terrainChecksum.shape()[0];
-			int cacheY = (terrainChecksum.shape()[1] + y) % terrainChecksum.shape()[1];
-			int3 tile(x, y, model->getLevel());
+			for(int x = dimensions.left(); x < dimensions.right(); ++x)
+			{
+				int cacheX = (terrainChecksum.shape()[0] + x) % terrainChecksum.shape()[0];
+				int cacheY = (terrainChecksum.shape()[1] + y) % terrainChecksum.shape()[1];
+				int3 tile(x, y, model->getLevel());
 
-			if(lazyUpdate && tilesUpToDate[cacheX][cacheY])
-				continue;
+				if(tilesUpToDate[cacheX][cacheY])
+					continue;
 
-			Canvas source = getTile(tile);
-			Rect targetRect = model->getTargetTileArea(tile);
-			target.draw(source, targetRect.topLeft());
+				Canvas source = getTile(tile);
+				Rect targetRect = model->getTargetTileArea(tile);
 
-			if (!fullRedraw)
-				tilesUpToDate[cacheX][cacheY] = true;
+				if(model->getCacheTileSize() == model->getSingleTileSize())
+					target.draw(source, targetRect.topLeft());
+				else
+					target.drawScaled(source, targetRect.topLeft(), targetRect.dimensions());
+
+				if (!fullRedraw)
+					tilesUpToDate[cacheX][cacheY] = true;
+			}
 		}
+	}
+	else
+	{
+		// Every tile has to be repainted - copy the whole cached window at once
+		// instead of issuing one blit per tile.
+		renderCachedTiles(target);
+
+		if (!fullRedraw)
+			std::fill_n(tilesUpToDate.data(), tilesUpToDate.num_elements(), true);
 	}
 
 	if(context->showImageOverlay())
@@ -185,7 +435,7 @@ void MapViewCache::render(const std::shared_ptr<IMapRendererContext> & context, 
 		}
 	}
 
-	if(context->showTextOverlay())
+	if(textOverlayVisible)
 	{
 		const auto & font = ENGINE->renderHandler().loadFont(FONT_TINY);
 
@@ -196,7 +446,7 @@ void MapViewCache::render(const std::shared_ptr<IMapRendererContext> & context, 
 				int3 tile(x, y, model->getLevel());
 				auto overlay = context->overlayText(tile);
 
-				if(!overlay.empty())
+				if(!overlay.text.empty())
 				{
 					Rect targetRect = model->getTargetTileArea(tile);
 					Point position = targetRect.center();
@@ -205,12 +455,12 @@ void MapViewCache::render(const std::shared_ptr<IMapRendererContext> & context, 
 					else
 						position.y -= targetRect.h / 4;
 
-					Point dimensions(font->getStringWidth(overlay), font->getLineHeight());
+					Point dimensions(font->getStringWidth(overlay.text), font->getLineHeight());
 					Rect textRect = Rect(position - dimensions / 2, dimensions).resize(2);
 
-					target.drawColor(textRect, context->overlayTextColor(tile));
+					target.drawColor(textRect, overlay.color);
 					target.drawBorder(textRect, Colors::BRIGHT_YELLOW);
-					target.drawText(position, EFonts::FONT_TINY, Colors::BLACK, ETextAlignment::CENTER, overlay);
+					target.drawText(position, EFonts::FONT_TINY, Colors::BLACK, ETextAlignment::CENTER, overlay.text);
 				}
 			}
 		}
@@ -221,6 +471,7 @@ void MapViewCache::render(const std::shared_ptr<IMapRendererContext> & context, 
 
 	cachedPosition = model->getMapViewCenter();
 	overlayWasVisible = overlayVisible;
+	updatedThisFrame = false;
 }
 
 void MapViewCache::createTransitionSnapshot(const std::shared_ptr<IMapRendererContext> & context)

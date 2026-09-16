@@ -46,12 +46,13 @@
 #include "../lib/modding/ModUtility.h"
 #include "../lib/serializer/GameConnection.h"
 #include "../lib/VCMIDirs.h"
+#include "../lib/texts/TextOperations.h"
 #include "../lib/ObstacleHandler.h"
 #include "../lib/logging/VisualLogger.h"
 
 void ClientCommandManager::handleQuitCommand()
 {
-		exit(EXIT_SUCCESS);
+		throw GameShutdownException();
 }
 
 void ClientCommandManager::handleSaveCommand(std::istringstream & singleWordBuffer)
@@ -93,7 +94,7 @@ void ClientCommandManager::handleGoSoloCommand()
 		// unlikely it will work but just in case to be consistent
 		for(auto & color : GAME->server().getAllClientPlayers(GAME->server().logicConnection->connectionID))
 		{
-			if(color.isValidPlayer() && GAME->server().client->gameInfo().getStartInfo()->playerInfos.at(color).isControlledByHuman())
+			if(color.isValidPlayer() && GAME->server().client->gameInfo().getStartInfo()->playerInfos.count(color) && GAME->server().client->gameInfo().getStartInfo()->playerInfos.at(color).isControlledByHuman())
 			{
 				GAME->server().client->installNewPlayerInterface(std::make_shared<CPlayerInterface>(color), color);
 			}
@@ -103,7 +104,7 @@ void ClientCommandManager::handleGoSoloCommand()
 	{
 		PlayerColor currentColor = GAME->interface()->playerID;
 		GAME->server().client->removeGUI();
-		
+
 		for(auto & color : GAME->server().getAllClientPlayers(GAME->server().logicConnection->connectionID))
 		{
 			if(color.isValidPlayer() && GAME->server().client->gameInfo().getStartInfo()->playerInfos.at(color).isControlledByHuman())
@@ -215,7 +216,7 @@ void ClientCommandManager::handleTranslateGameCommand(bool onlyMissing)
 		if (!output.isNull())
 		{
 			std::string filename = modEntry.first;
-			boost::range::replace(filename, '.', '_');
+			std::ranges::replace(filename, '.', '_');
 			const boost::filesystem::path filePath = outPath / (filename + ".json");
 			std::ofstream file(filePath.c_str());
 			file << output.toString();
@@ -223,7 +224,7 @@ void ClientCommandManager::handleTranslateGameCommand(bool onlyMissing)
 	}
 
 	printCommandMessage("Translation export complete");
-	printCommandMessage("Extracted files can be found in " + outPath.string() + " directory\n");
+	printCommandMessage("Extracted files can be found in " + TextOperations::filesystemPathToUtf8(outPath) + " directory\n");
 }
 
 void ClientCommandManager::handleTranslateMapsCommand()
@@ -306,7 +307,7 @@ void ClientCommandManager::handleTranslateMapsCommand()
 	}
 
 	printCommandMessage("Translation export complete");
-	printCommandMessage("Extracted files can be found in " + outPath.string() + " directory\n");
+	printCommandMessage("Extracted files can be found in " + TextOperations::filesystemPathToUtf8(outPath) + " directory\n");
 
 }
 
@@ -348,7 +349,7 @@ void ClientCommandManager::handleGetConfigCommand()
 	}
 
 	printCommandMessage("\rExtracting done :)\n");
-	printCommandMessage("Extracted files can be found in " + outPath.string() + " directory\n");
+	printCommandMessage("Extracted files can be found in " + TextOperations::filesystemPathToUtf8(outPath) + " directory\n");
 }
 
 void ClientCommandManager::handleAntilagCommand(std::istringstream& singleWordBuffer)
@@ -393,14 +394,14 @@ void ClientCommandManager::handleGetTextCommand()
 
 		boost::filesystem::create_directories(filePath.parent_path());
 
-		std::ofstream file(filePath.c_str());
+		std::ofstream file(filePath.c_str(), std::ios::binary);
 		auto text = CResourceHandler::get()->load(filename)->readAll();
 
 		file.write((char*)text.first.get(), text.second);
 	}
 
 	printCommandMessage("\rExtracting done :)\n");
-	printCommandMessage("Extracted files can be found in " + outPath.string() + " directory\n");
+	printCommandMessage("Extracted files can be found in " + TextOperations::filesystemPathToUtf8(outPath) + " directory\n");
 }
 
 void ClientCommandManager::handleDef2bmpCommand(std::istringstream& singleWordBuffer)
@@ -503,7 +504,7 @@ void ClientCommandManager::handleBonusesCommand(std::istringstream & singleWordB
 		ss << b;
 		return ss.str();
 	};
-		printCommandMessage("Bonuses of " + GAME->interface()->localState->getCurrentArmy()->getObjectName() + "\n");
+		printCommandMessage("Bonuses of " + GAME->interface()->localState->getCurrentArmy()->getObjectName().toString(&GAME->translator()) + "\n");
 		printCommandMessage(format(*GAME->interface()->localState->getCurrentArmy()->getAllBonuses(Selector::all)) + "\n");
 
 	printCommandMessage("\nInherited bonuses:\n");
@@ -572,6 +573,22 @@ void ClientCommandManager::handleVsLog(std::istringstream & singleWordBuffer)
 	singleWordBuffer >> key;
 
 	logVisual->setKey(key);
+}
+
+void ClientCommandManager::handleWhoIsTheBossCommand(std::istringstream & singleWordBuffer)
+{
+	std::string value;
+	singleWordBuffer >> value;
+
+	Settings session = settings.write["session"];
+	if(value == "on")
+		session["showAiHeroOverlay"].Bool() = true;
+	else if(value == "off")
+		session["showAiHeroOverlay"].Bool() = false;
+	else
+		printCommandMessage("Unexpected syntax. Supported forms (case insensitive):\n/whoIsTheBoss on\n/whoIsTheBoss off\n");
+
+	ENGINE->windows().totalRedraw();
 }
 
 void ClientCommandManager::handleGenerateAssets()
@@ -707,6 +724,9 @@ void ClientCommandManager::processCommand(const std::string & message, bool call
 
 	else if(commandName == "vslog")
 		handleVsLog(singleWordBuffer);
+
+	else if(boost::iequals(commandName, "whoistheboss"))
+		handleWhoIsTheBossCommand(singleWordBuffer);
 
 	else if(message=="generate assets")
 		handleGenerateAssets();

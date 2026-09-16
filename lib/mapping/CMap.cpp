@@ -15,9 +15,11 @@
 #include "CCastleEvent.h"
 
 #include "../CCreatureHandler.h"
+#include "../CRandomGenerator.h"
 #include "../CSkillHandler.h"
 #include "../GameLibrary.h"
 #include "../GameSettings.h"
+#include "../MapLayerHandler.h"
 #include "../RiverHandler.h"
 #include "../RoadHandler.h"
 #include "../TerrainHandler.h"
@@ -29,15 +31,13 @@
 #include "../gameState/CGameState.h"
 #include "../mapObjects/CGHeroInstance.h"
 #include "../mapObjects/CGTownInstance.h"
-#include "../mapObjects/CQuest.h"
+#include "../mapObjects/Quest.h"
 #include "../mapObjects/ObjectTemplate.h"
 #include "../serializer/JsonSerializeFormat.h"
 #include "../spells/CSpellHandler.h"
 #include "../texts/CGeneralTextHandler.h"
 
 #include <vstd/RNG.h>
-
-VCMI_LIB_NAMESPACE_BEGIN
 
 const CGHeroPlaceholder * CMap::findHeroPlaceholder(const int3 & position) const
 {
@@ -460,6 +460,12 @@ const CGObjectInstance * CMap::getObjectiveObjectFrom(const int3 & pos, Obj type
 			return object;
 	}
 
+	for(const auto & object : objects)
+	{
+		if(object && object->ID == type && object->anchorPos() == pos)
+			return object.get();
+	}
+
 	logGlobal->error("Failed to find object of type %d at %s", type.getNum(), pos.toString());
 	return nullptr;
 }
@@ -504,25 +510,18 @@ void CMap::checkForObjectives()
 				case EventCondition::CONTROL_CURRENT:
 					if(isInTheMap(cond.position))
 					{
-						for(const auto & objID : getTile(cond.position).visitableObjects)
-						{
-							const auto * object = getObject(objID);
-							if(object->ID == cond.objectType.as<MapObjectID>())
-							{
-								cond.objectID = object->id;
-								break;
-							}
-						}
+						if(const auto * object = getObjectiveObjectFrom(cond.position, cond.objectType.as<MapObjectID>()))
+							cond.objectID = object->id;
 					}
 
 					if(cond.objectID != ObjectInstanceID::NONE)
 					{
 						const auto * town = dynamic_cast<const CGTownInstance *>(objects[cond.objectID].get());
 						if(town)
-							event.onFulfill.replaceRawString(town->getNameTranslated());
+							event.onFulfill.replaceTextID(town->getNameTextID());
 						const auto * hero = dynamic_cast<const CGHeroInstance *>(objects[cond.objectID].get());
 						if(hero)
-							event.onFulfill.replaceRawString(hero->getNameTranslated());
+							event.onFulfill.replaceTextID(hero->getNameTextID());
 					}
 					break;
 
@@ -546,7 +545,7 @@ void CMap::checkForObjectives()
 					{
 						const auto * hero = dynamic_cast<const CGHeroInstance *>(objects[cond.objectID].get());
 						if(hero)
-							event.onFulfill.replaceRawString(hero->getNameTranslated());
+							event.onFulfill.replaceTextID(hero->getNameTextID());
 					}
 					break;
 				case EventCondition::TRANSPORT:
@@ -869,6 +868,20 @@ void CMap::initTerrain()
 	guardingCreaturePositions = MapTilesStorage<int3>(int3(width, height, levels()));
 }
 
+void CMap::addLevel(const MapLayerId & layerType)
+{
+	terrain.addLevel();
+	guardingCreaturePositions.addLevel();
+	mapLayers.push_back(layerType);
+
+	int newLevel = levels() - 1;
+	getEditManager()->getTerrainSelection().selectRange(MapRect(int3(0, 0, newLevel), width, height));
+	getEditManager()->drawTerrain(layerType.toEntity(LIBRARY)->getDefaultTerrain(), 0, &CRandomGenerator::getDefault());
+
+	// newly appended tiles start default-constructed, which is not a valid "no guard" sentinel
+	calculateGuardingGreaturePositions();
+}
+
 CMapEditManager * CMap::getEditManager()
 {
 	if(!editManager) editManager = std::make_unique<CMapEditManager>(this);
@@ -1073,18 +1086,6 @@ const CGObjectInstance * CMap::getObject(ObjectInstanceID obj) const
 	return nullptr;
 }
 
-void CMap::saveCompatibilityStoreAllocatedArtifactID()
-{
-	if (!artInstances.empty())
-		cb->gameState().saveCompatibilityLastAllocatedArtifactID = artInstances.back()->getId();
-}
-
-void CMap::saveCompatibilityAddMissingArtifact(std::shared_ptr<CArtifactInstance> artifact)
-{
-	assert(artifact->getId().getNum() == artInstances.size());
-	artInstances.push_back(artifact);
-}
-
 ObjectInstanceID CMap::allocateUniqueInstanceID()
 {
 	objects.push_back(nullptr);
@@ -1202,5 +1203,3 @@ void CMap::deserializeHeroPool(const std::vector<std::shared_ptr<CGHeroInstance>
 			heroesPool.at(hero->getHeroTypeID().getNum()) = hero;
 }
 
-
-VCMI_LIB_NAMESPACE_END

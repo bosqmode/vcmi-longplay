@@ -73,6 +73,12 @@ set(launcher_HEADERS
 		prepare_p.h
 )
 
+# gamepad support relies on SDL, which is not linked into launcher on mobile platforms
+if(NOT ANDROID AND NOT IOS)
+	list(APPEND launcher_SRCS gamepadHandler.cpp)
+	list(APPEND launcher_HEADERS gamepadHandler.h)
+endif()
+
 set(launcher_FORMS
 		aboutProject/aboutproject_moc.ui
 		modManager/cmodlistview_moc.ui
@@ -244,7 +250,17 @@ endif()
 
 if(ANDROID)
 	target_link_libraries(vcmilauncher Qt${QT_VERSION_MAJOR}::AndroidExtras)
-elseif(NOT IOS)
+endif()
+
+# the launcher queries SDL for displays and rendering drivers. the lookup is repeated
+# here because imported targets are scoped to the directory that creates them.
+# on mobile the launcher shares its process with the client, so it needs the headers too.
+if(ENABLE_SDL3)
+	find_package(SDL3 REQUIRED)
+	target_link_libraries(vcmilauncher ${SDL3_CORE_TARGET})
+	target_compile_definitions(vcmilauncher PRIVATE VCMI_SDL3)
+elseif(NOT ANDROID AND NOT IOS)
+	find_package(SDL2 REQUIRED)
 	target_link_libraries(vcmilauncher SDL2::SDL2)
 endif()
 

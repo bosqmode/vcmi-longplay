@@ -13,10 +13,8 @@
 #include "../../lib/Point.h"
 #include "../gui/CIntObject.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
 class CStack;
 class Rect;
-VCMI_LIB_NAMESPACE_END
 
 class BattleHero;
 class CAnimation;
@@ -39,6 +37,23 @@ class BattleFieldController : public CIntObject
 
 	/// Canvas that contains background, hex grid (if enabled), absolute obstacles and movement range of active stack
 	std::unique_ptr<Canvas> backgroundWithHexes;
+
+	/// Whether backgroundWithHexes was built as a GPU render target; compared against usesGpuLayer()
+	/// on each rebuild since a colour-scheme change can flip GPU rendering mid-battle
+	bool backgroundOnGpu = false;
+
+	/// Allocates backgroundWithHexes on first use, or recreates it if the GPU/software mode changed.
+	/// Deferred out of the constructor, which runs on the network thread where creating a render
+	/// target would steal the GL context
+	void ensureBackgroundCanvas();
+
+	/// True while the battlefield draws into the GPU layer rather than the screen surface
+	bool usesGpuLayer() const;
+
+	/// Set when the background is stale; the rebuild itself must happen at paint time
+	bool backgroundNeedsRebuild = true;
+
+	void rebuildBackgroundWithHexes();
 
 	/// direction which will be used to perform attack with current cursor position
 	Point currentAttackOriginPoint;
@@ -99,6 +114,7 @@ class BattleFieldController : public CIntObject
 	void clickPressed(const Point & cursorPosition) override;
 	void showPopupWindow(const Point & cursorPosition) override;
 	void activate() override;
+	void deactivate() override;
 
 	void showAll(Canvas & to) override;
 	void show(Canvas & to) override;
@@ -126,8 +142,22 @@ public:
 	/// Returns the currently hovered stack
 	const CStack* getHoveredStack();
 
+	/// Returns the stack hovered in the battle queue, or nullptr if none is hovered there
+	const CStack* getQueueHoveredStack() const;
+
 	/// returns true if stack should render its stack count image in default position - outside own hex
 	bool stackCountOutsideHex(const BattleHex & number) const;
 
 	BattleHex::EDir selectAttackDirection(const BattleHex & myNumber) const;
+
+	/// starts screen shake effect (used by earthquake spell)
+	void startShakeAnimation();
+
+private:
+	void updateShake();
+
+	/// current shake offset and animation progress
+	Point shakeOffset;
+	int shakeFrameCounter = 0;
+	int shakeFrameTotal = 0;
 };

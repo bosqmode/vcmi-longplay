@@ -11,7 +11,7 @@
 #pragma once
 
 #include "../gui/CIntObject.h"
-#include "../render/Colors.h"
+#include "render/Colors.h"
 #include "../../lib/TurnTimerInfo.h"
 
 class CAnimImage;
@@ -19,9 +19,7 @@ class CLabel;
 class CFilledTexture;
 class TransparentFilledRectangle;
 
-VCMI_LIB_NAMESPACE_BEGIN
 class PlayerColor;
-VCMI_LIB_NAMESPACE_END
 
 class VerticalPercentBar : public CIntObject
 {

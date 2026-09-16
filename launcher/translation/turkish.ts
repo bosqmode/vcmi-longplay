@@ -92,42 +92,91 @@
         <translation>Günlükleri dışa aktar</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="170"/>
-        <source>Save logs</source>
-        <translation>Günlükleri kaydet</translation>
+        <location filename="../aboutProject/aboutproject_moc.ui" line="329"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="442"/>
+        <source>Export saves</source>
+        <translation>Kayıtları Dışa Aktar</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="170"/>
+        <source>Save logs</source>
+        <translation type="vanished">Günlükleri kaydet</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="442"/>
         <source>Zip archives (*.zip)</source>
         <translation>Zip arşivleri (*.zip)</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="272"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="415"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="532"/>
         <source>Error</source>
         <translation>Hata</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="272"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="411"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="448"/>
+        <source>Saves exported to %1</source>
+        <translation>Kayıtlar %1 konumuna dışa aktarıldı</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="415"/>
+        <source>Failed to save archive to selected destination</source>
+        <translation>Kayıt arşivi seçilen konuma kaydedilemedi</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="433"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="435"/>
+        <source>Select destination file</source>
+        <translation>Hedef dosyayı seçin</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="433"/>
+        <source>Please select destination file and save the archive as vcmi-saves.zip.</source>
+        <translation>Lütfen hedef dosyayı seçin ve arşivi vcmi-saves.zip olarak kaydedin.</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="435"/>
+        <source>Zip archives (*.zip);;All files (*.*)</source>
+        <translation>Zip arşivleri (*.zip);;Tüm dosyalar (*.*)</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="464"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="465"/>
+        <source>Exporting logs...</source>
+        <translation>Günlükler dışa aktarılıyor...</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="464"/>
+        <source>Cancel</source>
+        <translation>İptal</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="465"/>
+        <source>Log export</source>
+        <translation>Günlükleri Dışa Aktar</translation>
+    </message>
+    <message>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="532"/>
         <source>Failed to create archive: %1</source>
         <translation>Arşiv oluşturulamadı: %1</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="277"/>
         <source>Send logs</source>
-        <translation>Günlükleri gönder</translation>
+        <translation type="vanished">Günlükleri gönder</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="277"/>
         <source>The archive will be sent via another application. Share your logs e.g. over discord to developers.</source>
-        <translation>Arşiv başka bir uygulama üzerinden gönderilecek. Günlüklerinizi, örn. Discord üzerinden geliştiricilerle paylaşın.</translation>
+        <translation type="vanished">Arşiv başka bir uygulama üzerinden gönderilecek. Günlüklerinizi, örn. Discord üzerinden geliştiricilerle paylaşın.</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="281"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="411"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="448"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="541"/>
         <source>Success</source>
         <translation>Başarılı</translation>
     </message>
     <message>
-        <location filename="../aboutProject/aboutproject_moc.cpp" line="281"/>
+        <location filename="../aboutProject/aboutproject_moc.cpp" line="541"/>
         <source>Logs saved to %1, please send them to the developers</source>
         <translation>Günlükler %1 konumuna kaydedildi, lütfen geliştiricilere gönderin</translation>
     </message>
@@ -289,8 +338,8 @@
     </message>
     <message>
         <location filename="../modManager/cmodlistview_moc.cpp" line="217"/>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1038"/>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1043"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1124"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1129"/>
         <source>mods repository index</source>
         <translation>mod deposu dizini</translation>
     </message>
@@ -406,7 +455,7 @@ Install successfully downloaded?</source>
 İndirme işlemi başarıyla tamamlandı mı?</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1013"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1097"/>
         <source>Failed to install file %1.
 Reason: %2.
 Please report this issue to developers</source>
@@ -415,75 +464,122 @@ Sebep: %2.
 Bu sorunu geliştiricilere bildiriniz</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1107"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1200"/>
         <source>Installing Heroes Chronicles</source>
         <translation>Heroes Chronicles yükleniyor</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1139"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1232"/>
         <source>Extracting error!</source>
         <translation>Çıkarma sırasında hata oluştu!</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1141"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1234"/>
         <source>Invalid file selected</source>
         <translation>Geçersiz dosya seçildi</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1141"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1234"/>
         <source>You have to select a Heroes Chronicles installer file!</source>
         <translation>Bir Heroes Chronicles yükleyici dosyası seçmelisiniz!</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1202"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1366"/>
+        <source>Save exists</source>
+        <translation>Kayıt zaten mevcut</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1367"/>
+        <source>Save &apos;%1&apos; already exists. Do you want to overwrite it?</source>
+        <translation>&apos;%1&apos; adlı kayıt zaten mevcut. Üzerine yazmak istiyor musunuz?</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1387"/>
+        <source>Failed to import saves from %1.
+Reason: %2</source>
+        <translation>Kayıtlar %1 konumundan içe aktarılamadı.
+Neden: %2</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1400"/>
+        <source>Success</source>
+        <translation>Başarılı</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1400"/>
+        <source>Imported %1 save files</source>
+        <translation>%1 kayıt dosyası içe aktarıldı</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1457"/>
         <source>Installing mod %1</source>
         <translation>%1 modu yükleniyor</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1290"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1489"/>
+        <source>%1 requires: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1492"/>
+        <source>Failed to enable mod</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1493"/>
+        <source>One or more installed mods could not be enabled:
+
+%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1582"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1610"/>
         <source>Map exists</source>
         <translation>Harita mevcut</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1291"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1582"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1610"/>
         <source>Map &apos;%1&apos; already exists. Do you want to overwrite it?</source>
         <translation>Harita &apos;%1&apos; zaten mevcut. Üzerine yazmak ister misiniz?</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1300"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1003"/>
         <source>Yes to All</source>
         <translation>Tümüne Evet</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1301"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1004"/>
         <source>No to All</source>
         <translation>Tümüne Hayır</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1390"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1629"/>
         <source>Import complete</source>
         <translation>İçe aktarma tamamlandı</translation>
     </message>
     <message numerus="yes">
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1390"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1629"/>
         <source>%n map(s) successfully imported.</source>
         <translation>
             <numerusform>%n harita başarıyla içe aktarıldı.</numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1526"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1765"/>
         <source>Uninstall mod</source>
         <translation>Modu kaldır</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1526"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1765"/>
         <source>Are you sure you want to uninstall %1?</source>
         <translation>%1 kaldırmak istediğinizden emin misiniz?</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1013"/>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1393"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1097"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1387"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1632"/>
         <source>Import failed</source>
         <translation>İçe aktarma başarısız</translation>
     </message>
@@ -492,34 +588,36 @@ Bu sorunu geliştiricilere bildiriniz</translation>
         <source>
 
 Process successfully downloaded files?</source>
-        <translation type="unfinished"></translation>
+        <translation>
+
+İndirilen dosyalar işlensin mi?</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1393"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1632"/>
         <source>Failed to import the following maps:
 %1</source>
         <translation>Aşağıdaki haritalar içe aktarılamadı:
 %1</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1423"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1662"/>
         <source>Operation failed</source>
         <translation>İşlem başarısız</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1424"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1663"/>
         <source>Encountered errors:
 </source>
         <translation>Karşılaşılan hatalar:
 </translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1476"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1715"/>
         <source>screenshots</source>
         <translation>ekran görüntüleri</translation>
     </message>
     <message>
-        <location filename="../modManager/cmodlistview_moc.cpp" line="1482"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1721"/>
         <source>Screenshot %1</source>
         <translation>Ekran görüntüsü %1</translation>
     </message>
@@ -533,7 +631,7 @@ Process successfully downloaded files?</source>
     <name>CSettingsView</name>
     <message>
         <location filename="../settingsView/csettingsview_moc.ui" line="166"/>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="115"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="128"/>
         <source>Off</source>
         <translation>Kapalı</translation>
     </message>
@@ -543,22 +641,22 @@ Process successfully downloaded files?</source>
         <translation>Yapay Zekâ</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="552"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="589"/>
         <source>Interface Scaling</source>
         <translation>Arayüz Ölçeklendirme</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1328"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1335"/>
         <source>Neutral AI in battles</source>
         <translation>Savaşlarda tarafsız YZ</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="904"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="911"/>
         <source>Enemy AI in battles</source>
         <translation>Savaşlarda düşman YZ</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="941"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="948"/>
         <source>Additional repository</source>
         <translation>Ek depo</translation>
     </message>
@@ -573,7 +671,7 @@ Process successfully downloaded files?</source>
         <translation>Çevrimiçi Lobi port numarası</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1193"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1200"/>
         <source>Autocombat AI in battles</source>
         <translation>Savaşlarda otomatik savaş YZ&apos;si</translation>
     </message>
@@ -583,24 +681,24 @@ Process successfully downloaded files?</source>
         <translation>Analog Hassasiyeti</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1240"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1247"/>
         <source>Automatic (Linear)</source>
         <translation>Otomatik (Doğrusal)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="733"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="754"/>
         <source>Haptic Feedback</source>
         <translation>Dokunsal Geri Bildirim</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="875"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="882"/>
         <source>Software Cursor</source>
         <translation>Yazılımsal İmleç</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="498"/>
-        <location filename="../settingsView/csettingsview_moc.ui" line="654"/>
-        <location filename="../settingsView/csettingsview_moc.ui" line="888"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="520"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="675"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="895"/>
         <source>Automatic</source>
         <translation>Otomatik</translation>
     </message>
@@ -610,7 +708,7 @@ Process successfully downloaded files?</source>
         <translation>Mod Doğrulaması</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1378"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1385"/>
         <source>Config editor</source>
         <translation>Yapılandırma düzenleyicisi</translation>
     </message>
@@ -620,22 +718,22 @@ Process successfully downloaded files?</source>
         <translation>Düzenleyiciyi aç</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="503"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="525"/>
         <source>None</source>
         <translation>Hiçbiri</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="508"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="530"/>
         <source>xBRZ x2</source>
         <translation>xBRZ x2</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="513"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="540"/>
         <source>xBRZ x3</source>
         <translation>xBRZ x3</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="518"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="550"/>
         <source>xBRZ x4</source>
         <translation>xBRZ x4</translation>
     </message>
@@ -645,22 +743,22 @@ Process successfully downloaded files?</source>
         <translation>Tam</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="911"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="918"/>
         <source>Allow portrait mode</source>
         <translation>Dikey moda izin ver</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1032"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1039"/>
         <source>Use scalable fonts</source>
         <translation>Ölçeklenebilir yazı tiplerini kullan</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1335"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1342"/>
         <source>Online Lobby address</source>
         <translation>Çevrimiçi Lobi adresi</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="678"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="699"/>
         <source>Handle back as right mouse button</source>
         <translation>Geri tuşunu sağ tık olarak işle</translation>
     </message>
@@ -670,17 +768,17 @@ Process successfully downloaded files?</source>
         <translation>İmleç Ölçeklendirme</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="954"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="961"/>
         <source>Scalable</source>
         <translation>Ölçeklenebilir</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="583"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="620"/>
         <source>Miscellaneous</source>
         <translation>Çeşitli</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1436"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1443"/>
         <source>Select a display mode for the game
 
 Windowed - the game will run inside a window that covers part of your screen.
@@ -702,12 +800,12 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>Yazı Tipi Ölçeklendirme (deneysel)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1013"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1020"/>
         <source>Original</source>
         <translation>Orijinal</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="723"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="744"/>
         <source>Upscaling Filter</source>
         <translation>Görüntü Yükseltme Filtresi</translation>
     </message>
@@ -727,37 +825,62 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>Modların tamamen çıkarılması</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="593"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="497"/>
+        <source>Sharpening strength for the xBRZ + Sharpen upscaling filters</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsView/csettingsview_moc.ui" line="535"/>
+        <source>xBRZ x2 + Sharpen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsView/csettingsview_moc.ui" line="545"/>
+        <source>xBRZ x3 + Sharpen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsView/csettingsview_moc.ui" line="555"/>
+        <source>xBRZ x4 + Sharpen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsView/csettingsview_moc.ui" line="630"/>
         <source>Show Status in Discord</source>
         <translation>Discord&apos;da Durumu Göster</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="685"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="706"/>
         <source>Use Relative Pointer Mode</source>
         <translation>Bağıl İşaretçi Modunu Kullan</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1230"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1222"/>
+        <source>Autosaves per game (0 = unlimited)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1237"/>
         <source>Nearest</source>
         <translation>En yakın</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1235"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1242"/>
         <source>Linear</source>
         <translation>Doğrusal</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1275"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1282"/>
         <source>Input - Touchscreen</source>
         <translation>Girdi - Dokunmatik ekran</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1543"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1550"/>
         <source>Save Before Visit</source>
         <translation>Ziyaret Öncesi Kaydet</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="822"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="829"/>
         <source>Adventure Map Enemies</source>
         <translation>Macera Haritası Düşmanları</translation>
     </message>
@@ -777,27 +900,27 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>Ağ</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="982"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="989"/>
         <source>Audio</source>
         <translation>Ses</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1429"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1436"/>
         <source>Relative Pointer Speed</source>
         <translation>Bağıl İşaretçi Hızı</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="934"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="941"/>
         <source>Music Volume</source>
         <translation>Müzik Sesi</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1308"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1315"/>
         <source>Ignore SSL errors</source>
         <translation>SSL hatalarını yoksay</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1260"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1267"/>
         <source>Input - Mouse</source>
         <translation>Girdi - Fare</translation>
     </message>
@@ -807,47 +930,46 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>Uzun Dokunuş Süresi</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1371"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1378"/>
         <source>Controller Click Tolerance</source>
         <translation>Kontrolcü Tıklama Toleransı</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="664"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="685"/>
         <source>Touch Tap Tolerance</source>
         <translation>Dokunma Toleransı</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1205"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1212"/>
         <source>Input - Controller</source>
         <translation>Girdi - Kontrolcü</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1301"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1308"/>
         <source>Sound Volume</source>
         <translation>Ses Seviyesi</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1449"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1456"/>
         <source>Windowed</source>
         <translation>Pencereli</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1454"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1461"/>
         <source>Borderless fullscreen</source>
         <translation>Çerçevesiz tam ekran</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1459"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1466"/>
         <source>Exclusive fullscreen</source>
         <translation>Özel tam ekran</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1215"/>
         <source>Autosave limit (0 = off)</source>
-        <translation>Otomatik kayıt sınırı (0 = kapalı)</translation>
+        <translation type="vanished">Otomatik kayıt sınırı (0 = kapalı)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="671"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="692"/>
         <source>Downscaling Filter</source>
         <translation>Küçültme Filtresi</translation>
     </message>
@@ -857,24 +979,22 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>Kare Hızı Sınırı</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="747"/>
         <source>Autosave prefix</source>
-        <translation>Otomatik kayıt ön eki</translation>
+        <translation type="vanished">Otomatik kayıt ön eki</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="740"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="761"/>
         <source>Mouse Click Tolerance</source>
         <translation>Fare Tıklama Toleransı</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1129"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1136"/>
         <source>Sticks Acceleration</source>
         <translation>Analog İvmelenmesi</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="782"/>
         <source>empty = map name prefix</source>
-        <translation>boş = harita adı öneki</translation>
+        <translation type="vanished">boş = harita adı öneki</translation>
     </message>
     <message>
         <location filename="../settingsView/csettingsview_moc.ui" line="490"/>
@@ -887,17 +1007,17 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>Varsayılan depo</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1222"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1229"/>
         <source>Renderer</source>
         <translation>Görüntü Oluşturucu</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="113"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="126"/>
         <source>On</source>
         <translation>Açık</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1248"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1255"/>
         <source>Reserved screen area</source>
         <translation>Ayrılmış ekran alanı</translation>
     </message>
@@ -912,7 +1032,7 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>Güncellemeleri başlangıçta denetle</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="1186"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1193"/>
         <source>Fullscreen</source>
         <translation>Tam ekran</translation>
     </message>
@@ -927,7 +1047,7 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>VCMI Dili</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="845"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="852"/>
         <source>Resolution</source>
         <translation>Çözünürlük</translation>
     </message>
@@ -942,7 +1062,7 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>VSync</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="852"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="859"/>
         <source>Display index</source>
         <translation>Ekran</translation>
     </message>
@@ -952,27 +1072,27 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>Port numarası</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="997"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="1004"/>
         <source>Video</source>
         <translation>Video</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.ui" line="970"/>
+        <location filename="../settingsView/csettingsview_moc.ui" line="977"/>
         <source>Show intro</source>
         <translation>Girişi göster</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="124"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="137"/>
         <source>StupidAI (deprecated)</source>
         <translation>StupidAI (kullanımdan kaldırıldı)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="128"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="141"/>
         <source>BattleAI (default, recommended)</source>
         <translation>BattleAI (varsayılan, önerilen)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="132"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="145"/>
         <source>MMAI (experimental)</source>
         <translation>MMAI (deneysel)</translation>
     </message>
@@ -981,37 +1101,37 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation type="vanished">Nullkiller (Nullkiller2 ile değiştirildi)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="145"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="158"/>
         <source>Nullkiller2 (default, recommended)</source>
         <translation>Nullkiller2 (varsayılan, önerilen)</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="155"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="168"/>
         <source>EmptyAI - No valid AI libraries found!</source>
         <translation>EmptyAI - Geçerli YZ kütüphaneleri bulunamadı!</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="676"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="763"/>
         <source>Active</source>
         <translation>Etkin</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="681"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="768"/>
         <source>Disabled</source>
         <translation>Devre dışı</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="682"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="769"/>
         <source>Enable</source>
         <translation>Etkinleştir</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="687"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="774"/>
         <source>Not Installed</source>
         <translation>Yüklü değil</translation>
     </message>
     <message>
-        <location filename="../settingsView/csettingsview_moc.cpp" line="688"/>
+        <location filename="../settingsView/csettingsview_moc.cpp" line="775"/>
         <source>Install</source>
         <translation>Yükle</translation>
     </message>
@@ -1127,12 +1247,12 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
     <message>
         <location filename="../firstLaunch/firstlaunch_moc.ui" line="482"/>
         <source>No Heroes III data? Download the free demo to try VCMI</source>
-        <translation type="unfinished"></translation>
+        <translation>Heroes III verisi bulunamadı mı? VCMI&apos;ı denemek için ücretsiz demoyu indirin</translation>
     </message>
     <message>
         <location filename="../firstLaunch/firstlaunch_moc.ui" line="498"/>
         <source>Download Demo</source>
-        <translation type="unfinished"></translation>
+        <translation>Demoyu İndir</translation>
     </message>
     <message>
         <location filename="../firstLaunch/firstlaunch_moc.ui" line="527"/>
@@ -1140,7 +1260,7 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>Heroes III veri dosyalarınız başarıyla bulundu.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="665"/>
+        <location filename="../firstLaunch/firstlaunch_moc.ui" line="739"/>
         <source>Install a translation of Heroes III in your preferred language</source>
         <translation>Heroes III çevirisini tercih ettiğiniz dilde yükleyin</translation>
     </message>
@@ -1165,32 +1285,30 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation>Önerilen VCMI Modlarını yükleyin</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="739"/>
+        <location filename="../firstLaunch/firstlaunch_moc.ui" line="681"/>
         <source>Optionally, you can install additional mods either now, or at any point later, using the VCMI Launcher</source>
         <translation>İsteğe bağlı olarak ek modları şimdi, veya daha sonra VCMI Başlatıcı üzerinden yükleyebilirsiniz</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="723"/>
         <source>Install compatible version of &quot;Horn of the Abyss&quot;, a fan-made Heroes III expansion ported by the VCMI team</source>
-        <translation>VCMI ekibi tarafından Heroes III için uyarlanan ve hayran yapımı olan &quot;Horn of the Abyss&quot; eklentisinin uyumlu sürümünü yükleyin</translation>
+        <translation type="vanished">VCMI ekibi tarafından Heroes III için uyarlanan ve hayran yapımı olan &quot;Horn of the Abyss&quot; eklentisinin uyumlu sürümünü yükleyin</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="806"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="802"/>
         <source>VCMI Extras</source>
         <translation>VCMI Ekstraları</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="836"/>
         <source>Install compatible version of &quot;In The Wake of Gods&quot;, a fan-made Heroes III expansion</source>
-        <translation>Heroes III için hayran yapımı bir genişleme paketi olan &quot;In The Wake of Gods&quot;ın uyumlu sürümünü yükleyin</translation>
+        <translation type="vanished">Heroes III için hayran yapımı bir genişleme paketi olan &quot;In The Wake of Gods&quot;ın uyumlu sürümünü yükleyin</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="852"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="819"/>
         <source>A feature-rich expansion that expands gameplay with one alternative unit for each of the 9 standard towns, plus new neutral creatures, creature banks, skills and spells</source>
         <translation>9 standart şehrin her biri için bir alternatif birim, ayrıca yeni tarafsız yaratıklar, yaratık bankaları, beceriler ve büyüler ile oyun deneyimini genişleten zengin özelliklere sahip bir genişletme paketi</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="868"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="824"/>
         <source>Descend into the underground realm and uncover Casemate — a new faction where mushrooms, stone and rune magic thrive in the dark, created for VCMI</source>
         <translation>Yeraltı dünyasına inin ve Casemate&apos;i keşfedin — VCMI için yaratılmış, karanlıkta mantarların, taşların ve rün büyüsünün hüküm sürdüğü yeni bir fraksiyon</translation>
     </message>
@@ -1199,17 +1317,16 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation type="vanished">Heroes III Demo dosyaları algılandı. Bu mod, VCMI&apos;da demo varlıklarını kullanmak için gereklidir, aksi takdirde oyun çökecektir</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="885"/>
         <source>Install mod that provides various interface improvements, such as a better interface for random maps and selectable actions in battles</source>
-        <translation>Rastgele haritalar için daha iyi bir arayüz ve savaşlarda seçilebilir eylemler gibi çeşitli arayüz iyileştirmeleri sağlayan modu yükleyin</translation>
+        <translation type="vanished">Rastgele haritalar için daha iyi bir arayüz ve savaşlarda seçilebilir eylemler gibi çeşitli arayüz iyileştirmeleri sağlayan modu yükleyin</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="951"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="818"/>
         <source>Tides of War</source>
         <translation>Savaşın Dalgaları</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="989"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="823"/>
         <source>Fallen of the Depth</source>
         <translation>Derinliklerin Düşüşü</translation>
     </message>
@@ -1218,7 +1335,7 @@ Pencereli - oyun, ekranınızın bir kısmını kaplayan bir pencerede çalış�
         <translation type="vanished">Demo desteği</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="1048"/>
+        <location filename="../firstLaunch/firstlaunch_moc.ui" line="788"/>
         <source>Finish</source>
         <translation>Bitir</translation>
     </message>
@@ -1284,175 +1401,200 @@ Offline installer consists of two files: &quot;.exe&quot; and &quot;.bin&quot; -
     </message>
     <message>
         <location filename="../firstLaunch/firstlaunch_moc.ui" line="596"/>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="1041"/>
+        <location filename="../firstLaunch/firstlaunch_moc.ui" line="781"/>
         <source>Back</source>
         <translation>Geri</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="767"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="808"/>
         <source>Horn of the Abyss</source>
         <translation>Horn of the Abyss</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="693"/>
+        <location filename="../firstLaunch/firstlaunch_moc.ui" line="709"/>
         <source>Heroes III Translation</source>
         <translation>Heroes III Çevirisi</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.ui" line="913"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="813"/>
         <source>In The Wake of Gods</source>
         <translation>In The Wake of Gods</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="215"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="220"/>
         <source>Heroes III installation found!</source>
         <translation>Heroes III kurulumu bulundu!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="215"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="220"/>
         <source>Copy data to VCMI folder?</source>
         <translation>Veriler VCMI klasörüne kopyalansın mı?</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="451"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="460"/>
         <source>GOG file (*.*)</source>
         <translation>GOG dosyası (*.*)</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="452"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="461"/>
         <source>File selection</source>
         <translation>Dosya seçimi</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="463"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="663"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="472"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="681"/>
         <source>GOG installer</source>
         <translation>GOG yükleyicisi</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="556"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="565"/>
         <source>Heroes III: HD Edition files are not supported by VCMI.
 Please select the directory with Heroes III: Complete Edition or Heroes III: Shadow of Death.</source>
         <translation>Heroes III: HD Edition dosyaları VCMI tarafından desteklenmez.
 Lütfen Heroes III: Complete Edition veya Heroes III: Shadow of Death dizinini seçin.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="558"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="567"/>
         <source>Unknown or unsupported Heroes III version found.
 Please select the directory with Heroes III: Complete Edition or Heroes III: Shadow of Death.</source>
         <translation>Bilinmeyen veya desteklenmeyen bir Heroes III sürümü bulundu.
 Lütfen Heroes III: Complete Edition veya Heroes III: Shadow of Death dizinini seçin.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="479"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="676"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="488"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="694"/>
         <source>GOG data</source>
         <translation>GOG verileri</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="149"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="154"/>
         <source>Downloading Heroes III Demo...</source>
-        <translation type="unfinished"></translation>
+        <translation>Heroes III Demosu indiriliyor...</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="395"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="404"/>
         <source>Failed to open file: %1</source>
         <translation>Dosya açılamadı: %1</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="415"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="441"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="424"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="450"/>
         <source>You need to select a %1 file!</source>
         <comment>param is file extension</comment>
         <translation>%1 dosyasını seçmeniz gerekiyor!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="423"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="432"/>
         <source>Unknown installer selected.
 You need to select the offline GOG installer.</source>
         <translation>Bilinmeyen yükleyici seçildi.
 Çevrimdışı GOG yükleyicisini seçmeniz gerekir.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="435"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="444"/>
         <source>You selected a GOG Galaxy installer. This file does not contain the game. Please download the offline backup game installer instead.</source>
         <translation>GOG Galaxy yükleyicisini seçtiniz. Bu dosya oyunu içermiyor. Lütfen bunun yerine çevrimdışı yedekleme oyun yükleyicisini indirin.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="464"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="473"/>
         <source>Select the offline GOG installer (.exe)</source>
         <translation>Çevrimdışı GOG yükleyiciyi (.exe) seçin</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="473"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="666"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="482"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="684"/>
         <source>Invalid file selected</source>
         <translation>Geçersiz dosya seçildi</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="480"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="489"/>
         <source>Select the offline GOG installer data file: %1</source>
         <comment>param is file name</comment>
         <translation>Çevrimdışı GOG yükleyici veri dosyasını seçin: %1</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="500"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="679"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="509"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="697"/>
         <source>Invalid data file</source>
         <translation>Geçersiz veri dosyası</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="595"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="731"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="604"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="759"/>
         <source>Importing Heroes III data...</source>
         <translation>Heroes III verilerini içe aktarıyorum...</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="628"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="643"/>
         <source>Preparing installer...</source>
         <translation>Yükleyici hazırlanıyor...</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="688"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="706"/>
         <source>Extracting installer...</source>
         <translation>Yükleyici çıkarılıyor...</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="715"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="743"/>
         <source>Extracting error!</source>
         <translation>Çıkarma hatası!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="719"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="747"/>
         <source>Hash error!</source>
         <translation>Doğrulama (hash) hatası!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="723"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="751"/>
         <source>No Heroes III data!</source>
         <translation>Heroes III verisi yok!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="723"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="751"/>
         <source>Selected files do not contain Heroes III data!</source>
         <translation>Seçilen dosyalar Heroes III verilerini içermiyor!</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="745"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="776"/>
         <source>Scanning selected folder...</source>
         <translation>Seçilen klasör taranıyor...</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="520"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="553"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="803"/>
+        <source>Adds interface and gameplay improvements such as a better interface for random maps, revisit and search buttons for the adventure map, quick exchange for heroes, bonus and immunity icons, and actions in battle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="809"/>
+        <source>A polished fan-made expansion that adds Cove, Factory and Bulwark towns, new campaigns, heroes, artifacts, map objects, Interference and Runes skills, balance fixes and new terrains while staying faithful to Heroes III</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="814"/>
+        <source>Deepens Heroes III with Commanders, stack experience, stack artifacts, many new hero and commander artifacts, extra progression systems and interactive adventure map objects</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="828"/>
+        <source>Tears of Ashan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="829"/>
+        <source>A fan-made expansion inspired by Heroes V that adds alternate creature upgrades, Light and Dark Magic, Gating, a higher secondary skill cap and redesigned Conflux gameplay to Heroes III</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="529"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="562"/>
         <source>Failed to detect valid Heroes III data in chosen directory.
 Please select the directory with installed Heroes III data.</source>
         <translation>Seçilen dizinde geçerli Heroes III verileri tespit edilemedi.
 Lütfen kurulu Heroes III verilerinin bulunduğu dizini seçin.</translation>
     </message>
     <message>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="520"/>
-        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="564"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="529"/>
+        <location filename="../firstLaunch/firstlaunch_moc.cpp" line="573"/>
         <source>Heroes III data not found!</source>
         <translation>Heroes III verileri bulunamadı!</translation>
     </message>
@@ -1460,27 +1602,37 @@ Lütfen kurulu Heroes III verilerinin bulunduğu dizini seçin.</translation>
 <context>
     <name>HdExtractor</name>
     <message>
-        <location filename="../modManager/hdextractor.cpp" line="38"/>
+        <location filename="../modManager/hdextractor.cpp" line="42"/>
+        <source>HD Edition installation found!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../modManager/hdextractor.cpp" line="42"/>
+        <source>Heroes III HD Edition installation was found. Install HD graphics mod using this installation?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../modManager/hdextractor.cpp" line="49"/>
         <source>Select Directory with HD Edition (Steam folder)</source>
         <translation>HD Edition içeren dizini seçin (Steam klasörü)</translation>
     </message>
     <message>
-        <location filename="../modManager/hdextractor.cpp" line="46"/>
+        <location filename="../modManager/hdextractor.cpp" line="58"/>
         <source>Invalid folder</source>
         <translation>Geçersiz klasör</translation>
     </message>
     <message>
-        <location filename="../modManager/hdextractor.cpp" line="46"/>
+        <location filename="../modManager/hdextractor.cpp" line="58"/>
         <source>The selected folder does not contain HOMM3 2.0.exe! Please select the HD Edition installation folder.</source>
         <translation>Seçilen klasör HOMM3 2.0.exe dosyasını içermiyor! Lütfen HD Edition kurulum klasörünü seçin.</translation>
     </message>
     <message>
-        <location filename="../modManager/hdextractor.cpp" line="98"/>
+        <location filename="../modManager/hdextractor.cpp" line="110"/>
         <source>Extraction error</source>
         <translation>Çıkarma hatası</translation>
     </message>
     <message>
-        <location filename="../modManager/hdextractor.cpp" line="98"/>
+        <location filename="../modManager/hdextractor.cpp" line="110"/>
         <source>Please delete mod and try again! Failed to copy file %1 to %2</source>
         <translation>Lütfen modu silip tekrar deneyin! %1 dosyası %2 konumuna kopyalanamadı</translation>
     </message>
@@ -1607,12 +1759,12 @@ Bin (%n Bayt):
     <message>
         <location filename="../languages.cpp" line="26"/>
         <source>Simplified Chinese</source>
-        <translation type="unfinished"></translation>
+        <translation>Basitleştirilmiş Çince</translation>
     </message>
     <message>
         <location filename="../languages.cpp" line="27"/>
         <source>Traditional Chinese</source>
-        <translation type="unfinished"></translation>
+        <translation>Geleneksel Çince</translation>
     </message>
     <message>
         <location filename="../languages.cpp" line="28"/>
@@ -1676,61 +1828,66 @@ Bin (%n Bayt):
     </message>
     <message>
         <location filename="../languages.cpp" line="40"/>
+        <source>Lithuanian</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../languages.cpp" line="41"/>
         <source>Norwegian</source>
         <translation>Norveççe</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="41"/>
+        <location filename="../languages.cpp" line="42"/>
         <source>Polish</source>
         <translation>Lehçe</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="42"/>
+        <location filename="../languages.cpp" line="43"/>
         <source>Portuguese</source>
         <translation>Portekizce</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="43"/>
+        <location filename="../languages.cpp" line="44"/>
         <source>Romanian</source>
         <translation>Rumence</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="44"/>
+        <location filename="../languages.cpp" line="45"/>
         <source>Russian</source>
         <translation>Rusça</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="45"/>
+        <location filename="../languages.cpp" line="46"/>
         <source>Serbian</source>
         <translation>Sırpça</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="46"/>
+        <location filename="../languages.cpp" line="47"/>
         <source>Spanish</source>
         <translation>İspanyolca</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="47"/>
+        <location filename="../languages.cpp" line="48"/>
         <source>Swedish</source>
         <translation>İsveççe</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="48"/>
+        <location filename="../languages.cpp" line="49"/>
         <source>Turkish</source>
         <translation>Türkçe</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="49"/>
+        <location filename="../languages.cpp" line="50"/>
         <source>Ukrainian</source>
         <translation>Ukraynaca</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="50"/>
+        <location filename="../languages.cpp" line="51"/>
         <source>Vietnamese</source>
         <translation>Vietnamca</translation>
     </message>
     <message>
-        <location filename="../languages.cpp" line="72"/>
+        <location filename="../languages.cpp" line="73"/>
         <source>Auto (%1)</source>
         <translation>Otomatik (%1)</translation>
     </message>
@@ -1763,17 +1920,17 @@ Bin (%n Bayt):
         <translation>Modlar</translation>
     </message>
     <message>
-        <location filename="../mainwindow_moc.cpp" line="52"/>
+        <location filename="../mainwindow_moc.cpp" line="53"/>
         <source>Error starting executable</source>
         <translation>Çalıştırılabilir dosya başlatılamadı</translation>
     </message>
     <message>
-        <location filename="../mainwindow_moc.cpp" line="290"/>
+        <location filename="../mainwindow_moc.cpp" line="460"/>
         <source>Replace config file?</source>
         <translation>Yapılandırma dosyası değiştirilsin mi?</translation>
     </message>
     <message>
-        <location filename="../mainwindow_moc.cpp" line="290"/>
+        <location filename="../mainwindow_moc.cpp" line="460"/>
         <source>Do you want to replace %1?</source>
         <translation>%1 değiştirmek istiyor musunuz?</translation>
     </message>
@@ -1918,7 +2075,7 @@ Bin (%n Bayt):
     <message>
         <location filename="../modManager/modstateitemmodel_moc.cpp" line="45"/>
         <source>Skills</source>
-        <translation>Yetenekler</translation>
+        <translation>Beceriler</translation>
     </message>
     <message>
         <location filename="../modManager/modstateitemmodel_moc.cpp" line="46"/>
@@ -1989,22 +2146,38 @@ Bin (%n Bayt):
     <message>
         <location filename="../modManager/modstateitemmodel_moc.cpp" line="59"/>
         <source>Demo</source>
-        <translation type="unfinished"></translation>
+        <translation>Demo</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../main.cpp" line="154"/>
+        <location filename="../main.cpp" line="158"/>
         <source>Error starting executable</source>
         <translation>Çalıştırılabilir dosya başlatılamadı</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="155"/>
+        <location filename="../main.cpp" line="159"/>
         <source>Failed to start %1
 Reason: %2</source>
         <translation>%1 başlatılamadı
 Neden: %2</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1319"/>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1338"/>
+        <source>Import failed</source>
+        <translation>İçe aktarma başarısız</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1319"/>
+        <source>Failed to import save %1 from %2</source>
+        <translation>%1 kaydı %2 konumundan içe aktarılamadı</translation>
+    </message>
+    <message>
+        <location filename="../modManager/cmodlistview_moc.cpp" line="1338"/>
+        <source>Failed to import save file %1</source>
+        <translation>%1 kayıt dosyası içe aktarılamadı</translation>
     </message>
 </context>
 <context>
@@ -2121,7 +2294,7 @@ Neden: %2</translation>
     <message>
         <location filename="../startGame/StartGameTab.ui" line="318"/>
         <source>Install game</source>
-        <translation type="unfinished"></translation>
+        <translation>Oyunu yükle</translation>
     </message>
     <message>
         <location filename="../startGame/StartGameTab.ui" line="831"/>
@@ -2139,14 +2312,14 @@ Neden: %2</translation>
         <translation>Düzenleyici</translation>
     </message>
     <message numerus="yes">
-        <location filename="../startGame/StartGameTab.cpp" line="205"/>
+        <location filename="../startGame/StartGameTab.cpp" line="212"/>
         <source>Update %n mods</source>
         <translation>
             <numerusform>%n Modu güncelle</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../startGame/StartGameTab.cpp" line="209"/>
+        <location filename="../startGame/StartGameTab.cpp" line="216"/>
         <source>Heroes Chronicles:
 %n/%1 installed</source>
         <translation>
@@ -2155,62 +2328,70 @@ Neden: %2</translation>
         </translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="234"/>
+        <location filename="../startGame/StartGameTab.cpp" line="241"/>
         <source>Update to %1 available</source>
         <translation>%1 güncelleme mevcut</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="268"/>
+        <location filename="../startGame/StartGameTab.cpp" line="289"/>
+        <source>Select files (configs, mods, saves, maps, campaigns, gog files) to install...</source>
+        <translation>Yüklenecek dosyaları (ayarlar, modlar, kayıtlar, haritalar, senaryolar, gog dosyaları) seçin..</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="298"/>
         <source>Install Heroes III</source>
-        <translation type="unfinished"></translation>
+        <translation>Heroes III&apos;ü yükle</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="269"/>
+        <location filename="../startGame/StartGameTab.cpp" line="299"/>
         <source>This will remove all demo game data (Data, Maps, Mp3, Video folders) and restart the setup wizard. Are you sure?</source>
-        <translation type="unfinished"></translation>
+        <translation>Bu işlem, tüm demo oyun verilerini (Data, Maps, Mp3, Video klasörleri) silecek ve kurulum sihirbazını yeniden başlatacaktır. Emin misiniz?</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="293"/>
+        <location filename="../startGame/StartGameTab.cpp" line="276"/>
         <source>All supported files</source>
         <translation>Tüm desteklenen dosyalar</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="294"/>
+        <location filename="../startGame/StartGameTab.cpp" line="277"/>
         <source>Maps</source>
         <translation>Haritalar</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="295"/>
+        <location filename="../startGame/StartGameTab.cpp" line="278"/>
         <source>Campaigns</source>
         <translation>Seferler</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="296"/>
+        <location filename="../startGame/StartGameTab.cpp" line="279"/>
+        <source>Saves</source>
+        <translation>Kayıtlar</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="280"/>
         <source>Configs</source>
         <translation>Yapılandırmalar</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="297"/>
+        <location filename="../startGame/StartGameTab.cpp" line="281"/>
         <source>Mods</source>
         <translation>Modlar</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="298"/>
+        <location filename="../startGame/StartGameTab.cpp" line="282"/>
         <source>Gog files</source>
         <translation>Gog dosyaları</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="301"/>
+        <location filename="../startGame/StartGameTab.cpp" line="285"/>
         <source>All files (*.*)</source>
         <translation>Tüm dosyalar (*.*)</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="303"/>
         <source>Select files (configs, mods, maps, campaigns, gog files) to install...</source>
-        <translation>Yüklenecek dosyaları seçin (yapılandırmalar, modlar, haritalar, seferler, Gog dosyaları)...</translation>
+        <translation type="vanished">Yüklenecek dosyaları seçin (yapılandırmalar, modlar, haritalar, seferler, Gog dosyaları)...</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="346"/>
         <source>This option allows you to import additional data files into your VCMI installation. At the moment, following options are supported:
 
  - Heroes III Maps (.h3m or .vmap).
@@ -2219,7 +2400,7 @@ Neden: %2</translation>
  - VCMI mods in zip format (.zip)
  - VCMI configuration files (.json)
 </source>
-        <translation>Bu seçenek, VCMI kurulumunuza ek veri dosyaları içe aktarmanıza olanak tanır. Şu anda aşağıdaki seçenekler desteklenmektedir:
+        <translation type="vanished">Bu seçenek, VCMI kurulumunuza ek veri dosyaları içe aktarmanıza olanak tanır. Şu anda aşağıdaki seçenekler desteklenmektedir:
 
 - Heroes III Haritaları (.h3m veya .vmap).
 - Heroes III Seferleri (.h3c veya .vcmp).
@@ -2229,17 +2410,61 @@ Neden: %2</translation>
 </translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="361"/>
+        <location filename="../startGame/StartGameTab.cpp" line="333"/>
+        <location filename="../startGame/StartGameTab.cpp" line="368"/>
+        <source>Preparing selected files for import...</source>
+        <translation>Seçilen dosyalar içe aktarım için hazırlanıyor...</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="338"/>
+        <source>Preparing selected files for import... %1/%2</source>
+        <translation>Seçilen dosyalar içe aktarım için hazırlanıyor... %1/%2</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="359"/>
+        <source>Import failed</source>
+        <translation>İçe aktarma başarısız</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="359"/>
+        <source>Failed to prepare file for import: %1</source>
+        <translation>Dosya içe aktarım için hazırlanamadı: %1</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="427"/>
+        <source>This option allows you to import additional data files into your VCMI installation. At the moment, following options are supported:
+
+ - Heroes III Maps (.h3m or .vmap).
+ - Heroes III Campaigns (.h3c or .vcmp).
+ - Heroes III Chronicles using offline backup installer from GOG.com (.exe).
+ - VCMI mods in zip format (.zip)
+ - VCMI saves archive in zip format (.zip)
+ - VCMI save files (.vsgm1)
+ - VCMI configuration files (.json)
+</source>
+        <translation>Bu seçenek, VCMI kurulumunuza ek veri dosyalarını içe aktarmanıza olanak tanır. Şu anda aşağıdaki seçenekler desteklenmektedir:
+
+ - Heroes III Haritaları (.h3m veya .vmap).
+ - Heroes III Senaryoları (.h3c veya .vcmp).
+ - GOG.com’dan indirilen çevrimdışı yedekleme yükleyicisini (.exe) kullanan Heroes III Chronicles.
+ - Zip formatındaki VCMI modları (.zip)
+ - Zip formatındaki VCMI kayıt arşivleri (.zip)
+ - VCMI kayıt dosyaları (.vsgm1)
+ - VCMI yapılandırma dosyaları (.json)
+</translation>
+    </message>
+    <message>
+        <location filename="../startGame/StartGameTab.cpp" line="444"/>
         <source>Your Heroes III version uses different language. VCMI provides translations of the game into various languages that you can use. Use this option to automatically install such translation to your language.</source>
         <translation>Heroes III sürümünüz farklı bir dil kullanıyor. VCMI, oyunun çeşitli dillere çevirilerini sunar. Bu seçeneği kullanarak dilinize uygun çeviriyi otomatik olarak yükleyin.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="371"/>
+        <location filename="../startGame/StartGameTab.cpp" line="454"/>
         <source>Translation of Heroes III into your language is installed, but has been turned off. Use this option to enable it.</source>
         <translation>Heroes III&apos;ün dilinize çevirisi yüklü ancak kapalı. Bu seçeneği kullanarak etkinleştirin.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="381"/>
+        <location filename="../startGame/StartGameTab.cpp" line="464"/>
         <source>A new version of some of the mods that you have installed is now available in mod repository. Use this option to automatically update all your mods to latest version.
 
 WARNING: In some cases, updated versions of mods may not be compatible with your existing saves. You may want to postpone mod update until you finish any of your ongoing games.</source>
@@ -2248,14 +2473,14 @@ WARNING: In some cases, updated versions of mods may not be compatible with your
 UYARI: Bazı durumlarda güncellenen modlar mevcut kayıtlarla uyumlu olmayabilir. Devam eden oyunlarınızı bitirene kadar mod güncellemeyi ertelemek isteyebilirsiniz.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="393"/>
+        <location filename="../startGame/StartGameTab.cpp" line="476"/>
         <source>If you own Heroes Chronicles on gog.com, you can use offline backup installers provided by gog to import Heroes Chronicles data into VCMI as custom campaigns.
 To import Heroes Chronicles, download offline backup installer of each chronicle that you wish to install, select &apos;Import files&apos; option and select downloaded file. This will generate and install mod for VCMI that contains imported chronicles.</source>
         <translation>Heroes Chronicles&apos;a gog.com üzerinden sahipseniz, gog&apos;un sağladığı çevrimdışı yedek yükleyicileri kullanarak Heroes Chronicles verilerini VCMI&apos;ye özel seferler olarak içe aktarabilirsiniz.
 Heroes Chronicles&apos;ı içe aktarmak için yüklemek istediğiniz her chronicle görev serisi için çevrimdışı yükleyicisini indirin, &apos;Dosyaları içe aktar&apos; seçeneğini seçin ve indirdiğiniz dosyayı gösterin. Bu, içe aktarılan chronicle görevlerini içeren bir VCMI modu oluşturup yükleyecektir.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="406"/>
+        <location filename="../startGame/StartGameTab.cpp" line="489"/>
         <source>VCMI has detected that Heroes III music files are missing from your installation. VCMI will run, but in-game music will not be available.
 
 To resolve this problem, please copy missing mp3 files from Heroes III to VCMI data files directory manually or reinstall VCMI and re-import Heroes III data files.</source>
@@ -2264,7 +2489,7 @@ To resolve this problem, please copy missing mp3 files from Heroes III to VCMI d
 Bu sorunu gidermek için lütfen eksik mp3 dosyalarını Heroes III&apos;ten VCMI veri dosyaları dizinine manuel olarak kopyalayın ya da VCMI&apos;ı yeniden yükleyip Heroes III veri dosyalarını yeniden içe aktarın.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="417"/>
+        <location filename="../startGame/StartGameTab.cpp" line="500"/>
         <source>VCMI has detected that Heroes III video files are missing from your installation. VCMI will run, but in-game cutscenes will not be available.
 
 To resolve this problem, please copy VIDEO.VID file from Heroes III to VCMI data files directory manually or reinstall VCMI and re-import Heroes III data files.</source>
@@ -2273,7 +2498,7 @@ To resolve this problem, please copy VIDEO.VID file from Heroes III to VCMI data
 Bu sorunu çözmek için VIDEO.VID dosyasını Heroes III&apos;ten VCMI veri dizinine elle kopyalayın veya VCMI&apos;yi yeniden yükleyip Heroes III verilerini yeniden içe aktarın.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="428"/>
+        <location filename="../startGame/StartGameTab.cpp" line="511"/>
         <source>VCMI has detected that some of Heroes III data files are missing from your installation. You may attempt to run VCMI, but game may not work as expected or crash.
 
 To resolve this problem, please reinstall game and reimport data files using supported version of Heroes III. VCMI requires Heroes III: Shadow of Death or Complete Edition to run, which you can get (for example) from gog.com.</source>
@@ -2282,7 +2507,7 @@ To resolve this problem, please reinstall game and reimport data files using sup
 Bu sorunu gidermek için lütfen oyunu yeniden yükleyin ve Heroes III&apos;ün desteklenen bir sürümünü kullanarak veri dosyalarını yeniden içe aktarın. VCMI&apos;ın çalışması için Heroes III: Shadow of Death veya Complete Edition gereklidir; bu sürümleri (örneğin) gog.com adresinden edinebilirsiniz.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="439"/>
+        <location filename="../startGame/StartGameTab.cpp" line="522"/>
         <source>VCMI has detected that some of Heroes III: Armageddon&apos;s Blade data files are missing from your installation. VCMI will work, but Armageddon&apos;s Blade campaigns will not be available.
 
 To resolve this problem, please copy missing data files from Heroes III to VCMI data files directory manually or reinstall VCMI and re-import Heroes III data files.</source>
@@ -2291,7 +2516,7 @@ To resolve this problem, please copy missing data files from Heroes III to VCMI 
 Bu sorunu gidermek için lütfen eksik veri dosyalarını Heroes III&apos;ten VCMI veri dosyaları dizinine manuel olarak kopyalayın veya VCMI&apos;yi yeniden yükleyip Heroes III veri dosyalarını yeniden içe aktarın.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="450"/>
+        <location filename="../startGame/StartGameTab.cpp" line="533"/>
         <source>To improve graphics quality in VCMI, you can install files from the official Heroes III HD version on Steam.Select the Heroes HD folder from Steam.
 
 After installation, you need to set the upscaling filter to x2 or higher in order to actually see the HD graphics.</source>
@@ -2300,24 +2525,24 @@ After installation, you need to set the upscaling filter to x2 or higher in orde
 Kurulumdan sonra, HD grafikleri görebilmek için yükseltme filtresini x2 veya daha yüksek bir değere ayarlamanız gerekir.</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="489"/>
-        <location filename="../startGame/StartGameTab.cpp" line="498"/>
+        <location filename="../startGame/StartGameTab.cpp" line="572"/>
+        <location filename="../startGame/StartGameTab.cpp" line="581"/>
         <source>Preset import failed</source>
         <translation>Önayar içe aktarma başarısız</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="489"/>
-        <location filename="../startGame/StartGameTab.cpp" line="498"/>
+        <location filename="../startGame/StartGameTab.cpp" line="572"/>
+        <location filename="../startGame/StartGameTab.cpp" line="581"/>
         <source>Failed to import preset - data in clipboard does not looks like mod preset!</source>
         <translation>Önayar içe aktarılamadı - panodaki veriler mod önayarına benzemiyor!</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="514"/>
+        <location filename="../startGame/StartGameTab.cpp" line="597"/>
         <source>Enter preset name:</source>
         <translation>Önayar adını girin:</translation>
     </message>
     <message>
-        <location filename="../startGame/StartGameTab.cpp" line="557"/>
+        <location filename="../startGame/StartGameTab.cpp" line="640"/>
         <source>Rename preset &apos;%1&apos; to:</source>
         <translation>Önayar &apos;%1&apos; adını değiştir:</translation>
     </message>

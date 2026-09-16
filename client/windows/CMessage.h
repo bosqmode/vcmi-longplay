@@ -9,7 +9,7 @@
  */
 #pragma once
 
-#include "../render/EFont.h"
+#include "render/EFont.h"
 #include "../../lib/GameConstants.h"
 
 struct SDL_Surface;
@@ -17,9 +17,7 @@ class CInfoWindow;
 class CComponent;
 class Canvas;
 
-VCMI_LIB_NAMESPACE_BEGIN
 class ColorRGBA;
-VCMI_LIB_NAMESPACE_END
 
 /// Class which draws formatted text messages and generates chat windows
 class CMessage

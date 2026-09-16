@@ -192,3 +192,5 @@ Host's desktop access requires https over the internet, so outside of LAN this s
 
 To activate HOTA, download the mod, place it under /longplay/host/gamedata/Mods,
 and edit /longplay/host/modSettings.json to include it, or delete "hota" if not needed.
+
+note: remember to pull/download appropriate HOTA version, since we are running "develop" (currently 1.8 in development) we have to make sure the mod is supported by core, for this you can pull from the HOTA repository a specific commit, and just zip the content-directory (this is how the mod is actually packaged)

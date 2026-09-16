@@ -14,6 +14,9 @@
 #include "CMT.h"
 #include "CServerHandler.h"
 #include "GameEngine.h"
+#include "Translator.h"
+#include "adventureMap/AdventureMapInterface.h"
+#include "gui/WindowHandler.h"
 #include "mapView/mapHandler.h"
 #include "globalLobby/GlobalLobbyClient.h"
 #include "mainmenu/CMainMenu.h"
@@ -22,12 +25,14 @@
 #include "../lib/CConfigHandler.h"
 #include "../lib/GameLibrary.h"
 #include "../lib/callback/CCallback.h"
+#include "../lib/filesystem/SavegamePath.h"
 #include "../lib/texts/CGeneralTextHandler.h"
 
 std::unique_ptr<GameInstance> GAME = nullptr;
 
 GameInstance::GameInstance()
-	: serverInstance(std::make_unique<CServerHandler>())
+	: translatorInstance(std::make_unique<CompositeTranslator>())
+	, serverInstance(std::make_unique<CServerHandler>())
 	, interfaceInstance(nullptr)
 {
 }
@@ -40,6 +45,11 @@ CServerHandler & GameInstance::server()
 		throw std::runtime_error("Invalid access to GameInstance::server");
 
 	return *serverInstance;
+}
+
+ITranslator & GameInstance::translator()
+{
+	return *translatorInstance;
 }
 
 CMapHandler & GameInstance::map()
@@ -76,6 +86,12 @@ void GameInstance::setMapInstance(std::unique_ptr<CMapHandler> ptr)
 	mapInstance = std::move(ptr);
 }
 
+std::unique_ptr<CMapHandler> GameInstance::swapMapInstance(std::unique_ptr<CMapHandler> ptr)
+{
+	std::swap(mapInstance, ptr);
+	return ptr;
+}
+
 void GameInstance::setInterfaceInstance(CPlayerInterface * ptr)
 {
 	interfaceInstance = ptr;
@@ -97,14 +113,45 @@ void GameInstance::onUpdate()
 
 bool GameInstance::capturedAllEvents()
 {
+	// a replay animates constantly, which would otherwise swallow every event and make the
+	// abort button unreachable. Nothing can be disturbed - the replayed game is a throw-away copy.
+	if (serverInstance && serverInstance->isReplayActive())
+		return false;
+
 	if (interfaceInstance)
 		return interfaceInstance->capturedAllEvents();
 	else
 		return false;
 }
 
+bool GameInstance::wantsFrameRendered()
+{
+	// Only the plain adventure map may skip a frame: a battle or a window above it animates on
+	// its own, and the hero keeps counting as moving while they are up.
+	if (CPlayerInterface::battleInt)
+		return true;
+
+	if (!adventureInt || !ENGINE->windows().isTopWindow(adventureInt))
+		return true;
+
+	// between two steps of a walking hero nothing moves, and rendering it only delays the
+	// netpacks that would start the next step
+	if (interfaceInstance && mapInstance && interfaceInstance->isHeroMoving())
+		return mapInstance->hasOngoingAnimations();
+
+	return true;
+}
+
 void GameInstance::onShutdownRequested(bool ask)
 {
+	if(!ENGINE)
+	{
+		if(server().client)
+			server().endGameplay();
+		server().stopNetwork();
+		return;
+	}
+
 	auto doQuit = [](){ throw GameShutdownException(); };
 
 	if(!ask)
@@ -125,8 +172,6 @@ void GameInstance::onAppPaused()
 
 void GameInstance::pauseAutoSave()
 {
-	const std::string autoSaveName = "Saves/PauseAutosave";
-
 	logGlobal->info("Received pause save game request");
 	if(!GAME->interface() || !GAME->interface()->cb)
 	{
@@ -146,5 +191,10 @@ void GameInstance::pauseAutoSave()
 		return;
 	}
 
-	GAME->interface()->cb->save(autoSaveName, false);
+	const std::string autosavePath = SavegamePath::getPath(
+		*GAME->interface()->cb->getStartInfo(),
+		*GAME->interface()->cb->getMapHeader(),
+		"PauseAutosave"
+	);
+	GAME->interface()->cb->save(autosavePath, false);
 }

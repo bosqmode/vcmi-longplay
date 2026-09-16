@@ -10,10 +10,9 @@
 #pragma once
 
 #include "../../lib/Point.h"
+#include "../../lib/Rect.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
 class ObjectInstanceID;
-VCMI_LIB_NAMESPACE_END
 
 class IImage;
 class CAnimation;
@@ -41,6 +40,14 @@ class MapViewCache
 	boost::multi_array<TileChecksum, 2> terrainChecksum;
 	boost::multi_array<bool, 2> tilesUpToDate;
 
+	/// Animation-step bookkeeping of update(): tiles dirtied this frame and the previous one,
+	/// tiles redrawn so far, this frame's share, and whether the previous frame left some waiting
+	int animatedTilesDirty = 0;
+	int animatedTilesDirtyBefore = 0;
+	int animatedTilesRedrawn = 0;
+	int animatedTileRedrawBudget = 0;
+	bool drainingAnimationBurst = false;
+
 	Point cachedSize;
 	Point cachedPosition;
 	int cachedLevel;
@@ -48,30 +55,81 @@ class MapViewCache
 
 	std::shared_ptr<MapViewModel> model;
 
+	/// Whether this cache may allocate GPU render targets
+	bool useGpuLayer;
+
+	/// Whether the canvases below are GPU backed. A colour scheme moves the whole client to the
+	/// surface path, and a cache built for one path cannot be drawn onto the other.
+	bool canvasesOnGpu = false;
+
+	/// Whether the terrain cache was last built at native tile size, rather than the bounded,
+	/// ready-scaled size used when that would exceed the driver's maximum texture size
+	bool cachedAtNativeSize = false;
+
+	/// Size the cache canvas was created for - at native tile size it follows the zoom level
+	Point cachedCanvasDimensions;
+
+	/// Set by update(), cleared by render(). Lets a caller that already filled the cache
+	/// this frame skip doing it again, which would re-checksum every visible tile.
+	bool updatedThisFrame = false;
+
+	/// Tiles the cache was filled for, to detect a scroll between the update and the draw
+	Rect updatedTilesRect;
+
 	std::unique_ptr<Canvas> terrain;
 	std::unique_ptr<Canvas> terrainTransition;
 	std::unique_ptr<Canvas> intermediate;
 	std::unique_ptr<MapRenderer> mapRenderer;
+
+	/// Canvas of the given logical size, drawing onto a GPU render target when this view
+	/// uses the GPU layer and onto a plain surface otherwise
+	std::unique_ptr<Canvas> createCanvas(const Point & size) const;
+
+	/// Allocates the canvases on first use. Deferred out of the constructor because that
+	/// runs on the network thread, where creating a texture would steal the GL context
+	void ensureCanvases();
 
 	std::shared_ptr<CAnimation> iconsStorage;
 
 	Canvas getTile(const int3 & coordinates);
 	void updateTile(const std::shared_ptr<IMapRendererContext> & context, const int3 & coordinates);
 
+	/// Copies the entire cached tile window onto the target in as few blits as possible. Used
+	/// when every tile has to be repainted anyway, above all while the view is scrolling.
+	/// Walks the visible window of the cache. Because tiles are stored wrapped around on both
+	/// axes it falls into at most four bands, each contiguous in the cache and on screen.
+	void forEachCachedBand(const std::function<void(const Rect & cacheArea, const Point & targetPosition, const Point & targetSize)> & visit) const;
+
+	void renderCachedTiles(Canvas & target);
+
 	std::shared_ptr<IImage> getOverlayImageForTile(const std::shared_ptr<IMapRendererContext> & context, const int3 & coordinates);
 
 public:
-	explicit MapViewCache(const std::shared_ptr<MapViewModel> & model);
+	/// useGpuLayer must match how the owning view presents itself: a view drawn into the
+	/// software screen cannot read from a GPU-backed cache
+	MapViewCache(const std::shared_ptr<MapViewModel> & model, bool useGpuLayer);
 	~MapViewCache();
 
 	/// invalidates cache of specified object
 	void invalidate(const std::shared_ptr<IMapRendererContext> & context, const ObjectInstanceID & object);
 
 	/// updates internal terrain cache according to provided time delta
+	/// True when update() already ran this frame and the view still shows the same tiles. A scroll
+	/// in between brings tiles into view whose cache slots were never filled for them.
+	bool isUpdatedThisFrame() const;
+
 	void update(const std::shared_ptr<IMapRendererContext> & context);
 
 	/// renders updated terrain cache onto provided canvas
 	void render(const std::shared_ptr<IMapRendererContext> & context, Canvas & target, bool fullRedraw);
+
+	/// Hands the visible window of the cache to the screen handler, to be drawn onto the screen
+	/// while the frame is composed rather than copied into a layer now. Only valid when nothing
+	/// has to be drawn on top of the terrain - see needsOwnLayer(). targetArea is in screen pixels.
+	void present(const Rect & targetArea);
+
+	/// Whether this frame draws anything over the terrain, which needs a layer of its own
+	bool needsOwnLayer(const std::shared_ptr<IMapRendererContext> & context) const;
 
 	/// creates snapshot of current view and stores it into internal canvas
 	/// used for view transition, e.g. Dimension Door spell or teleporters (Subterra gates / Monolith)

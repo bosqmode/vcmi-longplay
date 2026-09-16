@@ -168,7 +168,7 @@ void ApplyClientNetPackVisitor::visitSetSecSkill(SetSecSkill & pack)
 void ApplyClientNetPackVisitor::visitHeroVisitCastle(HeroVisitCastle & pack)
 {
 	const CGHeroInstance *h = cl.gameInfo().getHero(pack.hid);
-	
+
 	if(pack.start())
 	{
 		callInterfaceIfPresent(cl, h->tempOwner, &IGameEventsReceiver::heroVisitsTown, h, gs.getTown(pack.tid));
@@ -362,7 +362,7 @@ void ApplyClientNetPackVisitor::visitNewTurn(NewTurn & pack)
 	{
 		const auto & newWeek = *pack.newWeekNotification;
 
-		std::string str = newWeek.text.toString();
+		std::string str = newWeek.text.toString(&GAME->translator());
 		callAllInterfaces(cl, &CGameInterface::showInfoDialog, newWeek.type, str, newWeek.components,(soundBase::soundID)newWeek.soundID);
 	}
 }
@@ -607,10 +607,8 @@ void ApplyClientNetPackVisitor::visitChangeSpells(ChangeSpells & pack)
 	if(!hero)
 		return;
 
-	if(hero->valOfBonuses(BonusType::LEARN_BATTLE_SPELL_CHANCE_PRE_BATTLE) <= 0)
-		return;
-
-	showEagleEyeLearnedSpellsDialog(cl, pack.hid, pack.spells, hero->tempOwner);
+	if (pack.eagleEyeBonus)
+		showEagleEyeLearnedSpellsDialog(cl, pack.hid, pack.spells, hero->tempOwner);
 }
 
 void ApplyClientNetPackVisitor::visitSetHeroesInTown(SetHeroesInTown & pack)
@@ -663,7 +661,9 @@ void ApplyFirstClientNetPackVisitor::visitGiveHero(GiveHero & pack)
 
 void ApplyClientNetPackVisitor::visitInfoWindow(InfoWindow & pack)
 {
-	std::string str = pack.text.toString();
+	std::string str = pack.text.toString(&GAME->translator());
+	if(pack.journalInfo)
+		callInterfaceIfPresent(cl, pack.player, &IGameEventsReceiver::scenarioEventJournalChanged);
 
 	if(!callInterfaceIfPresent(cl, pack.player, &CGameInterface::showInfoDialog, pack.type, str, pack.components,(soundBase::soundID)pack.soundID))
 		logNetwork->warn("We received InfoWindow for not our player...");
@@ -722,7 +722,7 @@ void ApplyClientNetPackVisitor::visitCommanderLevelUp(CommanderLevelUp & pack)
 
 void ApplyClientNetPackVisitor::visitBlockingDialog(BlockingDialog & pack)
 {
-	std::string str = pack.text.toString();
+	std::string str = pack.text.toString(&GAME->translator());
 
 	if(!callOnlyThatInterface(cl, pack.player, &CGameInterface::showBlockingDialog, str, pack.components, pack.queryID, (soundBase::soundID)pack.soundID, pack.selection(), pack.cancel(), pack.safeToAutoaccept()))
 		logNetwork->warn("We received YesNoDialog for not our player...");
@@ -804,6 +804,11 @@ void ApplyClientNetPackVisitor::visitBattleLogMessage(BattleLogMessage & pack)
 	callBattleInterfaceIfPresentForBothSides(cl, pack.battleID, &IBattleEventsReceiver::battleLogMessage, pack.battleID, pack.lines);
 }
 
+void ApplyClientNetPackVisitor::visitBattleAnimationPlayed(BattleAnimationPlayed & pack)
+{
+	callBattleInterfaceIfPresentForBothSides(cl, pack.battleID, &IBattleEventsReceiver::battleAnimationPlayed, pack.battleID, pack);
+}
+
 void ApplyClientNetPackVisitor::visitBattleTriggerEffect(BattleTriggerEffect & pack)
 {
 	callBattleInterfaceIfPresentForBothSides(cl, pack.battleID, &IBattleEventsReceiver::battleTriggerEffect, pack.battleID, pack);
@@ -856,7 +861,7 @@ void ApplyClientNetPackVisitor::visitSetStackEffect(SetStackEffect & pack)
 	callBattleInterfaceIfPresentForBothSides(cl, pack.battleID, &IBattleEventsReceiver::battleStacksEffectsSet, pack.battleID, pack);
 }
 
-void ApplyClientNetPackVisitor::visitStacksInjured(StacksInjured & pack)
+void ApplyFirstClientNetPackVisitor::visitStacksInjured(StacksInjured & pack)
 {
 	callBattleInterfaceIfPresentForBothSides(cl, pack.battleID, &IBattleEventsReceiver::battleStacksAttacked, pack.battleID, pack.stacks, false);
 }
@@ -906,8 +911,8 @@ void ApplyClientNetPackVisitor::visitBattleUnitsChanged(BattleUnitsChanged & pac
 
 void ApplyClientNetPackVisitor::visitBattleObstaclesChanged(BattleObstaclesChanged & pack)
 {
-	//inform interfaces about removed obstacles
-	callBattleInterfaceIfPresentForBothSides(cl, pack.battleID, &IBattleEventsReceiver::battleObstaclesChanged, pack.battleID, pack.changes);
+	//inform interfaces about the changed obstacle
+	callBattleInterfaceIfPresentForBothSides(cl, pack.battleID, &IBattleEventsReceiver::battleObstaclesChanged, pack.battleID, pack.change);
 }
 
 void ApplyClientNetPackVisitor::visitCatapultAttack(CatapultAttack & pack)
@@ -929,12 +934,17 @@ void ApplyClientNetPackVisitor::visitPackageApplied(PackageApplied & pack)
 		logNetwork->warn("Surprising server message! PackageApplied for unknown requestID!");
 }
 
+void ApplyClientNetPackVisitor::visitQueryResolved(QueryResolved & pack)
+{
+	callAllInterfaces(cl, &IGameEventsReceiver::queryResolved, pack.queryID);
+}
+
 void ApplyClientNetPackVisitor::visitSystemMessage(SystemMessage & pack)
 {
 	// usually used to receive error messages from server
-	logNetwork->error("System message: %s", pack.text.toString());
+	logNetwork->error("System message: %s", pack.text.toString(&GAME->translator()));
 
-	GAME->server().getGameChat().onNewSystemMessageReceived(pack.text.toString());
+	GAME->server().getGameChat().onNewSystemMessageReceived(pack.text.toString(&GAME->translator()));
 }
 
 void ApplyClientNetPackVisitor::visitPlayerBlocked(PlayerBlocked & pack)

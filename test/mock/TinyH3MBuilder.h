@@ -12,7 +12,7 @@
 
 #include "../../lib/GameConstants.h"
 #include "../../lib/int3.h"
-#include "../../lib/mapObjects/CQuest.h"
+#include "../../lib/mapObjects/Quest.h"
 #include "../../lib/mapping/MapFormat.h"
 #include "../../lib/mapping/MapDifficulty.h"
 
@@ -43,6 +43,12 @@ struct Quest
 	HeroTypeID                                   hero;            // HERO
 	PlayerColor                                  player = PlayerColor::NEUTRAL; // PLAYER
 	uint32_t                                     killTargetIdentifier = 0; // KILL_CREATURE / KILL_HERO (wire identifier of target)
+
+	// HOTA-only missions (emitted via the HOTA_MULTI placeholder; require format == HOTA).
+	std::vector<HeroClassID>                     heroClasses;              // HOTA_HERO_CLASS
+	uint32_t                                     reachDateDay = 0;         // HOTA_REACH_DATE: resulting mission.daysPassed
+	uint8_t                                      difficultyMask = 0;       // HOTA_GAME_DIFFICULTY: allowed-difficulty bitmask (1..31)
+	uint32_t                                     scriptEventID = 0;        // HOTA_SCRIPTED: questEvents handler id
 
 	/// Day-of-game past which the quest can no longer be completed. -1 (default) = no timeout.
 	int32_t                                      lastDay = -1;
@@ -101,9 +107,21 @@ public:
 	TinyH3MBuilder & description(std::string s);
 	TinyH3MBuilder & difficulty(EMapDifficulty d);
 
+	/// Plain-text Lua script for the built map. Not part of the H3M bytes (H3M cannot embed Lua) -
+	/// retrieve via script() and hand it to the loader/service to set as CMap::scriptSource.
+	TinyH3MBuilder & withScript(std::string lua) { mapScript = std::move(lua); return *this; }
+	const std::string & script() const { return mapScript; }
+
+	/// HotA sub-format version. Ignored unless the format is EMapFormat::HOTA.
+	/// Only versions 0..3 are emittable; higher values throw at build() time.
+	TinyH3MBuilder & hotaVersion(uint32_t version);
+
 	/// Mark a player as both human- and computer-playable. Required for any
 	/// object that ownership-validates against canAnyonePlay (towns, heroes).
 	TinyH3MBuilder & playerActive(PlayerColor color);
+
+	/// Append a fixed-faction Town object owned by `owner`.
+	TinyH3MBuilder & town(const int3 & pos, FactionID faction, PlayerColor owner);
 
 	/// Append a Random Town object owned by `owner`. Builder auto-registers the
 	/// RANDOM_TOWN template on first call. No garrison, standard fort, no events.
@@ -133,6 +151,12 @@ public:
 	/// Per-skill primary stat overrides (attack, defense, spell power, knowledge).
 	TinyH3MBuilder & heroPrimary(uint8_t attack, uint8_t defense, uint8_t spellPower, uint8_t knowledge);
 
+	/// Explicit secondary skill set. Levels use H3 values: 1 basic, 2 advanced, 3 expert.
+	TinyH3MBuilder & heroSecondarySkills(std::vector<std::pair<SecondarySkill, uint8_t>> skills);
+
+	/// Explicit spellbook contents. Use an empty vector to force an empty custom spellbook.
+	TinyH3MBuilder & heroSpells(std::vector<SpellID> spells);
+
 	/// Equipped artifacts keyed by slot. Slots not listed are written as NONE
 	/// (empty). Triggers the hasArtSet branch in `loadArtifactsOfHero`.
 	TinyH3MBuilder & heroEquipped(std::vector<std::pair<ArtifactPosition, ArtifactID>> equipped);
@@ -149,11 +173,17 @@ public:
 	/// Resource pile. amount=0 means "use default".
 	TinyH3MBuilder & resource(const int3 & pos, GameResID resource, uint32_t amount = 0);
 
+	/// Empty Pandora's Box - no message, guards or rewards.
+	TinyH3MBuilder & pandora(const int3 & pos);
+
 	/// Specific artifact pickup.
 	TinyH3MBuilder & artifact(const int3 & pos, ArtifactID artifact);
 
 	/// Spell scroll pickup containing the given spell.
 	TinyH3MBuilder & scroll(const int3 & pos, SpellID spell);
+
+	/// Fixed creature dwelling owned by `owner`.
+	TinyH3MBuilder & dwelling(const int3 & pos, MapObjectSubID type, PlayerColor owner);
 
 	// ---- quest objects -------------------------------------------------
 
@@ -171,10 +201,22 @@ public:
 	/// satisfy the mission before passing.
 	TinyH3MBuilder & questGuard(const int3 & pos, Quest mission = {});
 
+	/// Quest Gate (HotA). Pathfinder-passable once its mission is satisfied; never
+	/// removed. Emitted as the HotA BORDER_GATE subID-1000 hack, so it requires the
+	/// HOTA format. The loader reads it through the same path as a Quest Guard.
+	TinyH3MBuilder & questGate(const int3 & pos, Quest mission = {});
+
 	/// Seer Hut. With default-constructed Quest{} no mission is required and the
 	/// reward is ignored. With a real mission, the reward kind controls what the
 	/// hero receives on completion.
 	TinyH3MBuilder & seerHut(const int3 & pos, Quest mission = {}, SeerReward reward = {});
+
+	/// Multi-quest Seer Hut (HotA v3+): a list of one-shot quests followed by a
+	/// list of repeatable quests, each with its own reward. Requires the HOTA
+	/// format with hotaVersion >= 3.
+	TinyH3MBuilder & seerHutMulti(const int3 & pos,
+		std::vector<std::pair<Quest, SeerReward>> oneShots,
+		std::vector<std::pair<Quest, SeerReward>> repeatables = {});
 
 	// ---- mission factories (for .questGuard / .seerHut) -----------------
 
@@ -187,6 +229,12 @@ public:
 	static Quest missionPlayer(PlayerColor player);
 	static Quest missionKillCreature(ObjectHandle target);
 	static Quest missionKillHero(ObjectHandle target);
+
+	// HOTA-only mission factories (require the HOTA format):
+	static Quest missionHeroClass(std::vector<HeroClassID> classes);
+	static Quest missionReachDate(uint32_t daysPassed);
+	static Quest missionDifficulty(uint8_t difficultyMask);
+	static Quest missionScripted(uint32_t scriptEventID);
 
 	// ---- seer-hut reward factories --------------------------------------
 
@@ -229,13 +277,20 @@ private:
 		uint32_t       resourceAmount    = 0;
 		HeroTypeID     heroType;            // HERO / RANDOM_HERO
 		SpellID        scrollSpell;         // SPELL_SCROLL
-		Quest          quest;               // QUEST_GUARD / SEER_HUT
-		SeerReward     reward;              // SEER_HUT (only consumed when quest is non-NONE)
+		Quest          quest;               // QUEST_GUARD / QUEST_GATE
+		SeerReward     reward;              // unused for the multi-quest seer-hut path
+
+		// SEER_HUT: one-shot then repeatable quests, each with its own reward.
+		// The single-quest seerHut() populates one one-shot entry.
+		std::vector<std::pair<Quest, SeerReward>> seerOneShots;
+		std::vector<std::pair<Quest, SeerReward>> seerRepeatables;
 
 		// Hero customisation. Only consumed for HERO / RANDOM_HERO objects.
 		std::vector<std::pair<CreatureID, uint16_t>>           heroGarrisonStacks;
 		std::optional<uint32_t>                                heroExperienceXp;
 		std::optional<std::array<uint8_t, 4>>                  heroPrimarySkills;
+		std::vector<std::pair<SecondarySkill, uint8_t>>        heroSecondarySkills;
+		std::optional<std::vector<SpellID>>                    heroSpells;
 		std::vector<std::pair<ArtifactPosition, ArtifactID>>   heroEquippedArts;
 		std::vector<ArtifactID>                                heroBackpackArts;
 
@@ -269,6 +324,7 @@ private:
 
 	void writeHeroBody(TinyH3MWriter & w, const ObjectSpec & obj) const;
 	void writeScrollBody(TinyH3MWriter & w, const ObjectSpec & obj) const;
+	void writeSpellBitmask(TinyH3MWriter & w, const std::vector<SpellID> & spells) const;
 	/// Mirrors readCreatureSet: 7 fixed slots, each = creature id + uint16 count.
 	/// Slots past the end of `stacks` are written as NONE / 0.
 	void writeCreatureSet(TinyH3MWriter & w, const std::vector<std::pair<CreatureID, uint16_t>> & stacks) const;
@@ -283,12 +339,17 @@ private:
 	/// Emits 1 byte rewardKind + payload. Caller must only invoke when the
 	/// preceding mission was non-NONE — NONE missions skip the reward block.
 	void writeRewardBody(TinyH3MWriter & w, const SeerReward & reward) const;
+	/// One seer-hut quest: mission body followed by its reward (or a single zero
+	/// placeholder byte when the mission is NONE), mirroring readSeerHutQuest.
+	void writeSeerHutQuest(TinyH3MWriter & w, const Quest & quest, const SeerReward & reward) const;
 
 	EMapFormat     format;
+	uint32_t       hotaFormatVersion = 3; // HotA sub-format; only used when format == HOTA
 	int            sideLength = 36;
 	bool           twoLevel = false;
 	std::string    mapName = "TinyH3M test map";
 	std::string    mapDescription;
+	std::string    mapScript;
 	EMapDifficulty mapDifficulty = EMapDifficulty::NORMAL;
 
 	std::array<bool, 8> playerEnabled{};

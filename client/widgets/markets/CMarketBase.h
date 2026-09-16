@@ -11,14 +11,10 @@
 
 #include "TradePanels.h"
 #include "../Slider.h"
-#include "../../render/EFont.h"
-#include "../../render/Colors.h"
-
-VCMI_LIB_NAMESPACE_BEGIN
+#include "render/EFont.h"
+#include "render/Colors.h"
 
 class IMarket;
-
-VCMI_LIB_NAMESPACE_END
 
 class CPlayerInterface;
 

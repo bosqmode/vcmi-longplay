@@ -16,8 +16,6 @@
 #include "../../constants/EntityIdentifiers.h"
 #include "../../json/JsonNode.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 class BattleHex;
 class BattleHexArray;
 class CBattleInfoCallback;
@@ -36,7 +34,6 @@ namespace effects
 using RNG = vstd::RNG;
 class Effects;
 class Effect;
-class SpellEffectService;
 
 using TargetType = spells::AimType;
 
@@ -110,5 +107,3 @@ protected:
 
 }
 }
-
-VCMI_LIB_NAMESPACE_END

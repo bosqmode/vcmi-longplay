@@ -27,7 +27,7 @@
 #include "../widgets/GraphicalPrimitiveCanvas.h"
 #include "../widgets/Images.h"
 #include "../windows/InfoWindows.h"
-#include "../render/Colors.h"
+#include "render/Colors.h"
 #include "../globalLobby/GlobalLobbyClient.h"
 
 #include "../../lib/CConfigHandler.h"
@@ -200,7 +200,7 @@ void CLobbyScreen::updateCompatibilityNotice(size_t requiredHumanPlayers)
 		MetaString warningText;
 		warningText.appendTextID("vcmi.lobby.system.hidingIncompatibleMaps");
 		warningText.replaceNumber(requiredHumanPlayers);
-		const std::string warningTextFormatted = warningText.toString();
+		const std::string warningTextFormatted = warningText.toString(&GAME->translator());
 
 		if(lastCompatibilityNotice != warningTextFormatted)
 		{
@@ -313,7 +313,7 @@ void CLobbyScreen::startCampaign()
 		message.appendTextID("vcmi.client.errors.invalidMap");
 		message.replaceRawString(e.what());
 
-		CInfoWindow::showInfoDialog(message.toString(), {});
+		CInfoWindow::showInfoDialog(message.toString(&GAME->translator()), {});
 	}
 }
 
@@ -429,7 +429,8 @@ void CLobbyScreen::updateAfterStateChange()
 		ExtraOptionsInfo info = SEL->getStartInfo()->extraOptionsInfo;
 		info.cheatsAllowed = isMultiplayer ? persistentStorage["startExtraOptions"]["multiPlayer"]["cheatsAllowed"].Bool() : !persistentStorage["startExtraOptions"]["singlePlayer"]["cheatsNotAllowed"].Bool();
 		info.unlimitedReplay = persistentStorage["startExtraOptions"][isMultiplayer ? "multiPlayer" : "singlePlayer"]["unlimitedReplay"].Bool();
-		if(info.cheatsAllowed != GAME->server().si->extraOptionsInfo.cheatsAllowed || info.unlimitedReplay != GAME->server().si->extraOptionsInfo.unlimitedReplay)
+		info.recordGame = persistentStorage["startExtraOptions"][isMultiplayer ? "multiPlayer" : "singlePlayer"]["recordGame"].Bool();
+		if(info != GAME->server().si->extraOptionsInfo)
 			GAME->server().setExtraOptionsInfo(info);
 	}
 

@@ -12,7 +12,7 @@
 #include "CampaignState.h" // Convenience include - not required for build, but required for any user of CampaignHandler
 #include "../filesystem/ResourcePath.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
+class ITranslator;
 
 class DLL_LINKAGE CampaignHandler
 {
@@ -44,8 +44,6 @@ public:
 	static std::shared_ptr<CampaignState> getCampaign(const std::string & name); //name - name of appropriate file
 
 	//writer for VCMI campaigns (*.vcmp)
-	static JsonNode writeHeaderToJson(CampaignHeader & header);
-	static JsonNode writeScenarioToJson(const CampaignScenario & scenario);
+	static JsonNode writeHeaderToJson(CampaignHeader & header, const ITranslator * translator);
+	static JsonNode writeScenarioToJson(const CampaignScenario & scenario, const ITranslator * translator);
 };
-
-VCMI_LIB_NAMESPACE_END

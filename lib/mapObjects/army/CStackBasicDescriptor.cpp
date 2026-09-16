@@ -14,8 +14,6 @@
 #include "../../GameLibrary.h"
 #include "../../serializer/JsonSerializeFormat.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 //This constructor should be placed here to avoid side effects
 CStackBasicDescriptor::CStackBasicDescriptor() = default;
 
@@ -62,7 +60,7 @@ void CStackBasicDescriptor::setCount(TQuantity newCount)
 	count = newCount;
 }
 
-bool operator==(const CStackBasicDescriptor & l, const CStackBasicDescriptor & r)
+DLL_LINKAGE bool operator==(const CStackBasicDescriptor & l, const CStackBasicDescriptor & r)
 {
 	return l.typeID == r.typeID && l.count == r.count;
 }
@@ -87,5 +85,3 @@ void CStackBasicDescriptor::serializeJson(JsonSerializeFormat & handler)
 			setType(CreatureID(CreatureID::decode(typeName)).toCreature());
 	}
 }
-
-VCMI_LIB_NAMESPACE_END

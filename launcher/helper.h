@@ -25,10 +25,14 @@ namespace Helper
 	void revealDirectoryInFileBrowser(QString path);
 	MainWindow * getMainWindow();
 	void keepScreenOn(bool isEnabled);
+	/// on Android, gamepad input is handled by the activity - tell it whether starting the game is possible right now
+	void allowGamepadStart(bool isEnabled);
 	bool canUseFolderPicker();
 	void nativeFolderPicker(QWidget *parent, std::function<void(QString)>&& cb);
 	QStringList findFilesForCopy(const QString &treeUri);
 	void sendFileToApp(QString path);
+	/// looks up a Steam game's install directory by AppID (Windows only - returns empty string elsewhere or if not found)
+	QString findSteamGameInstallDir(const QString & appId, const QString & fallbackInstallDir = QString());
 #ifdef VCMI_ANDROID
 	bool isInstalledFromGooglePlay();
 #endif

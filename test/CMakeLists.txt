@@ -25,6 +25,8 @@ set(test_SRCS
 
 		bonus/BonusSystemTest.cpp
 
+		combatScripts/CombatScriptDescriptionTest.cpp
+
 		entity/CArtifactTest.cpp
 		entity/CCreatureTest.cpp
 		entity/CFactionTest.cpp
@@ -35,8 +37,13 @@ set(test_SRCS
 		events/ApplyDamageTest.cpp
 		events/EventBusTest.cpp
 
-		game/CGameStateTest.cpp
+		filesystem/FilesystemTest.cpp
+		filesystem/SavegamePathTest.cpp
+
+		game/BattleSpellCastTest.cpp
 		game/HeroRecruitmentTest.cpp
+		game/HeroSecondarySkillsTest.cpp
+		game/MovementCostTest.cpp
 
 		json/JsonTests.cpp
 
@@ -44,6 +51,7 @@ set(test_SRCS
 		map/CMapFormatTest.cpp
 		map/CGArtifactRegressionTest.cpp
 		map/MapComparer.cpp
+		map/MapScriptTest.cpp
 		map/TinyH3MBuilderTest.cpp
 
 		quest/QuestTest.cpp
@@ -51,14 +59,17 @@ set(test_SRCS
 		quest/QuestScenarios.cpp
 		quest/CQuestLoaderTest.cpp
 		quest/CQuestSeerTest.cpp
+		quest/CQuestSeerMultiTest.cpp
+		quest/CQuestVisibilityTest.cpp
+		quest/CQuestMarkerTest.cpp
 		quest/CQuestGuardTest.cpp
 		quest/CQuestBorderTest.cpp
+		quest/CQuestGateTest.cpp
 
 		netpacks/NetPackFixture.cpp
 
-#TODO		scripting/BindingsCoverageTest.cpp
-
 		spells/AbilityCasterTest.cpp
+		spells/AdventureSpellEffectTest.cpp
 		spells/CSpellTest.cpp
  		spells/TargetConditionTest.cpp
 
@@ -91,14 +102,30 @@ set(test_SRCS
  		spells/targetConditions/SpellEffectConditionTest.cpp
  		spells/targetConditions/TargetConditionItemFixture.cpp
 
+		server/battles/AcidBreathTest.cpp
+		server/battles/BattleTestFixture.cpp
+		server/battles/CombatEventTriggerTest.cpp
+		server/battles/DamageCalculatorTest.cpp
+		server/battles/DeathStareTest.cpp
+		server/battles/DestructionTest.cpp
+		server/battles/EnchantedTest.cpp
+		server/battles/FireShieldTest.cpp
+		server/battles/LifeDrainTest.cpp
+		server/battles/SoulStealTest.cpp
+		server/battles/SummonGuardiansTest.cpp
+		server/battles/TransmutationTest.cpp
 		server/queries/QueriesProcessorTest.cpp
 
+		texts/TextOperationsTest.cpp
+
 		mock/BattleFake.cpp
+		mock/GameHandlerTestServer.cpp
 		mock/mock_IGameEventCallback.cpp
  		mock/mock_MapService.cpp
  		mock/mock_MapServiceTinyH3M.cpp
  		mock/mock_BonusBearer.cpp
 		mock/mock_CPSICallback.cpp
+		mock/TinyMapGameTest.cpp
 		mock/TinyH3MWriter.cpp
 		mock/TinyH3MBuilder.cpp
 )
@@ -117,7 +144,10 @@ set(test_HEADERS
 
 		spells/targetConditions/TargetConditionItemFixture.h
 
+		server/battles/BattleTestFixture.h
+
 		mock/BattleFake.h
+		mock/GameHandlerTestServer.h
 		mock/mock_BonusBearer.h
 		mock/mock_CStack.h
 		mock/mock_IGameEventCallback.h
@@ -125,6 +155,7 @@ set(test_HEADERS
  		mock/mock_MapServiceTinyH3M.h
 		mock/mock_BonusBearer.h
 		mock/TownFake.h
+		mock/TinyMapGameTest.h
 		mock/TinyH3MWriter.h
 		mock/TinyH3MBuilder.h
 
@@ -139,15 +170,36 @@ if(ENABLE_BATTLE_AI)
 
 	list(APPEND test_SRCS
 		${BATTLE_AI_TEST_SRCS}
+		battleAI/BattleEvaluatorTest.cpp
 		battleAI/SpellTargetsEvaluatorTest.cpp
 	)
-
 endif()
 
 if(ENABLE_NULLKILLER2_AI)
 	list(APPEND test_SRCS
+		nullkiller2/AIUtilityTest.cpp
+		nullkiller2/Analyzers/HeroManagerTest.cpp
+		nullkiller2/Analyzers/ObjectClusterizerTest.cpp
+		nullkiller2/Behaviors/DefenceBehaviorTest.cpp
+		nullkiller2/Behaviors/EscapeBehaviorTest.cpp
+		nullkiller2/Behaviors/ExplorationBehaviorTest.cpp
+		nullkiller2/Behaviors/GatherArmyBehaviorTest.cpp
+		nullkiller2/Behaviors/RecruitHeroBehaviorTest.cpp
+		nullkiller2/Engine/PriorityEvaluatorTest.cpp
+		nullkiller2/Engine/TaskFailureTest.cpp
 		nullkiller2/Goals/BuyArmyTest.cpp
+		nullkiller2/Goals/CompositionTest.cpp
 		nullkiller2/Goals/ExploreNeighbourTileTest.cpp
+		nullkiller2/Helpers/ExplorationHelperTest.cpp
+		nullkiller2/Helpers/TinyH3MDimensionDoorExplorationTest.cpp
+		nullkiller2/Pathfinding/AIPathNodePoolTest.cpp
+		nullkiller2/Pathfinding/ArmyLossTest.cpp
+		nullkiller2/Pathfinding/DimensionDoorActionTest.cpp
+	)
+
+	list(APPEND test_HEADERS
+		nullkiller2/Nulkiller2TestUtils.h
+		nullkiller2/NullkillerTest.h
 	)
 endif()
 
@@ -191,7 +243,20 @@ endif()
 add_subdirectory_with_folder("3rdparty" googletest EXCLUDE_FROM_ALL)
 
 add_executable(vcmitest ${test_SRCS} ${test_HEADERS} ${mock_HEADERS})
-target_link_libraries(vcmitest PRIVATE gtest gmock vcmi vcmiservercommon ${SYSTEM_LIBS})
+if(ENABLE_NULLKILLER2_AI)
+	# Nullkiller tests use internal AI symbols, so embed AI objects in vcmitest
+	# instead of linking the facade and loading a second copy of lib globals.
+	target_sources(vcmitest PRIVATE $<TARGET_OBJECTS:Nullkiller2>)
+	set(vcmitest_LIBS gtest gmock vcmiMain vcmiservercommon TBB::tbb ${SYSTEM_LIBS})
+	foreach(optional_vcmitest_target IN ITEMS vcmiLua EmptyAI StupidAI MMAI)
+		if(TARGET ${optional_vcmitest_target})
+			list(APPEND vcmitest_LIBS ${optional_vcmitest_target})
+		endif()
+	endforeach()
+else()
+	set(vcmitest_LIBS gtest gmock vcmi vcmiservercommon ${SYSTEM_LIBS})
+endif()
+target_link_libraries(vcmitest PRIVATE ${vcmitest_LIBS})
 
 target_include_directories(vcmitest
 		PUBLIC	${CMAKE_CURRENT_SOURCE_DIR}

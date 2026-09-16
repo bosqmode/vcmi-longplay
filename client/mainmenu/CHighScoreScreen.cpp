@@ -17,8 +17,8 @@
 #include "../GameInstance.h"
 #include "../gui/WindowHandler.h"
 #include "../gui/Shortcut.h"
-#include "../media/IMusicPlayer.h"
-#include "../media/ISoundPlayer.h"
+#include "media/IMusicPlayer.h"
+#include "media/ISoundPlayer.h"
 #include "../widgets/Buttons.h"
 #include "../widgets/CTextInput.h"
 #include "../widgets/Images.h"
@@ -26,8 +26,8 @@
 #include "../widgets/VideoWidget.h"
 #include "../windows/InfoWindows.h"
 #include "../widgets/TextControls.h"
-#include "../render/Canvas.h"
-#include "../render/IRenderHandler.h"
+#include "render/Canvas.h"
+#include "render/IRenderHandler.h"
 
 #include "../../lib/texts/CGeneralTextHandler.h"
 #include "../../lib/texts/TextOperations.h"
@@ -269,7 +269,7 @@ int CHighScoreInputScreen::addEntry(std::string text) {
 	if(calc.isCampaign)
 		newNode["campaignName"].String() = calc.calculate().cheater ? LIBRARY->generaltexth->translate("core.genrltxt.260") : calc.parameters[0].campaignName;
 	else
-		newNode["scenarioName"].String() = calc.calculate().cheater ? LIBRARY->generaltexth->translate("core.genrltxt.260") : calc.parameters[0].scenarioName;
+		newNode["scenarioName"].String() = calc.calculate().cheater ? LIBRARY->generaltexth->translate("core.genrltxt.260") : calc.parameters[0].scenarioName.toString(&GAME->translator());
 	newNode["days"].Integer() = calc.calculate().sumDays;
 	newNode["points"].Integer() = calc.calculate().cheater ? 0 : calc.calculate().total;
 	newNode["datetime"].String() = TextOperations::getFormattedDateTimeLocal(std::time(nullptr));
@@ -285,7 +285,7 @@ int CHighScoreInputScreen::addEntry(std::string text) {
 		baseNode.resize(highscoreEntriesCap - 1);
 
 	baseNode.push_back(newNode);
-	boost::range::sort(baseNode, sortFunctor);
+	std::ranges::sort(baseNode, sortFunctor);
 
 	int pos = -1;
 	for (int i = 0; i < baseNode.size(); i++)

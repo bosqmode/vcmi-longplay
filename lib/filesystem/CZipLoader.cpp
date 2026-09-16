@@ -13,8 +13,6 @@
 #include "../ScopeGuard.h"
 #include "../texts/TextOperations.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 CZipStream::CZipStream(const std::shared_ptr<CIOApi> & api, const boost::filesystem::path & archive, unz64_file_pos filepos)
 {
 	zlib_filefunc64_def zlibApi;
@@ -69,7 +67,7 @@ std::unordered_map<ResourcePath, unz64_file_pos> CZipLoader::listFiles(const std
 	unzFile file = unzOpen2_64(archive.c_str(), &zlibApi);
 
 	if(file == nullptr)
-		logGlobal->error("%s failed to open", archive.string());
+		logGlobal->error("%s failed to open", TextOperations::filesystemPathToUtf8(archive));
 
 	if (unzGoToFirstFile(file) == UNZ_OK)
 	{
@@ -217,7 +215,7 @@ ZipArchive::ZipArchive(const boost::filesystem::path & from)
 #endif
 
 	if (archive == nullptr)
-		throw std::runtime_error("Failed to open file '" + from.string());
+		throw std::runtime_error("Failed to open file '" + TextOperations::filesystemPathToUtf8(from));
 }
 
 ZipArchive::~ZipArchive()
@@ -260,9 +258,9 @@ bool ZipArchive::extract(const boost::filesystem::path & where, const std::strin
 	{
 #ifdef VCMI_WINDOWS
 		if (fullName.size() < 260)
-			logGlobal->error("Failed to open file '%s'", fullName.string());
+			logGlobal->error("Failed to open file '%s'", TextOperations::filesystemPathToUtf8(fullName));
 		else
-			logGlobal->error("Failed to open file with long path '%s' (%d characters)", fullName.string(), fullName.size());
+			logGlobal->error("Failed to open file with long path '%s' (%d characters)", TextOperations::filesystemPathToUtf8(fullName), fullName.size());
 #else
 		logGlobal->error("Failed to open file '%s'", fullName.c_str());
 #endif
@@ -274,5 +272,3 @@ bool ZipArchive::extract(const boost::filesystem::path & where, const std::strin
 		return false;
 	return true;
 }
-
-VCMI_LIB_NAMESPACE_END

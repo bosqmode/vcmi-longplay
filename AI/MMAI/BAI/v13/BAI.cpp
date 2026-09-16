@@ -119,9 +119,9 @@ void BAI::battleEnd(const BattleID & bid, const BattleResult * br, QueryID query
 	}
 
 	if(getActionTotalCalls > 0)
-		logger.info("MMAI stats after battle end: %d predictions, %d ms per prediction", getActionTotalCalls, getActionTotalMs / getActionTotalCalls);
+		logger.trace("MMAI stats after battle end: %d predictions, %d ms per prediction", getActionTotalCalls, getActionTotalMs / getActionTotalCalls);
 	else
-		logger.info("MMAI stats after battle end: 0 predictions");
+		logger.trace("MMAI stats after battle end: 0 predictions");
 
 	// BAI is destroyed after this call
 	logger.debug("Leaving battleEnd, embracing death");
@@ -274,7 +274,7 @@ std::optional<BattleAction> BAI::maybeFleeOrSurrender(const BattleID & bid)
 		}
 	}
 
-	logger.info("Will ask for surrender/retreat decision...");
+	logger.trace("Will ask for surrender/retreat decision...");
 	return cb->makeSurrenderRetreatDecision(bid, bs);
 }
 
@@ -692,7 +692,7 @@ std::string BAI::debugInfo(Action * action, const CStack * astack, const BattleH
 		info << "rinfo.distances[nbh] <= astack->getMovementRange(): " << (rinfo.distances[nbh->toInt()] <= astack->getMovementRange()) << "\n";
 
 		if(stack)
-			info << "astack->isMeleeAttackPossible(...)=" << astack->isMeleeAttackPossible(astack, stack->cstack, *nbh) << "\n";
+			info << "astack->isMeleeAttackPossible(...)=" << battle->isMeleeAttackPossible(astack, stack->cstack, *nbh) << "\n";
 	}
 
 	info << "\nACTION TRACE:\n";

@@ -43,11 +43,14 @@ MapSettings::MapSettings(MapController & ctrl, QWidget *parent) :
 	}
 	for(auto const & objectPtr : LIBRARY->spellh->objects)
 	{
-		auto * item = new QListWidgetItem(QString::fromStdString(objectPtr->getNameTranslated()));
-		item->setData(Qt::UserRole, QVariant::fromValue(objectPtr->getIndex()));
-		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-		item->setCheckState(controller.map()->allowedSpells.count(objectPtr->getId()) ? Qt::Checked : Qt::Unchecked);
-		ui->listSpells->addItem(item);
+		if(objectPtr->isCommonHeroSpell())
+		{
+			auto * item = new QListWidgetItem(QString::fromStdString(objectPtr->getNameTranslated()));
+			item->setData(Qt::UserRole, QVariant::fromValue(objectPtr->getIndex()));
+			item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+			item->setCheckState(controller.map()->allowedSpells.count(objectPtr->getId()) ? Qt::Checked : Qt::Unchecked);
+			ui->listSpells->addItem(item);
+		}
 	}
 	for(auto const & objectPtr : LIBRARY->arth->objects)
 	{
@@ -87,7 +90,7 @@ void MapSettings::on_pushButton_clicked()
 		{
 			auto * item = widget->item(i);
 			if (item->checkState() == Qt::Checked)
-				arr.emplace(i);
+				arr.emplace(item->data(Qt::UserRole).toInt());
 		}
 	};
 	

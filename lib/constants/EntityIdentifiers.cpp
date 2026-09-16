@@ -26,6 +26,7 @@
 #include <vcmi/spells/Service.h>
 #include <vcmi/spells/SchoolService.h>
 
+#include "scripting/ScriptService.h"
 #include "modding/IdentifierStorage.h"
 #include "modding/ModScope.h"
 #include "GameLibrary.h"
@@ -48,8 +49,6 @@
 #include "ObstacleHandler.h"
 #include "MapLayerHandler.h"
 #include "mapObjectConstructors/CObjectClassesHandler.h"
-
-VCMI_LIB_NAMESPACE_BEGIN
 
 const CampaignScenarioID CampaignScenarioID::NONE(-1);
 const BattleID BattleID::NONE(-1);
@@ -81,7 +80,7 @@ const SpellSchool SpellSchool::FIRE(1);
 const SpellSchool SpellSchool::EARTH(2);
 const SpellSchool SpellSchool::WATER(3);
 
-const SpellEffectID SpellEffectID::NONE(-1);
+const ScriptID ScriptID::NONE(-1);
 
 const FactionID FactionID::NONE(-2);
 const FactionID FactionID::DEFAULT(-1);
@@ -468,6 +467,9 @@ std::string PlayerColor::encode(const si32 index)
 	if (index == -1)
 		return "neutral";
 
+	if (index == PlayerColor::SPECTATOR.num)
+		return "spectator";
+
 	if (index < 0 || index >= std::size(GameConstants::PLAYER_COLOR_NAMES))
 	{
 		assert(0);
@@ -638,6 +640,23 @@ const ObstacleInfo * Obstacle::getInfo() const
 	return LIBRARY->obstacles()->getById(*this);
 }
 
+si32 ScriptID::decode(const std::string & identifier)
+{
+	return resolveIdentifier(entityType(), identifier);
+}
+
+std::string ScriptID::encode(const si32 index)
+{
+	if (index == -1)
+		return "";
+	return LIBRARY->scriptTypes()->getById(ScriptID(index)).scriptId;
+}
+
+std::string ScriptID::entityType()
+{
+	return "script";
+}
+
 si32 SpellSchool::decode(const std::string & identifier)
 {
 	return resolveIdentifier(entityType(), identifier);
@@ -735,5 +754,3 @@ bool MapObjectID::isRandomArtifact(MapObjectBaseID id)
 {
 	return id == RANDOM_ART || id == RANDOM_TREASURE_ART || id == RANDOM_MINOR_ART || id == RANDOM_MAJOR_ART || id == RANDOM_RELIC_ART;
 }
-
-VCMI_LIB_NAMESPACE_END

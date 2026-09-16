@@ -10,11 +10,12 @@
 #include "StdInc.h"
 
 #include "QuestAssertions.h"
+#include "../../lib/GameLibrary.h"
 
 namespace quest_test
 {
 
-void expectQuestMission(const CQuest & actual, const ExpectedMission & expected,
+void expectQuestMission(const Quest & actual, const ExpectedMission & expected,
                         const char * file, int line)
 {
 	::testing::ScopedTrace trace(file, line, "EXPECT_QUEST_MISSION");
@@ -29,15 +30,15 @@ void expectQuestMission(const CQuest & actual, const ExpectedMission & expected,
 
 	if(!expected.firstVisitText.empty())
 	{
-		EXPECT_EQ(expected.firstVisitText, actual.firstVisitText.toString());
+		EXPECT_EQ(expected.firstVisitText, actual.firstVisitText.toString(LIBRARY->staticTexts()));
 	}
 	if(!expected.nextVisitText.empty())
 	{
-		EXPECT_EQ(expected.nextVisitText, actual.nextVisitText.toString());
+		EXPECT_EQ(expected.nextVisitText, actual.nextVisitText.toString(LIBRARY->staticTexts()));
 	}
 	if(!expected.completedText.empty())
 	{
-		EXPECT_EQ(expected.completedText, actual.completedText.toString());
+		EXPECT_EQ(expected.completedText, actual.completedText.toString(LIBRARY->staticTexts()));
 	}
 }
 

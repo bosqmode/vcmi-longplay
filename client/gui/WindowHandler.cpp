@@ -14,9 +14,9 @@
 #include "CIntObject.h"
 #include "CursorHandler.h"
 
-#include "../render/Canvas.h"
-#include "../render/IScreenHandler.h"
-#include "../render/Colors.h"
+#include "render/Canvas.h"
+#include "render/IScreenHandler.h"
+#include "render/Colors.h"
 
 void WindowHandler::popWindow(std::shared_ptr<IShowActivatable> top)
 {
@@ -102,6 +102,39 @@ void WindowHandler::totalRedraw()
 	totalRedrawRequested = true;
 }
 
+void WindowHandler::requestRedraw(CIntObject * object)
+{
+	if(!vstd::contains(pendingRedraws, object))
+		pendingRedraws.push_back(object);
+
+	hasPendingRedraws = true;
+}
+
+void WindowHandler::cancelRedraw(CIntObject * object)
+{
+	// every destroyed widget passes here, so the common case must stay cheap
+	if(!hasPendingRedraws)
+		return;
+
+	vstd::erase(pendingRedraws, object);
+	hasPendingRedraws = !pendingRedraws.empty();
+}
+
+void WindowHandler::processPendingRedraws()
+{
+	std::vector<CIntObject *> pending;
+	pending.swap(pendingRedraws);
+	hasPendingRedraws = false;
+
+	if(pending.empty())
+		return;
+
+	Canvas target = ENGINE->screenHandler().getScreenCanvas();
+
+	for(CIntObject * object : pending)
+		object->showAll(target);
+}
+
 void WindowHandler::totalRedrawImpl()
 {
 	logGlobal->debug("totalRedraw requested!");
@@ -110,10 +143,15 @@ void WindowHandler::totalRedrawImpl()
 
 	for(auto & elem : windowsStack)
 		elem->showAll(target);
+
+	if(overlay)
+		overlay->showAll(target);
 }
 
 void WindowHandler::simpleRedraw()
 {
+	processPendingRedraws();
+
 	if (totalRedrawRequested)
 		totalRedrawImpl();
 	else
@@ -128,6 +166,9 @@ void WindowHandler::simpleRedrawImpl()
 
 	if(!windowsStack.empty())
 		windowsStack.back()->show(target); //blit active interface/window
+
+	if(overlay)
+		overlay->showAll(target);
 }
 
 void WindowHandler::onScreenResize()
@@ -155,4 +196,40 @@ void WindowHandler::clear()
 
 	windowsStack.clear();
 	disposed.clear();
+}
+
+void WindowHandler::setOverlay(std::shared_ptr<IShowActivatable> newOverlay)
+{
+	if(overlay)
+		overlay->deactivate();
+
+	overlay = std::move(newOverlay);
+
+	if(overlay)
+		overlay->activate();
+
+	totalRedraw();
+}
+
+std::vector<std::shared_ptr<IShowActivatable>> WindowHandler::detachAll()
+{
+	if(!windowsStack.empty())
+		windowsStack.back()->deactivate();
+
+	auto result = std::move(windowsStack);
+	windowsStack.clear();
+	disposed.clear();
+	return result;
+}
+
+void WindowHandler::attachAll(std::vector<std::shared_ptr<IShowActivatable>> windows)
+{
+	clear();
+
+	windowsStack = std::move(windows);
+
+	if(!windowsStack.empty())
+		windowsStack.back()->activate();
+
+	totalRedraw();
 }

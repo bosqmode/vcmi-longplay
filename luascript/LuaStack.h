@@ -15,12 +15,8 @@
 #include "vcmi/scripting/ApiTags.h"
 #include <boost/core/demangle.hpp>
 
-VCMI_LIB_NAMESPACE_BEGIN
 namespace scripting::api { template<typename E> struct EnumGroup; }
-VCMI_LIB_NAMESPACE_END
 
-
-VCMI_LIB_NAMESPACE_BEGIN
 
 class BattleHex;
 class JsonNode;
@@ -64,6 +60,8 @@ public:
 	void pushNil();
 	void pushInteger(lua_Integer value);
 	void push(bool value);
+	/// Without this a double would reach Lua through the bool overload, as `true`.
+	void push(double value);
 	void push(const char * value);
 	void push(const std::string & value);
 	void push(const JsonNode & value);
@@ -187,6 +185,19 @@ public:
 		}
 	}
 
+	template<typename T>
+	void push(const std::unordered_map<std::string, T> & value)
+	{
+		lua_newtable(L);
+		int tableIndex = lua_gettop(L);
+
+		for(const auto & entry : value)
+		{
+			push(entry.second);
+			lua_setfield(L, tableIndex, entry.first.c_str());
+		}
+	}
+
 	template<typename E>
 	void push(const api::EnumGroup<E> & group)
 	{
@@ -260,6 +271,19 @@ public:
 
 	void get(int position, double & value);
 	void get(int position, std::string & value);
+
+	template<typename T>
+	void get(int position, std::optional<T> & value)
+	{
+		if(lua_isnoneornil(L, position))
+		{
+			value = std::nullopt;
+			return;
+		}
+		T temp{};
+		get(position, temp);
+		value = std::move(temp);
+	}
 
 	template<typename T>
 	void get(int idx, std::vector<T> & out)
@@ -527,5 +551,3 @@ private:
 };
 
 }
-
-VCMI_LIB_NAMESPACE_END

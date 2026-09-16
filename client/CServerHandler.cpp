@@ -29,6 +29,9 @@
 #include "lobby/CBonusSelection.h"
 
 #include "netlag/NetworkLagCompensator.h"
+#include "replay/GameplayReplayer.h"
+
+#include "render/SDL_Extensions.h"
 
 #include "media/CMusicHandler.h"
 #include "media/IVideoPlayer.h"
@@ -66,24 +69,42 @@
 #include <boost/uuid/uuid_generators.hpp>
 
 #include <vcmi/events/EventBus.h>
-#include <SDL_thread.h>
 
-#include <boost/lexical_cast.hpp>
 
 CServerHandler::~CServerHandler()
 {
 	if (serverRunner)
 		serverRunner->shutdown();
-	networkHandler->stop();
+	stopNetwork();
 
 	if (serverRunner)
 		serverRunner->wait();
 	serverRunner.reset();
+	waitForNetworkThread();
+}
+
+void CServerHandler::stopNetwork()
+{
+	networkHandler->stop();
+}
+
+void CServerHandler::waitForNetworkThread()
+{
 	if (threadNetwork.joinable())
 	{
+		if(threadNetwork.get_id() == std::this_thread::get_id())
+			return;
+
 		//ENGINE->interfaceMutex must have been locked by the current thread, otherwise an unlock will cause undefined behavior
-		auto unlockInterface = vstd::makeUnlockGuard(ENGINE->interfaceMutex);
-		threadNetwork.join();
+		if(ENGINE)
+		{
+			auto unlockInterface = vstd::makeUnlockGuard(ENGINE->interfaceMutex);
+			threadNetwork.join();
+		}
+		else
+		{
+			threadNetwork.join();
+		}
 	}
 }
 
@@ -91,14 +112,8 @@ void CServerHandler::endNetwork()
 {
 	if (client)
 		client->endNetwork();
-	networkHandler->stop();
-
-	if (threadNetwork.joinable())
-	{
-		//ENGINE->interfaceMutex must have been locked by the current thread, otherwise an unlock will cause undefined behavior
-		auto unlockInterface = vstd::makeUnlockGuard(ENGINE->interfaceMutex);
-		threadNetwork.join();
-	}
+	stopNetwork();
+	waitForNetworkThread();
 }
 
 CServerHandler::CServerHandler()
@@ -130,11 +145,11 @@ void CServerHandler::threadRunNetwork()
 	{
 		// VCMI can run SDL methods on network thread, leading to usage of thread-local storage by SDL
 		// Such storage needs to be cleaned up manually for threads that were not created by SDL
-		SDL_TLSCleanup();
+		CSDL_Ext::cleanupThreadLocalStorage();
 		logGlobal->info("Terminating network thread");
 		return;
 	}
-	SDL_TLSCleanup();
+	CSDL_Ext::cleanupThreadLocalStorage();
 	logGlobal->info("Ending network thread");
 }
 
@@ -145,6 +160,8 @@ void CServerHandler::resetStateForLobby(EStartMode mode, ESelectionScreen screen
 	serverMode = newServerMode;
 	loadMode = ELoadMode::NONE;
 	mapToStart = nullptr;
+	// si is replaced below - texts of the previous lobby must not shadow those of the next one
+	lobbyTextOverlays.clear();
 	hotseatMode = false;
 	battleMode = false;
 	th = std::make_unique<CStopWatch>();
@@ -234,7 +251,9 @@ void CServerHandler::connectToServer(const std::string & addr, const ui16 port)
 void CServerHandler::onConnectionFailed(const std::string & errorMessage)
 {
 	assert(getState() == EClientState::CONNECTING);
-	std::scoped_lock interfaceLock(ENGINE->interfaceMutex);
+	std::unique_lock<std::mutex> interfaceLock;
+	if(ENGINE)
+		interfaceLock = std::unique_lock<std::mutex>(ENGINE->interfaceMutex);
 
 	if (isServerLocal())
 	{
@@ -252,14 +271,16 @@ void CServerHandler::onConnectionFailed(const std::string & errorMessage)
 
 void CServerHandler::onTimer()
 {
-	std::scoped_lock interfaceLock(ENGINE->interfaceMutex);
+	std::unique_lock<std::mutex> interfaceLock;
+	if(ENGINE)
+		interfaceLock = std::unique_lock<std::mutex>(ENGINE->interfaceMutex);
 
 	if(getState() == EClientState::CONNECTION_CANCELLED)
 	{
 		logNetwork->info("Connection aborted by player!");
 		serverRunner->wait();
 		serverRunner.reset();
-		if (ENGINE->windows().topWindow<CSimpleJoinScreen>() != nullptr)
+		if (ENGINE && ENGINE->windows().topWindow<CSimpleJoinScreen>() != nullptr)
 			ENGINE->windows().popWindows(1);
 		return;
 	}
@@ -272,7 +293,9 @@ void CServerHandler::onConnectionEstablished(const NetworkConnectionPtr & netCon
 {
 	assert(getState() == EClientState::CONNECTING);
 
-	std::scoped_lock interfaceLock(ENGINE->interfaceMutex);
+	std::unique_lock<std::mutex> interfaceLock;
+	if(ENGINE)
+		interfaceLock = std::unique_lock<std::mutex>(ENGINE->interfaceMutex);
 
 	networkConnection = netConnection;
 
@@ -551,7 +574,7 @@ void CServerHandler::sendMessage(const std::string & txt) const
 		if(id.length())
 		{
 			LobbyChangeHost lch;
-			lch.newHostConnectionId = static_cast<GameConnectionID>(boost::lexical_cast<int>(id));
+			lch.newHostConnectionId = static_cast<GameConnectionID>(std::stoi(id));
 			sendLobbyPack(lch);
 		}
 	}
@@ -563,8 +586,8 @@ void CServerHandler::sendMessage(const std::string & txt) const
 		readed >> playerColorId;
 		if(connectedId.length() && playerColorId.length())
 		{
-			auto connected = static_cast<PlayerConnectionID>(boost::lexical_cast<int>(connectedId));
-			auto color = PlayerColor(boost::lexical_cast<int>(playerColorId));
+			auto connected = static_cast<PlayerConnectionID>(std::stoi(connectedId));
+			auto color = PlayerColor(std::stoi(playerColorId));
 			if(color.isValidPlayer() && playerNames.find(connected) != playerNames.end())
 			{
 				LobbyForceSetPlayer lfsp;
@@ -619,7 +642,7 @@ bool CServerHandler::validateGameStart(bool allowOnlyAI) const
 		message.appendRawString("\n");
 		message.appendTextID("vcmi.lobby.system.reason");
 		message.replaceRawString(e.what());
-		showServerError(message.toString());
+		showServerError(message.toString(&GAME->translator()));
 		return false;
 	}
 
@@ -651,6 +674,16 @@ void CServerHandler::startMapAfterConnection(std::shared_ptr<CMapInfo> to)
 	mapToStart = to;
 }
 
+void CServerHandler::installLobbyTexts()
+{
+	lobbyTextOverlays.clear();
+
+	if(mi && mi->mapHeader)
+		lobbyTextOverlays.emplace_back(mi->mapHeader->texts);
+	if(si && si->campState)
+		lobbyTextOverlays.emplace_back(si->campState->getTexts());
+}
+
 void CServerHandler::enableLagCompensation(bool on)
 {
 	if (on)
@@ -664,6 +697,19 @@ void CServerHandler::startGameplay(std::shared_ptr<CGameState> gameState)
 	logGlobal->info("CServerHandler: startGameplay");
 	if(GAME->mainmenu())
 		GAME->mainmenu()->disable();
+
+	// map and campaign texts are inert data - the client is what makes them resolvable.
+	// Campaign overlays of earlier scenarios stay installed, so heroes transferred from
+	// them keep their names in later scenarios
+	gameplayTextOverlays.emplace_back(gameState->getMap().texts);
+	if(si->campState)
+	{
+		gameplayTextOverlays.emplace_back(si->campState->getTexts());
+		for(const auto & scenarioTexts : si->campState->getScenarioTexts())
+			gameplayTextOverlays.emplace_back(scenarioTexts.second);
+	}
+
+	gameplayReplayer = std::make_unique<GameplayReplayer>();
 
 	if (isGuest())
 		networkLagCompensator = std::make_unique<NetworkLagCompensator>(getNetworkHandler(), gameState);
@@ -685,7 +731,8 @@ void CServerHandler::startGameplay(std::shared_ptr<CGameState> gameState)
 		throw std::runtime_error("Invalid mode");
 	}
 
-	ENGINE->discord().setPlayingStatus(si, &gameState->getMap(), howManyPlayerInterfaces());
+	if(ENGINE)
+		ENGINE->discord().setPlayingStatus(si, &gameState->getMap(), howManyPlayerInterfaces());
 
 	// After everything initialized we can accept CPackToClient netpacks
 	setState(EClientState::GAMEPLAY);
@@ -714,6 +761,29 @@ void CServerHandler::showHighScoresAndEndGameplay(PlayerColor player, bool victo
 
 void CServerHandler::endGameplay()
 {
+	// a running replay holds the live session hostage - it has to be gone before anything is torn down.
+	// Every caller of this method owns the interface mutex, which the replay thread needs to finish.
+	if(gameplayReplayer)
+	{
+		gameplayReplayer->requestStop();
+
+		if(ENGINE)
+		{
+			auto unlockInterface = vstd::makeUnlockGuard(ENGINE->interfaceMutex);
+			gameplayReplayer->waitForFinish();
+		}
+		else
+		{
+			gameplayReplayer->waitForFinish();
+		}
+
+		gameplayReplayer.reset();
+	}
+
+	// nothing renders this map's texts any more, and the next game must not see them
+	gameplayTextOverlays.clear();
+
+	client->endNetwork();
 	client->finishGameplay();
 
 	// Game is ending
@@ -731,7 +801,8 @@ void CServerHandler::endGameplay()
 		GAME->mainmenu()->makeActiveInterface();
 	}
 
-	ENGINE->discord().setStatus("", "", {0, 0});
+	if(ENGINE)
+		ENGINE->discord().setStatus("", "", {0, 0});
 }
 
 std::optional<std::string> CServerHandler::canQuickLoadGame(const std::string & path) const
@@ -799,7 +870,7 @@ void CServerHandler::startCampaignScenario(HighScoreParameter param, std::shared
 	if (!cs)
 		ourCampaign = si->campState;
 
-	param.campaignName = cs->getNameTranslated();
+	param.campaignName = cs->getNameTranslated(&GAME->translator());
 	cs->highscoreParameters.push_back(param);
 	auto campaignScoreCalculator = std::make_shared<HighScoreCalculation>();
 	campaignScoreCalculator->isCampaign = true;
@@ -807,8 +878,12 @@ void CServerHandler::startCampaignScenario(HighScoreParameter param, std::shared
 
 	endGameplay();
 
+	// the game just took its campaign texts down with it, but the epilogue still has to render
+	// them - this keeps them up until the transition hands over to the next lobby
+	auto campaignTexts = std::make_shared<TranslatorOverlay>(ourCampaign->getTexts());
+
 	auto & epilogue = ourCampaign->scenario(*ourCampaign->lastScenario()).epilog;
-	auto finisher = [ourCampaign, campaignScoreCalculator, statistic]()
+	auto finisher = [ourCampaign, campaignScoreCalculator, statistic, campaignTexts]()
 	{
 		if(ourCampaign->campaignSet != "" && ourCampaign->isCampaignFinished())
 		{
@@ -934,7 +1009,7 @@ void CServerHandler::debugStartTest(std::string filename, bool save)
 	}
 }
 
-class ServerHandlerCPackVisitor : public VCMI_LIB_WRAP_NAMESPACE(ICPackVisitor)
+class ServerHandlerCPackVisitor : public ::ICPackVisitor
 {
 private:
 	CServerHandler & handler;
@@ -960,7 +1035,9 @@ public:
 
 void CServerHandler::onPacketReceived(const std::shared_ptr<INetworkConnection> &, const std::vector<std::byte> & message)
 {
-	std::scoped_lock interfaceLock(ENGINE->interfaceMutex);
+	std::unique_lock<std::mutex> interfaceLock;
+	if(ENGINE)
+		interfaceLock = std::unique_lock<std::mutex>(ENGINE->interfaceMutex);
 
 	if(getState() == EClientState::DISCONNECTING)
 		return;
@@ -972,7 +1049,9 @@ void CServerHandler::onPacketReceived(const std::shared_ptr<INetworkConnection> 
 
 void CServerHandler::onDisconnected(const std::shared_ptr<INetworkConnection> & connection, const std::string & errorMessage)
 {
-	std::scoped_lock interfaceLock(ENGINE->interfaceMutex);
+	std::unique_lock<std::mutex> interfaceLock;
+	if(ENGINE)
+		interfaceLock = std::unique_lock<std::mutex>(ENGINE->interfaceMutex);
 
 	if (connection != networkConnection)
 	{
@@ -1017,8 +1096,15 @@ void CServerHandler::waitForServerShutdown()
 	{
 		// Release interfaceMutex while waiting for server thread to finish
 		// to avoid blocking the GUI thread (same pattern as endNetwork())
-		auto unlockInterface = vstd::makeUnlockGuard(ENGINE->interfaceMutex);
-		serverRunner->wait();
+		if(ENGINE)
+		{
+			auto unlockInterface = vstd::makeUnlockGuard(ENGINE->interfaceMutex);
+			serverRunner->wait();
+		}
+		else
+		{
+			serverRunner->wait();
+		}
 	}
 	int exitCode = serverRunner->exitCode();
 	serverRunner.reset();
@@ -1055,10 +1141,34 @@ void CServerHandler::visitForLobby(CPackForLobby & lobbyPack)
 
 void CServerHandler::visitForClient(CPackForClient & clientPack)
 {
+	if(gameplayReplayer && gameplayReplayer->isActive())
+	{
+		// a replay has taken the client over, so the live gamestate is not there to receive this pack.
+		// Holding the network thread here keeps packs in order and applies them to the live session
+		// once the replay is over - the player can end a replay at any time from its overlay
+		auto unlockInterface = vstd::makeUnlockGuard(ENGINE->interfaceMutex);
+		gameplayReplayer->waitForFinish();
+	}
+
+	// not done in CGameState::apply() - lag compensation applies predictions and rollbacks there
+	if(client)
+		client->gameState().replayLog.recordPack(clientPack, client->gameState());
+
 	if (networkLagCompensator && networkLagCompensator->verifyReply(clientPack))
 		return;
 
 	client->handlePack(clientPack);
+}
+
+GameplayReplayer & CServerHandler::replayer()
+{
+	assert(gameplayReplayer);
+	return *gameplayReplayer;
+}
+
+bool CServerHandler::isReplayActive() const
+{
+	return gameplayReplayer && gameplayReplayer->isActive();
 }
 
 void CServerHandler::sendLobbyPack(const CPackForLobby & pack) const

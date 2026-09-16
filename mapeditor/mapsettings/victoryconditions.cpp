@@ -21,6 +21,7 @@
 #include "../../lib/texts/CGeneralTextHandler.h"
 
 #include "../inspector/townbuildingswidget.h" //to convert BuildingID to string
+#include "../translator.h"
 
 VictoryConditions::VictoryConditions(QWidget *parent) :
 	AbstractSettings(parent),
@@ -34,10 +35,10 @@ void VictoryConditions::initialize(MapController & c)
 	AbstractSettings::initialize(c);
 
 	//victory message
-	ui->victoryMessageEdit->setText(QString::fromStdString(controller->map()->victoryMessage.toString()));
+	ui->victoryMessageEdit->setText(QString::fromStdString(controller->map()->victoryMessage.toString(&Translator::instance())));
 
 	//victory conditions
-	const std::array<std::string, 9> conditionStringsWin = {
+	const std::array<std::string, 10> conditionStringsWin = {
 		QT_TR_NOOP("No special victory"),
 		QT_TR_NOOP("Capture artifact"),
 		QT_TR_NOOP("Hire creatures"),
@@ -46,7 +47,8 @@ void VictoryConditions::initialize(MapController & c)
 		QT_TR_NOOP("Capture town"),
 		QT_TR_NOOP("Defeat hero"),
 		QT_TR_NOOP("Transport artifact"),
-		QT_TR_NOOP("Kill monster")
+		QT_TR_NOOP("Kill monster"),
+		QT_TR_NOOP("Capture all mines")
 	};
 
 	for(auto & s : conditionStringsWin)
@@ -121,9 +123,14 @@ void VictoryConditions::initialize(MapController & c)
 
 							case EventCondition::CONTROL:
 							case EventCondition::CONTROL_CURRENT: {
+							auto mapObject = MapObjectID::decode(json["objectType"].String());
+							if(mapObject == Obj::MINE)
+							{
+								ui->victoryComboBox->setCurrentIndex(9);
+								break;
+							}
 							ui->victoryComboBox->setCurrentIndex(5);
 							assert(victoryTypeWidget);
-							auto mapObject = MapObjectID::decode(json["objectType"].String());
 							if(mapObject == Obj::TOWN)
 							{
 								int townIdx = getObjectByPos<const CGTownInstance>(*controller->map(), posFromJson(json["position"]));
@@ -133,7 +140,7 @@ void VictoryConditions::initialize(MapController & c)
 									victoryTypeWidget->setCurrentIndex(idx);
 								}
 							}
-							//TODO: support control other objects (dwellings, mines)
+							//TODO: support control other objects (dwellings)
 							break;
 						}
 
@@ -226,7 +233,7 @@ void VictoryConditions::update()
 		specialVictory.description.clear(); // TODO: display in quest window
 
 		controller->map()->victoryIconIndex = vicCondition;
-		controller->map()->victoryMessage = MetaString::createFromTextID("core.vcdesc." + std::to_string(vicCondition + 1));
+		controller->map()->victoryMessage = MetaString::createFromTextID("core.vcdesc", vicCondition + 1);
 		customMessage = false;
 
 		switch(vicCondition)
@@ -325,6 +332,17 @@ void VictoryConditions::update()
 				break;
 			}
 
+			case 8: {
+				EventCondition cond(EventCondition::CONTROL_CURRENT);
+				cond.objectType = Obj(Obj::MINE);
+				specialVictory.effect.toOtherMessage.appendTextID("core.genrltxt.291");
+				specialVictory.onFulfill.appendTextID("core.genrltxt.290");
+				specialVictory.trigger = EventExpression(cond);
+				controller->map()->victoryIconIndex = 9;
+				controller->map()->victoryMessage = MetaString::createFromTextID("core.vcdesc.10");
+				break;
+			}
+
 		}
 
 		// if condition is human-only turn it into following construction: AllOf(human, condition)
@@ -413,7 +431,7 @@ void VictoryConditions::on_victoryComboBox_currentIndexChanged(int index)
 				{
 					MetaString str;
 					str.appendName(GameResID(resType));
-					auto resName = QString::fromStdString(str.toString());
+					auto resName = QString::fromStdString(str.toString(&Translator::instance()));
 					victoryTypeWidget->addItem(resName, QVariant::fromValue(resType.getNum()));
 				}
 			}

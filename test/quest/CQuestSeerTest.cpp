@@ -16,7 +16,7 @@
 #include "../../lib/gameState/CGameState.h"
 #include "../../lib/mapObjects/CGCreature.h"
 #include "../../lib/mapObjects/CGHeroInstance.h"
-#include "../../lib/mapObjects/CQuest.h"
+#include "../../lib/mapObjects/Quest.h"
 #include "../../lib/mapObjects/MiscObjects.h"
 
 // Seer hut behaviour as a player would experience it: visiting, accepting,
@@ -36,8 +36,8 @@ TEST_F(QuestSeerTest, Level_passesAtThreshold)
 	ASSERT_NE(hero, nullptr);
 	EXPECT_GE(hero->level, 3u) << "scenario assumes hero is at least level 3 from its starting XP";
 
-	const auto * easy = expectAt<CGSeerHut>(s.questPos);
-	const auto * hard = expectAt<CGSeerHut>(s.questPos2);
+	const auto * easy = expectAt<SeerHut>(s.questPos);
+	const auto * hard = expectAt<SeerHut>(s.questPos2);
 
 	EXPECT_TRUE (easy->getQuest().checkQuest(hero));
 	EXPECT_FALSE(hard->getQuest().checkQuest(hero));
@@ -53,8 +53,8 @@ TEST_F(QuestSeerTest, PrimarySkill_passesAtThreshold)
 	const auto * hero = findHeroAt(s.heroPos);
 	ASSERT_NE(hero, nullptr);
 
-	const auto * easy = expectAt<CGSeerHut>(s.questPos);
-	const auto * hard = expectAt<CGSeerHut>(s.questPos2);
+	const auto * easy = expectAt<SeerHut>(s.questPos);
+	const auto * hard = expectAt<SeerHut>(s.questPos2);
 
 	EXPECT_TRUE (easy->getQuest().checkQuest(hero));
 	EXPECT_FALSE(hard->getQuest().checkQuest(hero));
@@ -72,7 +72,7 @@ TEST_F(QuestSeerTest, BringHero_passesWhenHeroPresent)
 	ASSERT_NE(christian, nullptr);
 	ASSERT_NE(tyris,     nullptr);
 
-	const auto * seer = expectAt<CGSeerHut>(s.questPos);
+	const auto * seer = expectAt<SeerHut>(s.questPos);
 
 	EXPECT_FALSE(seer->getQuest().checkQuest(christian)) << "Christian is not the target hero";
 	EXPECT_TRUE (seer->getQuest().checkQuest(tyris))     << "Tyris is the target hero";
@@ -90,7 +90,7 @@ TEST_F(QuestSeerTest, BringPlayer_passesForCorrectColor)
 	ASSERT_NE(red,  nullptr);
 	ASSERT_NE(blue, nullptr);
 
-	const auto * seer = expectAt<CGSeerHut>(s.questPos);
+	const auto * seer = expectAt<SeerHut>(s.questPos);
 
 	EXPECT_FALSE(seer->getQuest().checkQuest(red))  << "red is not the target colour";
 	EXPECT_TRUE (seer->getQuest().checkQuest(blue)) << "blue is the target colour";
@@ -105,7 +105,7 @@ TEST_F(QuestSeerTest, KillCreature_satisfiedAfterCreatureRemoved)
 
 	const auto * hero    = findHeroAt(s.heroPos);
 	const auto * monster = dynamic_cast<const CGCreature *>(findObjectAt(s.secondHeroPos));
-	const auto * seer    = expectAt<CGSeerHut>(s.questPos);
+	const auto * seer    = expectAt<SeerHut>(s.questPos);
 	ASSERT_NE(hero,    nullptr);
 	ASSERT_NE(monster, nullptr);
 
@@ -125,7 +125,7 @@ TEST_F(QuestSeerTest, KillHero_satisfiedAfterHeroDefeated)
 
 	const auto * visitor = findHeroAt(s.heroPos);
 	const auto * target  = findHeroAt(s.secondHeroPos);
-	const auto * seer    = expectAt<CGSeerHut>(s.questPos);
+	const auto * seer    = expectAt<SeerHut>(s.questPos);
 	ASSERT_NE(visitor, nullptr);
 	ASSERT_NE(target,  nullptr);
 
@@ -150,7 +150,7 @@ TEST_F(QuestSeerTest, FirstVisit_emitsAddQuest)
 
 	visit(tyris, seer);
 
-	EXPECT_EQ(gameEventCallback->addedQuests.size(), 1u);
+	EXPECT_EQ(gameEvents().addedQuests.size(), 1u);
 }
 
 TEST_F(QuestSeerTest, RepeatVisit_failedRequirements_showsNextVisitText)
@@ -166,15 +166,15 @@ TEST_F(QuestSeerTest, RepeatVisit_failedRequirements_showsNextVisitText)
 	ASSERT_NE(seer,      nullptr);
 
 	visit(christian, seer);
-	const size_t addQuestsAfterFirst = gameEventCallback->addedQuests.size();
-	const size_t windowsAfterFirst   = gameEventCallback->infoWindows.size();
+	const size_t addQuestsAfterFirst = gameEvents().addedQuests.size();
+	const size_t windowsAfterFirst   = gameEvents().infoWindows.size();
 	EXPECT_EQ(addQuestsAfterFirst, 1u);
 	EXPECT_GE(windowsAfterFirst,   1u);
 
 	visit(christian, seer);
-	EXPECT_EQ(gameEventCallback->addedQuests.size(), addQuestsAfterFirst)
+	EXPECT_EQ(gameEvents().addedQuests.size(), addQuestsAfterFirst)
 		<< "second failed visit must not re-emit AddQuest";
-	EXPECT_GT(gameEventCallback->infoWindows.size(), windowsAfterFirst)
+	EXPECT_GT(gameEvents().infoWindows.size(), windowsAfterFirst)
 		<< "second failed visit should produce its own next-visit info dialog";
 }
 
@@ -192,7 +192,7 @@ TEST_F(QuestSeerTest, GrantsRewardOnAcceptance)
 
 	const auto xpBefore = tyris->exp;
 	visit(tyris, seer);
-	ASSERT_EQ(gameEventCallback->blockingDialogs.size(), 1u);
+	ASSERT_EQ(gameEvents().blockingDialogs.size(), 1u);
 	answerDialog(tyris, /*select reward 0*/ 1);
 
 	EXPECT_GE(tyris->exp, xpBefore + 500)
@@ -215,15 +215,15 @@ TEST_F(QuestSeerTest, CompletedOneShot_subsequentVisitShowsEmptyText)
 	answerDialog(tyris, 1);
 
 	// Snapshot after completion, then re-visit.
-	const size_t addQuestsBefore     = gameEventCallback->addedQuests.size();
-	const size_t blockingsBefore     = gameEventCallback->blockingDialogs.size();
-	const size_t windowsBefore       = gameEventCallback->infoWindows.size();
+	const size_t addQuestsBefore     = gameEvents().addedQuests.size();
+	const size_t blockingsBefore     = gameEvents().blockingDialogs.size();
+	const size_t windowsBefore       = gameEvents().infoWindows.size();
 
 	visit(tyris, seer);
 
-	EXPECT_EQ(gameEventCallback->addedQuests.size(),     addQuestsBefore);
-	EXPECT_EQ(gameEventCallback->blockingDialogs.size(), blockingsBefore);
-	EXPECT_GT(gameEventCallback->infoWindows.size(),     windowsBefore);
+	EXPECT_EQ(gameEvents().addedQuests.size(),     addQuestsBefore);
+	EXPECT_EQ(gameEvents().blockingDialogs.size(), blockingsBefore);
+	EXPECT_GT(gameEvents().infoWindows.size(),     windowsBefore);
 }
 
 TEST_F(QuestSeerTest, BringResources_takesResources)
@@ -235,7 +235,7 @@ TEST_F(QuestSeerTest, BringResources_takesResources)
 	grantResources(PlayerColor(0), GameResID(GameResID::GOLD), 7000);
 	grantResources(PlayerColor(0), GameResID(GameResID::WOOD),   10);
 
-	auto & playerRes = gameState->players.at(PlayerColor(0)).resources;
+	auto & playerRes = gameState()->players.at(PlayerColor(0)).resources;
 	const int goldBefore = playerRes[GameResID::GOLD];
 	const int woodBefore = playerRes[GameResID::WOOD];
 
@@ -245,7 +245,7 @@ TEST_F(QuestSeerTest, BringResources_takesResources)
 	ASSERT_NE(seer, nullptr);
 
 	visit(hero, seer);
-	ASSERT_EQ(gameEventCallback->blockingDialogs.size(), 1u);
+	ASSERT_EQ(gameEvents().blockingDialogs.size(), 1u);
 	answerDialog(hero, 1);
 
 	EXPECT_EQ(goldBefore - playerRes[GameResID::GOLD], 5000);
@@ -270,7 +270,7 @@ TEST_F(QuestSeerTest, BringArmy_takesCreatures_keepsExtras)
 	ASSERT_EQ(hero->getStackCount(SlotID(1)),  5);
 
 	visit(hero, seer);
-	ASSERT_EQ(gameEventCallback->blockingDialogs.size(), 1u);
+	ASSERT_EQ(gameEvents().blockingDialogs.size(), 1u);
 	answerDialog(hero, 1);
 
 	EXPECT_EQ(hero->getStackCount(SlotID(0)), 5) << "5 of 10 Griffins should remain";
@@ -291,7 +291,7 @@ TEST_F(QuestSeerTest, BringArtifact_completesAndTakesArtifact)
 	ASSERT_TRUE(hero->hasArt(kArtifactSash)) << "scenario must place the sash in the backpack";
 
 	visit(hero, seer);
-	ASSERT_EQ(gameEventCallback->blockingDialogs.size(), 1u);
+	ASSERT_EQ(gameEvents().blockingDialogs.size(), 1u);
 	answerDialog(hero, 1);
 
 	EXPECT_FALSE(hero->hasArt(kArtifactSash))
@@ -313,7 +313,7 @@ TEST_F(QuestSeerTest, BringArtifact_componentOfAssemblyInBackpack_disassembles)
 	ASSERT_TRUE(hero->hasArt(kArtifactAngelicAlly)) << "Angelic Alliance must be carried pre-visit";
 
 	visit(hero, seer);
-	ASSERT_EQ(gameEventCallback->blockingDialogs.size(), 1u);
+	ASSERT_EQ(gameEvents().blockingDialogs.size(), 1u);
 	answerDialog(hero, 1);
 
 	EXPECT_FALSE(hero->hasArt(kArtifactAngelicAlly))
@@ -337,7 +337,7 @@ TEST_F(QuestSeerTest, BringArtifact_componentOfAssemblyEquipped_disassembles)
 	ASSERT_TRUE(hero->hasArt(kArtifactAngelicAlly)) << "Angelic Alliance must be equipped pre-visit";
 
 	visit(hero, seer);
-	ASSERT_EQ(gameEventCallback->blockingDialogs.size(), 1u);
+	ASSERT_EQ(gameEvents().blockingDialogs.size(), 1u);
 	answerDialog(hero, 1);
 
 	EXPECT_FALSE(hero->hasArt(kArtifactAngelicAlly))
@@ -361,7 +361,7 @@ TEST_F(QuestSeerTest, FullArmyRemoval_h3BugSetting_enabledAllowsArmyEmpty)
 	ASSERT_EQ(hero->getStackCount(SlotID(0)), 1);
 
 	visit(hero, seer);
-	ASSERT_EQ(gameEventCallback->blockingDialogs.size(), 1u);
+	ASSERT_EQ(gameEvents().blockingDialogs.size(), 1u);
 	answerDialog(hero, 1);
 
 	EXPECT_FALSE(hero->hasStackAtSlot(SlotID(0)))
@@ -381,7 +381,7 @@ TEST_F(QuestSeerTest, FullArmyRemoval_disabled_keepsHeroWithOneStack)
 	ASSERT_NE(seer, nullptr);
 
 	visit(hero, seer);
-	if(!gameEventCallback->blockingDialogs.empty())
+	if(!gameEvents().blockingDialogs.empty())
 		answerDialog(hero, 1);
 
 	EXPECT_TRUE(hero->hasStackAtSlot(SlotID(0)))
@@ -396,14 +396,22 @@ TEST_F(QuestSeerTest, Timeout_expiresOnLastDay)
 	ASSERT_NO_FATAL_FAILURE(startWithMap(std::move(s.builder)));
 	grantResources(PlayerColor(0), GameResID(GameResID::WOOD), 5);
 
-	auto * seer = expectAt<CGSeerHut>(s.questPos);
+	auto * seer = expectAt<SeerHut>(s.questPos);
 	EXPECT_EQ(seer->getQuest().lastDay, 7);
 	EXPECT_FALSE(seer->getQuest().isCompleted);
 
 	advanceDays(10);
-	GameRandomizer randomizer(*gameState);
-	seer->newTurn(*gameEventCallback, randomizer);
+	GameRandomizer randomizer(*gameState());
+	seer->newTurn(gameEvents(), randomizer);
 
-	EXPECT_TRUE(seer->getQuest().isCompleted)
-		<< "after lastDay expires, the quest should be marked complete (i.e. inaccessible)";
+	// After the deadline the seer is inaccessible: a visit yields only the
+	// empty-seer info dialog, with no quest log entry and no reward prompt.
+	auto * hero = findHeroAt(s.heroPos);
+	ASSERT_NE(hero, nullptr);
+	const size_t addQuestsBefore = gameEvents().addedQuests.size();
+	visit(hero, seer);
+	EXPECT_EQ(gameEvents().addedQuests.size(), addQuestsBefore)
+		<< "expired seer must not register a quest log entry";
+	EXPECT_TRUE(gameEvents().blockingDialogs.empty())
+		<< "expired seer must not offer its reward";
 }

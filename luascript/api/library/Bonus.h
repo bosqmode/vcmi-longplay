@@ -16,8 +16,6 @@
 #include "../../../lib/bonuses/BonusList.h"
 #include "../../../lib/bonuses/BonusEnum.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 namespace scripting::api
 {
 
@@ -38,12 +36,14 @@ public:
 	static std::string getSubtype(const Bonus & b);
 	static std::string getSourceID(const Bonus & b);
 	static BonusSource getSource(const Bonus & b);
+	static BonusLimitEffect getEffectRange(const Bonus & b);
 	static std::vector<BonusDuration::BonusDuration> getDuration(const Bonus & b);
 	static BonusValueType getValType(const Bonus & b);
 	static std::string getStacking(const Bonus & b);
 	static si16 getTurnsRemain(const Bonus & b);
 	static bool isHidden(const Bonus & b);
 	static si32 getParametersAsNumber(const Bonus & b);
+	static std::vector<int32_t> getParametersAsVector(const Bonus & b);
 };
 
 class BonusListProxy : public CopyableWrapper<BonusList, BonusListProxy>
@@ -58,9 +58,9 @@ public:
 	static void registerMethods(MethodRegistrar & R);
 
 	static int32_t size(const BonusList & list);
+	static int32_t totalValue(const BonusList & list);
+	static int filter(lua_State * L);
 	static Bonus getBonus(const BonusList & list, int32_t index);
 };
 
 }
-
-VCMI_LIB_NAMESPACE_END

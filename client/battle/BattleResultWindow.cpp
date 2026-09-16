@@ -19,7 +19,7 @@
 #include "../GameEngine.h"
 #include "../gui/Shortcut.h"
 #include "../gui/WindowHandler.h"
-#include "../media/IMusicPlayer.h"
+#include "media/IMusicPlayer.h"
 #include "../widgets/Buttons.h"
 #include "../widgets/Images.h"
 #include "../widgets/TextControls.h"
@@ -95,7 +95,7 @@ BattleResultWindow::BattleResultWindow(const BattleResult & br, CPlayerInterface
 		if(heroInfo.portraitSource.isValid()) //attacking hero
 		{
 			icons.push_back(std::make_shared<CAnimImage>(AnimationPath::builtin("PortraitsLarge"), heroInfo.getIconIndex(), 0, xs[static_cast<int>(i)], 38));
-			sideNames[static_cast<int>(i)] = heroInfo.name;
+			sideNames[static_cast<int>(i)] = heroInfo.name.toString(&GAME->translator());
 		}
 		else
 		{
@@ -151,7 +151,7 @@ BattleResultWindow::BattleResultWindow(const BattleResult & br, CPlayerInterface
 
 	auto resources = getResources(br);
 
-	description = std::make_shared<CTextBox>(resources.resultText.toString(), Rect(69, 203, 330, 68), 0, FONT_SMALL, ETextAlignment::CENTER, Colors::WHITE);
+	description = std::make_shared<CTextBox>(resources.resultText.toString(&GAME->translator()), Rect(69, 203, 330, 68), 0, FONT_SMALL, ETextAlignment::CENTER, Colors::WHITE);
 	videoPlayer = std::make_shared<VideoWidget>(Point(107, 70), resources.prologueVideo, resources.loopedVideo, false);
 
 	ENGINE->music().playMusic(resources.musicName, false, true);

@@ -19,8 +19,8 @@
 #include "../../lib/bonuses/BonusEnum.h"
 #include "../../lib/battle/BattleSide.h"
 #include "../../lib/battle/CObstacleInstance.h"
-
-VCMI_LIB_NAMESPACE_BEGIN
+#include "../../lib/constants/EntityIdentifiers.h"
+#include "../../lib/mapping/MapDifficulty.h"
 
 namespace scripting::api
 {
@@ -52,9 +52,14 @@ class Enums : public scripting::ApiSerializable<Enums>
 	EnumGroup<BonusDuration::BonusDuration> exportBonusDuration() const;
 	EnumGroup<BonusSource> exportBonusSource() const;
 	EnumGroup<BonusValueType> exportBonusValueType() const;
+	EnumGroup<BonusLimitEffect> exportBonusLimitEffect() const;
 	EnumGroup<CObstacleInstance::EObstacleType> exportObstacleType() const;
 	EnumGroup<EWallPart> exportWallPart() const;
 	EnumGroup<BattleSide> exportBattleSide() const;
+	EnumGroup<EMapDifficulty> exportDifficulty() const;
+	EnumGroup<PrimarySkill> exportPrimarySkill() const;
+	EnumGroup<PlayerColor> exportPlayerColor() const;
+	EnumGroup<EPlayerStatus> exportPlayerStatus() const;
 
 public:
 	static constexpr std::string_view luaName = "Enums";
@@ -73,12 +78,15 @@ public:
 		s("BonusDuration",    exportBonusDuration(),    "Lifetime selectors used by Bonus / BonusDescriptor `duration`.");
 		s("BonusSource",      exportBonusSource(),      "Origin classes used by Bonus / BonusDescriptor `sourceType`.");
 		s("BonusValueType",   exportBonusValueType(),   "Combination rules used by Bonus / BonusDescriptor `valueType`.");
+		s("BonusLimitEffect", exportBonusLimitEffect(), "Kinds of combat a bonus is limited to, used by Bonus `effectRange`.");
 		s("ObstacleType",     exportObstacleType(),     "Obstacle categories used by SpellObstacleDescriptor `obstacleType`.");
 		s("WallPart",         exportWallPart(),         "Town-wall sections referenced by siege APIs and `catapultAttack`.");
 		s("BattleSide",       exportBattleSide(),       "Battlefield side identifiers: none / attacker / defender.");
+		s("Difficulty",       exportDifficulty(),       "Game difficulty levels, named after chess pieces (pawn = easiest, king = hardest).");
+		s("PrimarySkill",     exportPrimarySkill(),     "The four primary hero skills.");
+		s("PlayerColor",      exportPlayerColor(),      "Player colours, plus the neutral owner used by unowned objects.");
+		s("PlayerStatus",     exportPlayerStatus(),     "Whether a player is still playing, has won, or has lost.");
 	}
 };
 
 }
-
-VCMI_LIB_NAMESPACE_END

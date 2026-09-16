@@ -33,8 +33,6 @@
 #	define VCMI_LUA_PUSH_GLOBALS(L) lua_rawgeti((L), LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS)
 #endif
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 namespace scripting
 {
 
@@ -96,6 +94,16 @@ int LuaContext::luaPrint(lua_State *L) {
 	return 0;
 }
 
+std::shared_ptr<LuaContext> LuaContext::of(const Pool & pool, const Script * script)
+{
+	auto context = std::dynamic_pointer_cast<LuaContext>(pool.getContext(script));
+
+	if(!context)
+		throw std::runtime_error("Failed to execute Lua script '" + script->getIdentifier() + "'! Context not available!");
+
+	return context;
+}
+
 LuaContext::LuaContext(const LuaScriptInstance * source, const Environment * env_):
 	L(luaL_newstate()),
 	script(source),
@@ -114,6 +122,12 @@ LuaContext::LuaContext(const LuaScriptInstance * source, const Environment * env
 		lib.func(L);
 		lua_setglobal(L, lib.name);
 	}
+
+#if LUA_VERSION_NUM >= 502
+	// Since 5.2 the coroutine library is separate; on 5.1/LuaJIT it comes with luaopen_base.
+	luaopen_coroutine(L);
+	lua_setglobal(L, LUA_COLIBNAME);
+#endif
 
 	lua_settop(L, 0);
 
@@ -202,21 +216,18 @@ void LuaContext::cleanupGlobals()
 
 bool LuaContext::hasFunction(const std::string & name)
 {
-	std::lock_guard guard(mutex);
 	if(!scriptTable)
 		return false;
 	LuaStack S(L);
 	scriptTable->push();
 	lua_getfield(L, -1, name.c_str());
 	bool result = S.isFunction(-1);
-	S.clear();
+	S.restoreInitialTop();
 	return result;
 }
 
 void LuaContext::initialize()
 {
-	std::lock_guard guard(mutex);
-
 	std::shared_ptr<LuaReference> head;
 
 	for(const auto & layer : script->layers)
@@ -282,13 +293,6 @@ void LuaContext::installChunkEnvWithBase(LuaReference & base)
 	lua_setupvalue(L, -2, 1);
 #endif
 	// Stack: ..., chunk
-}
-
-int LuaContext::errorRetVoid(const std::string & message)
-{
-	logScript->error(message);
-	lua_settop(L, 0);
-	return 0;
 }
 
 std::string LuaContext::toStringRaw(int index)
@@ -408,5 +412,3 @@ int LuaContext::loadModule()
 }
 
 }
-
-VCMI_LIB_NAMESPACE_END

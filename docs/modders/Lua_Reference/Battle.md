@@ -35,6 +35,22 @@ True if the given hex is reachable by the given unit either on current turn or o
 
 - returns `boolean`
 
+### isAccessibleForNewUnit
+
+True if a unit of the given creature could be placed on the given hex. Use before summoning a unit; unlike `isAccessibleForUnit` it needs no existing unit to ask about.
+
+- param `hex`: [`BattleHex`](BattleHex.md) — Hex the unit would be placed on. For a double-wide creature this is its front hex.
+- param `creature`: [`Creature`](Creature.md) — Creature that would be placed there.
+- param `side`: [`BattleSide`](BattleSide.md) — Battle side the unit would belong to, which decides where its second hex goes.
+
+- returns `boolean`
+
+### getFieldWidth
+
+Returns the number of hex columns on the battlefield, including the two edge columns that units cannot stand on.
+
+- returns `integer`
+
 ### hasPenaltyOnLine
 
 True if a ranged attack along this line crosses a wall or moat (per the flags).
@@ -45,6 +61,54 @@ True if a ranged attack along this line crosses a wall or moat (per the flags).
 - param `checkMoat`: `boolean` — Pass true to count crossing a moat as a penalty source.
 
 - returns `boolean`
+
+### isMeleeAttackPossible
+
+True if the attacker stands where it could hit the defender in melee. False for units that an area attack reached without being adjacent to them, such as a dragon breath's second target.
+
+- param `attacker`: [`Unit`](Unit.md) — Unit that would strike.
+- param `defender`: [`Unit`](Unit.md) — Unit that would be struck.
+
+- returns `boolean`
+
+### hasDistancePenalty
+
+True if the shooter is too far from the target for a full-strength shot. Optionally, perform calculation assuming that units are at specified positions instead of their current ones.
+
+- param `shooter`: [`Unit`](Unit.md) — Unit making the ranged attack.
+- param `target`: [`Unit`](Unit.md) — Unit being shot at.
+- param `shooterHex`: [`BattleHex?`](BattleHex.md) — Hex to shoot from; nil uses where the shooter stands.
+- param `targetHex`: [`BattleHex?`](BattleHex.md) — Hex to shoot at; nil uses where the target stands.
+
+- returns `boolean`
+
+### hasWallPenalty
+
+True if a town wall stands between the shooter and the target. Optionally, perform calculation assuming that units are at specified positions instead of their current ones.
+
+- param `shooter`: [`Unit`](Unit.md) — Unit making the ranged attack.
+- param `target`: [`Unit`](Unit.md) — Unit being shot at.
+- param `shooterHex`: [`BattleHex?`](BattleHex.md) — Hex to shoot from; nil uses where the shooter stands.
+- param `targetHex`: [`BattleHex?`](BattleHex.md) — Hex to shoot at; nil uses where the target stands.
+
+- returns `boolean`
+
+### isToReverse
+
+True if the attacker would have to turn around to strike the defender. Optionally, perform calculation assuming that units are at specified positions instead of their current ones.
+
+- param `attacker`: [`Unit`](Unit.md) — Unit that would strike.
+- param `defender`: [`Unit`](Unit.md) — Unit that would be struck.
+- param `attackerHex`: [`BattleHex?`](BattleHex.md) — Hex to strike from; nil uses where the attacker stands.
+- param `defenderHex`: [`BattleHex?`](BattleHex.md) — Hex to strike at; nil uses where the defender stands.
+
+- returns `boolean`
+
+### getDefendedTown
+
+Returns the town being defended in this battle.
+
+- returns [`TownInstance`](TownInstance.md) — The besieged town, or nil when the battle is no siege.
 
 ### getUnitByPos
 

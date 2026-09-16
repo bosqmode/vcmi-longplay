@@ -12,16 +12,17 @@
 
 #include "../CPlayerInterface.h"
 #include "../GameEngine.h"
-#include "../render/Canvas.h"
-#include "../render/Colors.h"
-#include "../render/IImage.h"
-#include "../renderSDL/RenderHandler.h"
+#include "../GameInstance.h"
+#include "render/Canvas.h"
+#include "render/Colors.h"
+#include "render/IImage.h"
+#include "render/RenderHandler.h"
 #include "../widgets/CComponentHolder.h"
 #include "../widgets/Slider.h"
 #include "../widgets/Images.h"
 #include "../widgets/TextControls.h"
 #include "../widgets/GraphicalPrimitiveCanvas.h"
-#include "../eventsSDL/InputHandler.h"
+#include "events/InputHandler.h"
 
 #include "../../lib/IGameSettings.h"
 #include "../../lib/entities/hero/CHeroHandler.h"
@@ -78,7 +79,7 @@ void CHeroOverview::genControls()
 	r = Rect(borderOffset, 2 * borderOffset + yOffset + 64, 284, 20);
 	backgroundRectangles.push_back(std::make_shared<TransparentFilledRectangle>(r.resize(1), rectangleColor, borderColor));
 	for(int i = 0; i < 4; i++)
-		labelSkillHeader.push_back(std::make_shared<CLabel>((r.w / 4) * i + 42, r.y + 10, FONT_SMALL, ETextAlignment::CENTER, Colors::WHITE, LIBRARY->generaltexth->jktexts[1 + i]));
+		labelSkillHeader.push_back(std::make_shared<CLabel>((r.w / 4) * i + 42, r.y + 10, FONT_SMALL, ETextAlignment::CENTER, Colors::WHITE, GAME->translator().translate("core.jktext", 1 + i)));
 
 	// skill
 	const int tmp[] = {0, 1, 2, 5};
@@ -102,7 +103,7 @@ void CHeroOverview::genControls()
 	r = Rect(borderOffset, 5 * borderOffset + yOffset + 148, 284, 130);
 	backgroundRectangles.push_back(std::make_shared<TransparentFilledRectangle>(r.resize(1), rectangleColor, borderColor));
 	labelHeroBiography = std::make_shared<CTextBox>((*LIBRARY->heroh)[heroIdx]->getBiographyTranslated(), r.resize(-borderOffset), CSlider::EStyle::BROWN, FONT_SMALL, ETextAlignment::TOPLEFT, Colors::WHITE);
-	if(labelHeroBiography->slider && ENGINE->input().getCurrentInputMode() != InputMode::TOUCH)
+	if(labelHeroBiography->slider && !ENGINE->input().inputModeUsesGestures())
 		labelHeroBiography->slider->clearScrollBounds();
 
 	// speciality name
@@ -120,7 +121,7 @@ void CHeroOverview::genControls()
 	r = Rect(borderOffset, 7 * borderOffset + yOffset + 322, 284, 85);
 	backgroundRectangles.push_back(std::make_shared<TransparentFilledRectangle>(r.resize(1), rectangleColor, borderColor));
 	labelSpecialityDescription = std::make_shared<CTextBox>((*LIBRARY->heroh)[heroIdx]->getSpecialtyDescriptionTranslated(), r.resize(-borderOffset), CSlider::EStyle::BROWN, FONT_SMALL, ETextAlignment::TOPLEFT, Colors::WHITE);
-	if(labelSpecialityDescription->slider && ENGINE->input().getCurrentInputMode() != InputMode::TOUCH)
+	if(labelSpecialityDescription->slider && !ENGINE->input().inputModeUsesGestures())
 		labelSpecialityDescription->slider->clearScrollBounds();
 
 	// army title
@@ -145,7 +146,7 @@ void CHeroOverview::genControls()
 	int iStack = 0;
 	for(auto & army : (*LIBRARY->heroh)[heroIdx]->initialArmy)
 	{
-		if((*LIBRARY->creh)[army.creature]->warMachine == ArtifactID::NONE)
+		if(army.creature.hasValue() && army.creature.toCreature()->warMachine == ArtifactID::NONE)
 		{
 			imageArmy.push_back(std::make_shared<CAnimImage>(AnimationPath::builtin("CPRSMALL"), (*LIBRARY->creh)[army.creature]->getIconIndex(), 0, 302 + i * (32 + space) + 16, 2 * borderOffset + yOffset + 30));
 			labelArmyCount.push_back(std::make_shared<CLabel>(302 + i * (32 + space) + 32, 3 * borderOffset + yOffset + 72, FONT_SMALL, ETextAlignment::CENTER, Colors::WHITE, (army.minAmount == army.maxAmount) ? std::to_string(army.minAmount) : std::to_string(army.minAmount) + "-" + std::to_string(army.maxAmount)));
@@ -178,7 +179,7 @@ void CHeroOverview::genControls()
 			labelArmyCount.push_back(std::make_shared<CLabel>(302 + i * (32 + space) + 51, 5 * borderOffset + yOffset + 144, FONT_SMALL, ETextAlignment::TOPLEFT, grayedColor, "100%"));
 			i++;
 		}
-		if((*LIBRARY->creh)[army.creature]->warMachine != ArtifactID::NONE)
+		if(army.creature.hasValue() && army.creature.toCreature()->warMachine != ArtifactID::NONE)
 		{
 			imageWarMachine.push_back(std::make_shared<CAnimImage>(AnimationPath::builtin("CPRSMALL"), (*LIBRARY->creh)[army.creature]->getIconIndex(), 0, 302 + i * (32 + space) + 16, 5 * borderOffset + yOffset + 124));
 			if(iStack<stacksCountChances.size())
@@ -214,7 +215,7 @@ void CHeroOverview::genControls()
 	{
 		secSkills.push_back(std::make_shared<CSecSkillPlace>(Point(302, 7 * borderOffset + yOffset + 186 + i * (32 + borderOffset)),
 															 CSecSkillPlace::ImageSize::SMALL, skill.first, skill.second));
-		labelSecSkillsNames.push_back(std::make_shared<CLabel>(334 + 2 * borderOffset, 8 * borderOffset + yOffset + 186 + i * (32 + borderOffset) - 5, FONT_SMALL, ETextAlignment::TOPLEFT, Colors::WHITE, LIBRARY->generaltexth->levels[skill.second - 1], 90));
+		labelSecSkillsNames.push_back(std::make_shared<CLabel>(334 + 2 * borderOffset, 8 * borderOffset + yOffset + 186 + i * (32 + borderOffset) - 5, FONT_SMALL, ETextAlignment::TOPLEFT, Colors::WHITE, GAME->translator().translate("core.skilllev", skill.second - 1), 90));
 		labelSecSkillsNames.push_back(std::make_shared<CLabel>(334 + 2 * borderOffset, 8 * borderOffset + yOffset + 186 + i * (32 + borderOffset) + 10, FONT_SMALL, ETextAlignment::TOPLEFT, Colors::WHITE, (*LIBRARY->skillh)[skill.first]->getNameTranslated(), 90));
 		i++;
 	}

@@ -30,8 +30,6 @@
 
 #include <vstd/RNG.h>
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 //TODO: remove constructor
 CGObjectInstance::CGObjectInstance(IGameInfoCallback *cb):
 	IObjectInterface(cb),
@@ -102,6 +100,21 @@ bool CGObjectInstance::coveringAt(const int3 & testPos) const
 	return anchorPos().z == testPos.z && appearance->isVisibleAt(anchorPos().x - testPos.x, anchorPos().y - testPos.y);
 }
 
+bool CGObjectInstance::isVisibleFor(PlayerColor player) const
+{
+	// otherwise visible when at least one covered tile is revealed
+	for(int fy = 0; fy < getHeight(); ++fy)
+	{
+		for(int fx = 0; fx < getWidth(); ++fx)
+		{
+			int3 tile = anchorPos() + int3(-fx, -fy, 0);
+			if(coveringAt(tile) && cb->isVisibleFor(tile, player))
+				return true;
+		}
+	}
+	return false;
+}
+
 std::set<int3> CGObjectInstance::getBlockedPos() const
 {
 	std::set<int3> ret;
@@ -131,7 +144,7 @@ void CGObjectInstance::setType(MapObjectID newID, MapObjectSubID newSubID)
 		logGlobal->warn(
 			"CGObjectInstance::setType: object %s at %s has invalid visitablePos (null tile). "
 			"Skipping appearance update.",
-			LIBRARY->objtypeh->getObjectName(ID, newSubID), position.toString());
+			getObjectNameTextID(), position.toString());
 		return;
 		// skip visual/type update here which would fail; object is already on map with bad coords.
 	}
@@ -161,7 +174,7 @@ void CGObjectInstance::setType(MapObjectID newID, MapObjectSubID newSubID)
 			logGlobal->warn(
 				"CGObjectInstance::setType: object %s at %s has non-visitable template '%s'; "
 				"skipping old corner offset adjustment",
-				getObjectName(), pos.toString(), appearance->stringID);
+				getObjectName().toString(LIBRARY->staticTexts()), pos.toString(), appearance->stringID);
 		}
 	}
 
@@ -173,7 +186,7 @@ void CGObjectInstance::setType(MapObjectID newID, MapObjectSubID newSubID)
 	{
 		logGlobal->warn(
 			"Object %s at %s has no templates suitable for terrain %s",
-			LIBRARY->objtypeh->getObjectName(ID, newSubID), visitablePos().toString(),
+			getObjectNameTextID(), visitablePos().toString(),
 			tile->getTerrain()->getNameTranslated());
 		appearance = handler->getTemplates()[0]; // get at least some appearance since alternative is crash
 	}
@@ -262,9 +275,18 @@ void CGObjectInstance::giveDummyBonus(IGameEventCallback & gameEvents, const Obj
 	gameEvents.giveHeroBonus(&gbonus);
 }
 
-std::string CGObjectInstance::getObjectName() const
+std::string CGObjectInstance::getObjectNameTextID() const
 {
-	return LIBRARY->objtypeh->getObjectName(ID, subID);
+	const auto handler = getObjectHandler();
+	if (handler && handler->hasNameTextID())
+		return handler->getNameTextID();
+
+	return LIBRARY->objtypeh->getObjectGroupNameTextID(ID);
+}
+
+MetaString CGObjectInstance::getObjectName() const
+{
+	return MetaString::createFromTextID(getObjectNameTextID());
 }
 
 std::optional<AudioPath> CGObjectInstance::getAmbientSound(vstd::RNG & rng) const
@@ -294,24 +316,27 @@ std::optional<AudioPath> CGObjectInstance::getRemovalSound(vstd::RNG & rng) cons
 	return std::nullopt;
 }
 
-std::string CGObjectInstance::getHoverText(PlayerColor player) const
+MetaString CGObjectInstance::getHoverText(PlayerColor player) const
 {
 	auto text = getObjectName();
 	if (tempOwner.isValidPlayer())
-		text += "\n" + LIBRARY->generaltexth->arraytxt[23 + tempOwner.getNum()];
+	{
+		text.appendEOL();
+		text.appendLocalString(EMetaText::ARRAY_TXT, 23 + tempOwner.getNum());
+	}
 	return text;
 }
 
-std::string CGObjectInstance::getHoverText(const CGHeroInstance * hero) const
+MetaString CGObjectInstance::getHoverText(const CGHeroInstance * hero) const
 {
 	return getHoverText(hero->tempOwner);
 }
 
-std::string CGObjectInstance::getPopupText(PlayerColor player) const
+MetaString CGObjectInstance::getPopupText(PlayerColor player) const
 {
 	return getHoverText(player);
 }
-std::string CGObjectInstance::getPopupText(const CGHeroInstance * hero) const
+MetaString CGObjectInstance::getPopupText(const CGHeroInstance * hero) const
 {
 	return getHoverText(hero);
 }
@@ -379,6 +404,11 @@ bool CGObjectInstance::passableFor(PlayerColor color) const
 	return false;
 }
 
+bool CGObjectInstance::passableFor(const CGHeroInstance * hero) const
+{
+	return passableFor(hero->getOwner());
+}
+
 void CGObjectInstance::updateFrom(const JsonNode & data)
 {
 
@@ -423,7 +453,7 @@ void CGObjectInstance::serializeJsonOwner(JsonSerializeFormat & handler)
 BattleField CGObjectInstance::getBattlefield() const
 {
 	auto currentLayer = cb->gameState().getMap().mapLayers.at(pos.z);
-	const auto & objectBattlefields = LIBRARY->objtypeh->getHandlerFor(ID, subID)->getBattlefields();
+	const auto & objectBattlefields = getObjectHandler()->getBattlefields();
 
 	if (objectBattlefields.empty())
 		return BattleField::NONE;
@@ -431,9 +461,12 @@ BattleField CGObjectInstance::getBattlefield() const
 	return BattleFieldHandler::selectRandomBattlefield(objectBattlefields, currentLayer, CRandomGenerator::getDefault());
 }
 
+TerrainId CGObjectInstance::getBattleTerrain() const
+{
+	return getObjectHandler()->getBattleTerrain();
+}
+
 const IOwnableObject * CGObjectInstance::asOwnable() const
 {
 	return nullptr;
 }
-
-VCMI_LIB_NAMESPACE_END

@@ -11,10 +11,9 @@
 #include "MinizipExtensions.h"
 
 #include "CMemoryBuffer.h"
+#include "../texts/TextOperations.h"
 
 #include <mutex>
-
-VCMI_LIB_NAMESPACE_BEGIN
 
 template<class Stream>
 inline uLong streamRead(voidpf opaque, voidpf stream, void * buf, uLong size)
@@ -54,7 +53,7 @@ inline long streamSeek(voidpf opaque, voidpf stream, ZPOS64_T offset, int origin
 			break;
 		case ZLIB_FILEFUNC_SEEK_END:
 		{
-			const si64 pos = actualStream->getSize() - offset;
+			const si64 pos = actualStream->getSize() + offset;
 			if(actualStream->seek(pos) != pos)
 				ret = -1;
 		}
@@ -129,16 +128,64 @@ static voidpf ZCALLBACK MinizipOpenFunc(voidpf opaque, const void* filename, int
 		return nullptr;
 }
 
+static uLong ZCALLBACK MinizipReadFunc(voidpf opaque, voidpf filePtr, void * buf, uLong size)
+{
+	return static_cast<uLong>(std::fread(buf, 1, size, GETFILE));
+}
+
+static uLong ZCALLBACK MinizipWriteFunc(voidpf opaque, voidpf filePtr, const void * buf, uLong size)
+{
+	return static_cast<uLong>(std::fwrite(buf, 1, size, GETFILE));
+}
+
+static ZPOS64_T ZCALLBACK MinizipTellFunc(voidpf opaque, voidpf filePtr)
+{
+#ifdef VCMI_WINDOWS
+	return _ftelli64(GETFILE);
+#else
+	return ftello(GETFILE); // 64-bit off_t: ioapi.h sets _FILE_OFFSET_BITS=64 on Linux, native on Apple
+#endif
+}
+
+static long ZCALLBACK MinizipSeekFunc(voidpf opaque, voidpf filePtr, ZPOS64_T offset, int origin)
+{
+	const int whence = origin == ZLIB_FILEFUNC_SEEK_CUR ? SEEK_CUR
+	                 : origin == ZLIB_FILEFUNC_SEEK_END ? SEEK_END
+	                 : origin == ZLIB_FILEFUNC_SEEK_SET ? SEEK_SET : -1;
+	if (whence == -1)
+		return -1;
+#ifdef VCMI_WINDOWS
+	return _fseeki64(GETFILE, offset, whence);
+#else
+	return fseeko(GETFILE, offset, whence);
+#endif
+}
+
+static int ZCALLBACK MinizipCloseFunc(voidpf opaque, voidpf filePtr)
+{
+	return std::fclose(GETFILE);
+}
+
+static int ZCALLBACK MinizipErrorFunc(voidpf opaque, voidpf filePtr)
+{
+	return std::ferror(GETFILE);
+}
+
+// Populate every callback ourselves instead of relying on fill_fopen64_filefunc:
+// despite advertising minizip compatibility, minizip-ng's compat layer stubs that
+// function out to a no-op (undocumented), which would leave read/seek/etc NULL
 zlib_filefunc64_def CDefaultIOApi::getApiStructure()
 {
-	static zlib_filefunc64_def MinizipFilefunc;
-	static std::once_flag flag;
-	std::call_once(flag, []
-	{
-		fill_fopen64_filefunc(&MinizipFilefunc);
-		MinizipFilefunc.zopen64_file = &MinizipOpenFunc;
-	});
-	return MinizipFilefunc;
+	zlib_filefunc64_def api;
+	api.opaque       = nullptr;
+	api.zopen64_file = &MinizipOpenFunc;
+	api.zread_file   = &MinizipReadFunc;
+	api.zwrite_file  = &MinizipWriteFunc;
+	api.ztell64_file = &MinizipTellFunc;
+	api.zseek64_file = &MinizipSeekFunc;
+	api.zclose_file  = &MinizipCloseFunc;
+	api.zerror_file  = &MinizipErrorFunc;
+	return api;
 }
 
 #if MINIZIP_NEEDS_32BIT_FUNCS
@@ -227,7 +274,7 @@ int ZCALLBACK CProxyIOApi::errorFileProxy(voidpf opaque, voidpf stream)
 
 CInputOutputStream * CProxyIOApi::openFile(const boost::filesystem::path & filename, int mode)
 {
-	logGlobal->trace("CProxyIOApi: stream opened for %s with mode %d", filename.string(), mode);
+	logGlobal->trace("CProxyIOApi: stream opened for %s with mode %d", TextOperations::filesystemPathToUtf8(filename), mode);
 
 	data->seek(0);
 	return data;
@@ -260,7 +307,7 @@ zlib_filefunc64_def CProxyROIOApi::getApiStructure()
 
 CInputStream * CProxyROIOApi::openFile(const boost::filesystem::path& filename, int mode)
 {
-	logGlobal->trace("CProxyROIOApi: stream opened for %s with mode %d", filename.string(), mode);
+	logGlobal->trace("CProxyROIOApi: stream opened for %s with mode %d", TextOperations::filesystemPathToUtf8(filename), mode);
 
 	data->seek(0);
 	return data;
@@ -308,5 +355,3 @@ int ZCALLBACK CProxyROIOApi::errorFileProxy(voidpf opaque, voidpf stream)
 {
 	return 0;
 }
-
-VCMI_LIB_NAMESPACE_END

@@ -10,6 +10,7 @@
 #pragma once
 
 class IShowActivatable;
+class CIntObject;
 
 class WindowHandler
 {
@@ -20,7 +21,16 @@ class WindowHandler
 	/// Temporary list of recently popped windows
 	std::vector<std::shared_ptr<IShowActivatable>> disposed;
 
+	/// Widget drawn on top of every window and outside of the stack, e.g. the replay abort button
+	std::shared_ptr<IShowActivatable> overlay;
+
 	bool totalRedrawRequested = false;
+
+	/// Objects whose redraw() arrived from a thread that may not draw, repainted at the start of
+	/// the next frame. No extra drawing - the software path would have redrawn them right away.
+	/// All access happens under the interface mutex, like the rest of WindowHandler.
+	std::vector<CIntObject *> pendingRedraws;
+	bool hasPendingRedraws = false;
 
 	/// returns top windows
 	std::shared_ptr<IShowActivatable> topWindowImpl() const;
@@ -34,6 +44,16 @@ class WindowHandler
 public:
 	/// forces total redraw (using showAll), sets a flag, method gets called at the end of the rendering
 	void totalRedraw();
+
+	/// Defers one object's repaint to the next frame. Safe to call from any thread;
+	/// nothing is drawn here.
+	void requestRedraw(CIntObject * object);
+
+	/// Drops a pending repaint, so that a destroyed object is never drawn
+	void cancelRedraw(CIntObject * object);
+
+	/// Repaints everything deferred by requestRedraw(). Runs on the rendering thread.
+	void processPendingRedraws();
 
 	/// update only top windows and draw background from buffer, sets a flag, method gets called at the end of the rendering
 	void simpleRedraw();
@@ -73,6 +93,15 @@ public:
 
 	/// erases all currently existing windows from the stack
 	void clear();
+
+	/// installs a widget that is drawn on top of all windows, pass nullptr to remove it
+	void setOverlay(std::shared_ptr<IShowActivatable> newOverlay);
+
+	/// removes all windows from the stack without destroying them, so that they can be put back later
+	std::vector<std::shared_ptr<IShowActivatable>> detachAll();
+
+	/// replaces current stack with a previously detached one
+	void attachAll(std::vector<std::shared_ptr<IShowActivatable>> windows);
 
 	/// returns all existing windows of selected type
 	template <typename T>

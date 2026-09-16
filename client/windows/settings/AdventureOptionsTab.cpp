@@ -16,7 +16,7 @@
 #include "../../GameInstance.h"
 #include "../../CPlayerInterface.h"
 #include "../../PlayerLocalState.h"
-#include "../../eventsSDL/InputHandler.h"
+#include "events/InputHandler.h"
 #include "../../gui/WindowHandler.h"
 #include "../../widgets/Buttons.h"
 #include "../../widgets/Images.h"
@@ -43,7 +43,7 @@ AdventureOptionsTab::AdventureOptionsTab()
 	OBJECT_CONSTRUCTION;
 	setRedrawParent(true);
 
-	addConditional("touchscreen", ENGINE->input().getCurrentInputMode() == InputMode::TOUCH);
+	addConditional("touchscreen", ENGINE->input().inputModeUsesGestures());
 	addConditional("keyboardMouse", ENGINE->input().getCurrentInputMode() == InputMode::KEYBOARD_AND_MOUSE);
 	addConditional("controller", ENGINE->input().getCurrentInputMode() == InputMode::CONTROLLER);
 #ifdef VCMI_MOBILE
@@ -157,6 +157,11 @@ AdventureOptionsTab::AdventureOptionsTab()
 		setBoolSetting("adventure", "minimapShowHeroes", value);
 		ENGINE->windows().totalRedraw();
 	});
+	addCallback("replayShowBattlesChanged", [](bool value)
+	{
+		setBoolSetting("adventure", "replayShowBattles", value);
+	});
+
 	addCallback("showMovePathChanged", [](bool value)
 	{
 		setBoolSetting("adventure", "showMovePath", value);
@@ -226,4 +231,7 @@ AdventureOptionsTab::AdventureOptionsTab()
 
 	std::shared_ptr<CToggleButton> showMovePathCheckbox = widget<CToggleButton>("showMovePathCheckbox");
 	showMovePathCheckbox->setSelected(settings["adventure"]["showMovePath"].Bool());
+
+	std::shared_ptr<CToggleButton> replayShowBattlesCheckbox = widget<CToggleButton>("replayShowBattlesCheckbox");
+	replayShowBattlesCheckbox->setSelected(settings["adventure"]["replayShowBattles"].Bool());
 }

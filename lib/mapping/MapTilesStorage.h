@@ -12,8 +12,6 @@
 
 #include "../int3.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 template<typename DataType>
 class MapTilesStorage
 {
@@ -47,6 +45,13 @@ public:
 		dimensions(dimensions)
 	{}
 
+	/// Appends one more level at the end of the storage, preserving all existing tiles.
+	void addLevel()
+	{
+		storage.resize(storage.size() + dimensions.x * dimensions.y);
+		dimensions.z += 1;
+	}
+
 	const_iterator begin() const { return storage.begin(); }
 	const_iterator end() const { return storage.end(); }
 	iterator begin() { return storage.begin(); }
@@ -70,5 +75,3 @@ public:
 			h & element;
 	}
 };
-
-VCMI_LIB_NAMESPACE_END

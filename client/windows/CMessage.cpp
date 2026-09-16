@@ -12,12 +12,12 @@
 #include "CMessage.h"
 
 #include "../GameEngine.h"
-#include "../render/CAnimation.h"
-#include "../render/Canvas.h"
-#include "../render/Graphics.h"
-#include "../render/IFont.h"
-#include "../render/IImage.h"
-#include "../render/IRenderHandler.h"
+#include "render/CAnimation.h"
+#include "render/Canvas.h"
+#include "render/Graphics.h"
+#include "render/IFont.h"
+#include "render/IImage.h"
+#include "render/IRenderHandler.h"
 #include "../widgets/Buttons.h"
 #include "../widgets/CComponent.h"
 #include "../widgets/Images.h"
@@ -59,6 +59,10 @@ void CMessage::dispose()
 {
 	for(auto & item : dialogBorders)
 		item.reset();
+
+	// each image is also cached here in its own right, not only inside its animation above
+	for(auto & item : piecesOfBox)
+		item.clear();
 }
 
 std::vector<std::string> CMessage::breakText(std::string text, size_t maxLineWidth, EFonts font)
@@ -77,6 +81,8 @@ std::vector<std::string> CMessage::breakText(std::string text, size_t maxLineWid
 	while(text.length())
 	{
 		ui32 wordBreak = -1; //last position for line break (last space character)
+		bool wordBreakOpened = false; // formatting state at last possible line break
+		std::string wordBreakColor;
 		ui32 currPos = 0; //current position in text
 		bool opened = false; //set to true when opening brace is found
 		std::string color; //color found
@@ -92,7 +98,11 @@ std::vector<std::string> CMessage::breakText(std::string text, size_t maxLineWid
 
 			// candidate for line break
 			if(ui8(text[currPos]) <= ui8(' '))
+			{
 				wordBreak = currPos;
+				wordBreakOpened = opened;
+				wordBreakColor = color;
+			}
 
 			/* We don't count braces in string length. */
 			if(text[currPos] == '{')
@@ -129,11 +139,8 @@ std::vector<std::string> CMessage::breakText(std::string text, size_t maxLineWid
 			if(wordBreak != ui32(-1))
 			{
 				currPos = wordBreak;
-				if(boost::count(text.substr(0, currPos), '{') == boost::count(text.substr(0, currPos), '}'))
-				{
-					opened = false;
-					color = "";
-				}
+				opened = wordBreakOpened;
+				color = wordBreakColor;
 			}
 			else
 				currPos -= symbolSize;

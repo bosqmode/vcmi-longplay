@@ -12,15 +12,16 @@
 #include "CPrologEpilogVideo.h"
 #include "CMainMenu.h"
 
-#include "../media/IMusicPlayer.h"
-#include "../media/ISoundPlayer.h"
+#include "media/IMusicPlayer.h"
+#include "media/ISoundPlayer.h"
 #include "../GameEngine.h"
 #include "../gui/Shortcut.h"
 #include "../widgets/TextControls.h"
 #include "../widgets/VideoWidget.h"
 #include "../widgets/Images.h"
-#include "../render/Canvas.h"
+#include "render/Canvas.h"
 #include "../../lib/CConfigHandler.h"
+#include "../GameInstance.h"
 
 CPrologEpilogVideo::CPrologEpilogVideo(CampaignScenarioPrologEpilog _spe, std::function<void()> callback)
 	: CWindowObject(BORDERED), spe(_spe), positionCounter(0), voiceSoundHandle(-1), videoSoundHandle(-1), exitCb(callback), elapsedTimeMilliseconds(0)
@@ -66,7 +67,7 @@ CPrologEpilogVideo::CPrologEpilogVideo(CampaignScenarioPrologEpilog _spe, std::f
 	if(!settings["general"]["enableSubtitle"].Bool())
 		return;
 
-	text = std::make_shared<CMultiLineLabel>(Rect(100, 500, 600, 100), EFonts::FONT_BIG, ETextAlignment::CENTER, Colors::METALLIC_GOLD, spe.prologText.toString());
+	text = std::make_shared<CMultiLineLabel>(Rect(100, 500, 600, 100), EFonts::FONT_BIG, ETextAlignment::CENTER, Colors::METALLIC_GOLD, spe.prologText.toString(&GAME->translator()));
 	if(text->getLines().size() == 3)
 		text->scrollTextTo(-25); // beginning of text in the vertical middle of black area
 	else if(text->getLines().size() > 3)

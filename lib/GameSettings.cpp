@@ -11,8 +11,6 @@
 #include "GameSettings.h"
 #include "json/JsonUtils.h"
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 bool IGameSettings::getBoolean(EGameSettings option) const
 {
 	return getValue(option).Bool();
@@ -61,9 +59,11 @@ const std::vector<GameSettings::SettingOption> GameSettings::settingProperties =
 		{EGameSettings::COMBAT_BAD_LUCK_CHANCE,                           "combat",    "badLuckChance"                        },
 		{EGameSettings::COMBAT_LUCK_DICE_SIZE,                            "combat",    "luckDiceSize"                         },
 		{EGameSettings::COMBAT_LUCK_BIAS,                                 "combat",    "luckBias"                             },
+		{EGameSettings::COMBAT_LUCKY_STRIKE_AFFECTS_ALL_TARGETS,          "combat",    "luckyStrikeAffectsAllTargets"         },
 		{EGameSettings::COMBAT_LAYOUTS,                                   "combat",    "layouts"                              },
 		{EGameSettings::COMBAT_ONE_HEX_TRIGGERS_OBSTACLES,                "combat",    "oneHexTriggersObstacles"              },
 		{EGameSettings::COMBAT_NO_SPELL_HIT_AND_RUN_ROUNDS,               "combat",    "noSpellHitAndRunRounds"               },
+		{EGameSettings::COMBAT_SURRENDER_COST_DIVISOR,                    "combat",    "surrenderCostDivisor"                 },
 		{EGameSettings::CREATURES_ALLOW_ALL_FOR_DOUBLE_MONTH,             "creatures", "allowAllForDoubleMonth"               },
 		{EGameSettings::CREATURES_ALLOW_JOINING_FOR_FREE,                 "creatures", "allowJoiningForFree"                  },
 		{EGameSettings::CREATURES_ALLOW_RANDOM_SPECIAL_WEEKS,             "creatures", "allowRandomSpecialWeeks"              },
@@ -82,6 +82,7 @@ const std::vector<GameSettings::SettingOption> GameSettings::settingProperties =
 		{EGameSettings::GENERAL_WEEKS_PER_MONTH,                          "general",   "weeksPerMonth"                        },
 		{EGameSettings::HEROES_BACKPACK_CAP,                              "heroes",    "backpackSize"                         },
 		{EGameSettings::HEROES_BASE_SCOUNTING_RANGE,                      "heroes",    "baseScoutingRange"                    },
+		{EGameSettings::HEROES_MAXIMAL_PRIMARY_SKILLS,                    "heroes",    "maximalPrimarySkills"                 },
 		{EGameSettings::HEROES_MINIMAL_PRIMARY_SKILLS,                    "heroes",    "minimalPrimarySkills"                 },
 		{EGameSettings::HEROES_PER_PLAYER_ON_MAP_CAP,                     "heroes",    "perPlayerOnMapCap"                    },
 		{EGameSettings::HEROES_PER_PLAYER_TOTAL_CAP,                      "heroes",    "perPlayerTotalCap"                    },
@@ -94,6 +95,7 @@ const std::vector<GameSettings::SettingOption> GameSettings::settingProperties =
 		{EGameSettings::HEROES_SKILL_PER_HERO,                            "heroes",    "skillPerHero"                         },
 		{EGameSettings::HEROES_SPECIALTY_CREATURE_GROWTH,                 "heroes",    "specialtyCreatureGrowth"              },
 		{EGameSettings::HEROES_SPECIALTY_SECONDARY_SKILL_GROWTH,          "heroes",    "specialtySecondarySkillGrowth"        },
+		{EGameSettings::HEROES_SPECIALTY_SPELL_SCALING,                   "heroes",    "specialtySpellScaling"                },
 		{EGameSettings::LEVEL_UP_TOTAL_SKILLS_AMOUNT,                     "heroes",    "levelupTotalSkillsAmount"             },
 		{EGameSettings::LEVEL_UP_UPGRADED_SKILLS_AMOUNT,                  "heroes",    "levelupUpgradedSkillsAmount"          },
 		{EGameSettings::MAP_FORMAT_ARMAGEDDONS_BLADE,                     "mapFormat", "armageddonsBlade"                     },
@@ -110,6 +112,7 @@ const std::vector<GameSettings::SettingOption> GameSettings::settingProperties =
 		{EGameSettings::MODULE_STACK_ARTIFACT,                            "modules",   "stackArtifact"                        },
 		{EGameSettings::MODULE_STACK_ARTIFACT_INDICATION,                 "modules",   "stackArtifactIndication"              },
 		{EGameSettings::MODULE_STACK_EXPERIENCE,                          "modules",   "stackExperience"                      },
+		{EGameSettings::PATHFINDER_BLOCK_DISEMBARK_ON_HOLE,               "pathfinder", "blockDisembarkOnHole"                },
 		{EGameSettings::PATHFINDER_IGNORE_GUARDS,                         "pathfinder", "ignoreGuards"                        },
 		{EGameSettings::PATHFINDER_ORIGINAL_FLY_RULES,                    "pathfinder", "originalFlyRules"                    },
 		{EGameSettings::PATHFINDER_USE_BOAT,                              "pathfinder", "useBoat"                             },
@@ -207,5 +210,3 @@ JsonNode GameSettings::getAllOverrides() const
 
 	return result;
 }
-
-VCMI_LIB_NAMESPACE_END

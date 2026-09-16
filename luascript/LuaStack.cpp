@@ -19,8 +19,6 @@
 
 #include <vcmi/Creature.h>
 
-VCMI_LIB_NAMESPACE_BEGIN
-
 namespace scripting
 {
 
@@ -88,6 +86,11 @@ void LuaStack::pushInteger(lua_Integer value)
 void LuaStack::push(bool value)
 {
 	lua_pushboolean(L, value);
+}
+
+void LuaStack::push(double value)
+{
+	lua_pushnumber(L, value);
 }
 
 void LuaStack::push(const char * value)
@@ -324,5 +327,3 @@ int LuaStack::retVoid()
 
 
 }
-
-VCMI_LIB_NAMESPACE_END

@@ -122,12 +122,12 @@ std::string CMarketResources::getTraderText()
 	{
 		MetaString message = MetaString::createFromTextID("core.genrltxt.157");
 		message.replaceNumber(offerQty);
-		message.replaceRawString(offerQty == 1 ? LIBRARY->generaltexth->allTexts[161] : LIBRARY->generaltexth->allTexts[160]);
+		message.replaceTextID(offerQty == 1 ? "core.genrltxt.161" : "core.genrltxt.160");
 		message.replaceName(GameResID(offerTradePanel->getHighlightedItemId()));
 		message.replaceNumber(bidQty);
-		message.replaceRawString(bidQty == 1 ? LIBRARY->generaltexth->allTexts[161] : LIBRARY->generaltexth->allTexts[160]);
+		message.replaceTextID(bidQty == 1 ? "core.genrltxt.161" : "core.genrltxt.160");
 		message.replaceName(GameResID(bidTradePanel->getHighlightedItemId()));
-		return message.toString();
+		return message.toString(&GAME->translator());
 	}
 	else
 	{

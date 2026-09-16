@@ -9,11 +9,9 @@
  */
 #pragma once
 
-VCMI_LIB_NAMESPACE_BEGIN
 class Point;
 class AsyncRunner;
 class Rect;
-VCMI_LIB_NAMESPACE_END
 
 enum class MouseButton;
 class ShortcutHandler;
@@ -61,6 +59,10 @@ private:
 	IGameEngineUser *engineUser = nullptr;
 
 	int maxPerformanceOverlayTextWidth = 0;
+
+	/// Longest the display may go unredrawn while the game reports nothing new to show
+	static constexpr auto maxFrameSkipDuration = std::chrono::milliseconds(100);
+	std::chrono::steady_clock::time_point lastFrameRendered = std::chrono::steady_clock::now();
 
 	void updateFrame();
 	void handleEvents(); //takes events from queue and calls interested objects

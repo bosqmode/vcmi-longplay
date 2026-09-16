@@ -11,8 +11,7 @@
 #include "CFileInputStream.h"
 
 #include "../ExceptionsCommon.h"
-
-VCMI_LIB_NAMESPACE_BEGIN
+#include "../texts/TextOperations.h"
 
 CFileInputStream::CFileInputStream(const boost::filesystem::path & file, si64 start, si64 size)
   : dataStart{start},
@@ -20,7 +19,7 @@ CFileInputStream::CFileInputStream(const boost::filesystem::path & file, si64 st
 	fileStream{file.c_str(), std::ios::in | std::ios::binary}
 {
 	if (fileStream.fail())
-		throw DataLoadingException("Failed to open file '" + file.string() + "'. Reason: " + strerror(errno) );
+		throw DataLoadingException("Failed to open file '" + TextOperations::filesystemPathToUtf8(file) + "'. Reason: " + strerror(errno) );
 
 	if (dataSize == 0)
 	{
@@ -65,5 +64,3 @@ si64 CFileInputStream::getSize()
 {
 	return dataSize;
 }
-
-VCMI_LIB_NAMESPACE_END
