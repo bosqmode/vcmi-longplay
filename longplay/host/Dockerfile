@@ -1,7 +1,7 @@
 #FROM kasmweb/ubuntu-noble-desktop:1.17.0
 #ARG USERNAME=kasm-user
 
-FROM lscr.io/linuxserver/webtop:ubuntu-kde
+FROM lscr.io/linuxserver/webtop:ubuntu-kde-version-654ea8e3
 ARG USERNAME=abc
 USER root
 RUN apt-get update
