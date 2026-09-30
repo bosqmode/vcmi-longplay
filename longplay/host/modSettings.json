@@ -2,7 +2,17 @@
     "activePreset": "default",
     "presets": {
         "default": {
-            "mods": ["vcmi", "core", "hota"]
+            "mods": ["vcmi", "core", "hota", "vcmi-extras"],
+            "settings":{
+                "hota":{
+                    "maps": true,
+                    "mapsupport": true,
+                    "templates": true
+                },
+                "vcmi-extras":{
+					"extendedlobby" : true
+                }
+            }
         }
     }
 }
