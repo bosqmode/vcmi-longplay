@@ -24,6 +24,15 @@ WEBTOP_WS_URL = "ws://host:3000"
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_BOT_CHANNEL_ID = os.environ.get("TELEGRAM_BOT_CHANNEL_ID", "")
 
+# Volume-control hook injected into the desktop client's HTML (served through the /desktop/
+# reverse proxy). It must run before the client creates its AudioContext so we can route its
+# Web Audio output through a master gain that the parent page controls.
+try:
+    with open(os.path.join(os.path.dirname(__file__), "templates", "volume-hook.js"), "r", encoding="utf-8") as _f:
+        VOLUME_HOOK_JS = _f.read()
+except Exception:
+    VOLUME_HOOK_JS = ""
+
 active_sessions: dict[str, WebSocket] = {}
 current_gamestate = {}
 
@@ -228,6 +237,24 @@ async def proxy_http(path: str, request: Request, authorization: str | None = He
                 exclude_headers = ["content-length", "connection"]
                 response_headers = {k: v for k, v in proxied_res.headers.items() if k.lower() not in exclude_headers}
                 
+                content_type = (proxied_res.headers.get("content-type", "") or "").lower()
+                if VOLUME_HOOK_JS and content_type.startswith("text/html") and proxied_res.status_code < 400:
+                    # Inject the volume hook as the first child of <head> so it runs before the
+                    # desktop client creates its AudioContext. (Plain string splice -> no escaping issues.)
+                    html = proxied_res.content.decode("utf-8", "replace")
+                    script_tag = "<script>" + VOLUME_HOOK_JS + "</script>"
+                    head = html.lower().find("<head")
+                    if head != -1:
+                        gt = html.find(">", head)
+                        html = html[:gt + 1] + script_tag + html[gt + 1:]
+                    else:
+                        html = script_tag + html
+                    return StreamingResponse(
+                        iter([html.encode("utf-8")]),
+                        status_code=proxied_res.status_code,
+                        headers=response_headers
+                    )
+
                 return StreamingResponse(
                     proxied_res.aiter_bytes(),
                     status_code=proxied_res.status_code,
