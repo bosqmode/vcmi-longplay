@@ -138,6 +138,19 @@
       // race against Selkies' initial `gain.value = 1.0`.
       try { applyToAll(); } catch (e) { /* ignore */ }
 
+      // Arm the bounded re-assert window the moment a gain node appears.
+      // Relying only on the 'statechange' handler loses the startup race
+      // whenever the context is ALREADY "running" at capture time: 'statechange'
+      // only fires on transitions, so if the context has already reached
+      // "running" it may never fire again and Selkies' own `master.gain = 1.0`
+      // reset wins and stays. Arming here (idempotent) guarantees we keep
+      // clamping for ~2 s right after the node is created — the exact window in
+      // which Selkies finalizes/resets its master gain — regardless of the
+      // context-state timing. This is the decisive fix for the 50/50 "sometimes
+      // loads at 100%" case (a manual slider drive was previously arming this,
+      // which is why touching the slider always used to work).
+      try { startReassert(); } catch (e) { /* ignore */ }
+
       // When this AudioContext reaches "running" the client typically
       // finalizes its master gain; re-assert right after and arm a short
       // re-assert window to out-race any subsequent reset.

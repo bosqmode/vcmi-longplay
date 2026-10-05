@@ -188,6 +188,125 @@ The NGINX service is an optional but highly recommended edge proxy, essential fo
 
 Host's desktop access requires https over the internet, so outside of LAN this seems to be required.
 
+## Desktop volume control (`volume-hook.js`)
+
+The portal page renders a small volume + mute widget for the Kasm/Selkies
+remote desktop. Because Selkies plays audio through its own `AudioContext`
+(not through a `<video>` element that inherits the surrounding page's
+`volume` property), the standard `element.volume = ...` route reaches only
+the raw stream's default level — Chromium/Edge plays it at 100 % on the
+first ~100 ms after boot regardless of the level we wanted. On Firefox the
+situation is easier, but on Chromium we need to *intercept* the client's own
+audio graph. That is the job of `volume-hook.js`.
+
+### Why it exists
+
+- Selkies' audio path is a Web Audio `GainNode` (the "master" gain of the
+  `AudioContext`'s output), not a `<video>` — setting the volume on a
+  `<video>` has no effect on it.
+- Selkies itself *resets* that master gain to 1.0 whenever the AudioContext
+  reaches `"running"`, so any level we set before that transition is wiped.
+- The user's preference lives in the parent portal's `localStorage`
+  (`lp_volume` / `lp_muted`). Without a hook, the iframe audio starts at
+  full volume (or a race-dependent level) for the first few hundred ms — an
+  audible burst every time the desktop loads.
+
+### How it works
+
+1. **Gain-node capture.** The hook patches
+   `AudioContext.prototype.createGain` (and the `webkitAudioContext`
+   equivalent) to record every `GainNode` the client creates into a shared
+   list. The patch is read-only: we never override `AudioParam.value` or
+   `AudioParam.prototype.setValueAtTime`. Those native round-trip through
+   each other internally on Chromium/Edge, and overriding either of them
+   produces `RangeError: Maximum call stack size exceeded`. Keeping the
+   native setters intact sidesteps that recursion on every engine.
+
+2. **Seeding from `localStorage`.** The desktop iframe is served same-origin
+   under `/desktop/` (reverse-proxied by the portal), so it shares
+   `lp_volume` / `lp_muted` with the portal page. At IIFE evaluation time
+   the hook reads those keys and seeds its internal target, so the *first*
+   clamp it applies is already at the user's saved level — not 1.0.
+   Visitors with no stored value stay muted, preserving "silent until the
+   parent drives it" for new users.
+
+3. **Synchronous clamp on node capture.** When a `GainNode` is captured the
+   hook assigns `node.gain.value = <target>` *immediately* (not via
+   `setValueAtTime`). `setValueAtTime` schedules against the context's
+   clock, which on Firefox adds a frame of delay; the direct assignment
+   applies the same tick. `setValueAtTime` is only used as a fallback in
+   case an engine rejects the direct assignment while the context is not
+   yet running. In addition to clamping every captured `GainNode`, the same
+   pass also sets `volume` / `muted` on any `<video>` / `<audio>` element
+   in the document — a belt-and-braces path for Kasm variants that expose
+   their audio through HTML5 media rather than Web Audio. A re-entrancy
+   guard makes the whole apply path idempotent if engine-internal code ever
+   re-enters us.
+
+4. **Bounded re-assert window.** `startReassert()` installs a `setInterval`
+   that calls `applyToAll()` every 50 ms for ~40 ticks (≈2 s), then clears
+   itself. It is idempotent: if one is already running, subsequent calls
+   are no-ops. The window is armed from three places —
+
+   - inside the `createGain` patch, right after a node is captured (this is
+     the decisive one for the 50/50 race below),
+   - inside a `statechange` listener on the AudioContext (covers the
+     "context transitions to running *after* we captured" case), and
+   - inside the `setVolume` control-surface entry point (covers live slider
+     drives and the parent's first post-load drive).
+
+   The window is intentionally short: long enough to out-race Selkies'
+   post-running master-gain reset, short enough that we never pin the live
+   param once the client is healthy.
+
+5. **Control surface.** `window.__lpSetVolume(v, muted)` and a
+   `postMessage('lp-set-volume', …)` listener let the parent drive the
+   level at runtime. `index.html` polls every 50 → 150 → 500 ms up to 64
+   attempts and calls either path; the hook's re-assert window then holds
+   the level for the ~2 s in which Selkies' own audio graph settles.
+
+### The 50/50 race (root cause of the "sometimes loads at 100 %" bug)
+
+Before the `createGain`-side arm, only the `statechange` listener could
+start the re-assert window. `statechange` fires **only on transitions**:
+
+| Context state when `createGain` runs | `statechange` will fire? | Re-assert armed? | Outcome |
+|---|---|---|---|
+| Context still `suspended` / `idle` | Yes, later | ✅ | Clamp wins → correct level |
+| Context already `running` | No (it already fired before the hook existed) | ❌ | Selkies' `master.gain = 1.0` reset sticks |
+
+That second row is the 50/50: it depends on *when* the `AudioContext`
+reaches `"running"` relative to when our patched `createGain` first
+captures a node, which varies with network / CPU / Edge's tab-startup
+scheduling. On the losing path, nothing else arms the re-assert window, so
+the audible full-volume state persists until the user touches the slider —
+which *does* arm it (because `setVolume` is one of the three armed-from
+places). Arming from `createGain` closes the losing branch: the moment
+Selkies creates any gain node we re-assert for ~2 s, so our clamp wins
+regardless of when the context reaches running.
+
+### Files involved
+
+| File | Role |
+|---|---|
+| `portal/templates/volume-hook.js` | Hook injected into the iframe; owns gain capture, sync clamp, re-assert window, and the control surface. |
+| `portal/templates/index.html` | Portal page: owns the slider UI, `localStorage` persistence, and drives the hook via `frame.contentWindow.__lpSetVolume` (with a `postMessage` fallback). |
+| `portal/server.py` | Injects the hook as the *first* child of `<head>` in text/html responses reverse-proxied from the Selkies client, so it executes before the client's own scripts. |
+
+### Debugging tips
+
+- The hook runs inside the iframe. Open the iframe's DevTools (right-click
+  the iframe → "Inspect element", or use the target's DevTools) to see its
+  console.
+- Stored values live in the parent origin's `localStorage` under
+  `lp_volume` and `lp_muted`. Clearing them returns you to "start muted,
+  first drive wins" baseline behaviour.
+- If you ever see 100 % on load again with no slider interaction, first
+  confirm the hook is actually in the served HTML (it must be the first
+  `<script>` inside `<head>`). The server-side injection is gated on
+  `VOLUME_HOOK_JS` being non-empty AND the proxied response being
+  `text/html`. A change to either gate will silently disable the hook.
+
 # HOTA (Horn of the abyss)
 
 To activate HOTA, download the mod, place it under /longplay/host/gamedata/Mods,
