@@ -521,18 +521,43 @@ createApp({
             } catch (e) { /* ignore */ }
         }
 
-        // Poll until the client's <video> element exists, then apply the saved level.
+        // Poll until the client's audio element / Web Audio hook exists, then apply
+        // the saved level. We poll fast (50 ms) for the first second to land the
+        // drive *before* Chromium's ~first-100 ms full-volume render window closes
+        // (the audible burst), then back off to 500 ms so we stop quickly once we
+        // have a handle. The desktop frame loads same-origin, so this is cheap.
         function startVolumePolling() {
-            if (volumePollTimer) return;
-            let attempts = 24; // up to ~12 s at 500 ms
-            const stop = () => { clearInterval(volumePollTimer); volumePollTimer = null; };
-            const tick = () => { if (applyDesktopVolume() || --attempts <= 0) stop(); };
-            volumePollTimer = setInterval(tick, 500);
-            tick(); // try immediately
+            if (volumePollTimer !== null) return;
+            let attempts = 64; // ~64 attempts: fast window + long tail ≈ a few s
+            let intervalMs = 50;
+            let stop = () => {
+                if (volumePollTimer !== null) {
+                    clearTimeout(volumePollTimer);
+                    volumePollTimer = null;
+                }
+            };
+            let tick = () => {
+                if (applyDesktopVolume()) {
+                    stop();
+                    return;
+                }
+                if (--attempts <= 0) {
+                    stop();
+                    return;
+                }
+                // After the fast ~1 s window, widen the cadence to avoid busy polling.
+                if (attempts <= 24) intervalMs = 500;
+                else if (attempts <= 40) intervalMs = 150;
+                volumePollTimer = setTimeout(tick, intervalMs);
+            };
+            volumePollTimer = setTimeout(tick, intervalMs);
         }
 
         function stopVolumePolling() {
-            if (volumePollTimer) { clearInterval(volumePollTimer); volumePollTimer = null; }
+            if (volumePollTimer !== null) {
+                clearTimeout(volumePollTimer);
+                volumePollTimer = null;
+            }
         }
 
         return {
