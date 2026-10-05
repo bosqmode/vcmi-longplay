@@ -1,99 +1,140 @@
 // Volume-control hook for the Kasm/Selkies desktop client.
+//
+// Design notes
+// ------------
+// * We drive only the Web Audio gain via the standard public API
+//   (`GainNode.gain.setValueAtTime`). We do NOT override `AudioParam.value`,
+//   `AudioParam.prototype.setValueAtTime`, or any other param method. Doing so
+//   creates an unbounded recursion in Chromium (Edge/Chrome) that surfaces as:
+//       RangeError: Maximum call stack size exceeded
+//   because native setValueAtTime(round-trips through the `.value` property)
+//   internally on that engine. Keeping the native implementations intact
+//   sidesteps the bug on every engine.
+//
+// * We still patch `AudioContext.prototype.createGain`, but only to *record*
+//   the gain nodes the client creates so we can reach the master later. That
+//   patch is harmless on either browser because it installs no setter on any
+//   engine-internal path.
+//
+// * To win the startup race (Selkies resets its master gain to 1.0 right
+//   after the AudioContext starts running), we re-assert the target a few
+//   times (~250 ms apart for ~10 s) whenever a volume change is driven, AND
+//   again whenever an AudioContext transitions into the "running" state.
+//
+// * A re-entrancy guard makes the apply path idempotent: if any engine
+//   internal code ever re-enters us, we no-op rather than recurse.
+
 (function () {
   'use strict';
 
-  var pending = { volume: 0, muted: true }; // Start muted/silent to catch early boot audio
-  var capturedGains = [];
+  var pending = { volume: 0, muted: true }; // silent until parent drives it
+  var capturedGains = []; // every GainNode created via the (patched) AudioContext
+  var reentrant = false;  // belt-and-suspenders guard
 
   function targetGain() {
     return (pending.muted || pending.volume <= 0) ? 0 : pending.volume;
   }
 
-  function applyVolume() {
-    var gainVal = targetGain();
-    for (var i = capturedGains.length - 1; i >= 0; i--) {
-      var g = capturedGains[i];
-      try {
-        // Bypass overridden property setter using original AudioParam prototype
-        if (AudioParam.prototype.setValueAtTime) {
-          AudioParam.prototype.setValueAtTime.call(g.gain, gainVal, g.context.currentTime || 0);
-        } else {
-          g.gain.value = gainVal;
-        }
-      } catch (e) {
-        capturedGains.splice(i, 1);
-      }
+  function snapGain(node) {
+    var ctx = node && node.context;
+    var param = node && node.gain;
+    if (!ctx || !param) return;
+    if (typeof param.setValueAtTime === 'function') {
+      param.setValueAtTime(targetGain(), ctx.currentTime || 0);
+    } else if (typeof param.value !== 'undefined') {
+      param.value = targetGain();
     }
+  }
 
-    // Fallback for direct HTML5 audio/video elements
+  function applyToAll() {
+    if (reentrant) return;
+    reentrant = true;
     try {
-      var els = document.querySelectorAll('video, audio');
-      for (var j = 0; j < els.length; j++) {
-        els[j].volume = pending.volume;
-        els[j].muted = (pending.muted || pending.volume <= 0);
+      var i, node;
+      for (i = 0; i < capturedGains.length; i++) {
+        node = capturedGains[i];
+        try { snapGain(node); } catch (e) { /* per-node failures are ignored */ }
       }
-    } catch (e) {}
+      // Fallback for direct HTML5 audio/video elements (some Kasm variants
+      // carry audio there instead of through Web Audio).
+      try {
+        var els = document.querySelectorAll('video, audio');
+        var tv = targetGain();
+        for (i = 0; i < els.length; i++) {
+          els[i].volume = tv;
+          els[i].muted = (tv === 0);
+        }
+      } catch (e) { /* ignore */ }
+    } finally {
+      reentrant = false;
+    }
   }
 
-  function setVolume(v, m) {
-    pending.volume = (typeof v === 'number' && isFinite(v)) ? Math.min(1, Math.max(0, v)) : 0;
-    pending.muted = !!m;
-    applyVolume();
+  // Bounded re-assert: win the startup race without freezing Selkies' param.
+  var reassertTimer = null;
+  function startReassert() {
+    if (reassertTimer) return;
+    var ticks = 40; // 40 × 250ms ≈ 10 s
+    reassertTimer = setInterval(function () {
+      try { applyToAll(); } catch (e) { /* ignore */ }
+      if (--ticks <= 0) {
+        clearInterval(reassertTimer);
+        reassertTimer = null;
+      }
+    }, 250);
   }
 
-  // Lock an AudioParam so Selkies startup scripts cannot force it back to 1.0
-  function clampGainParam(param, ctx) {
-    try {
-      // Intercept direct value assignment (e.g., gainNode.gain.value = 1.0)
-      Object.defineProperty(param, 'value', {
-        get: function () { return targetGain(); },
-        set: function () {
-          // Ignore Selkies' internal volume overrides; enforce targetGain()
-          try {
-            AudioParam.prototype.setValueAtTime.call(param, targetGain(), ctx.currentTime || 0);
-          } catch (e) {}
-        },
-        configurable: true,
-        enumerable: true
-      });
-
-      // Intercept scheduled assignments (e.g., gainNode.gain.setValueAtTime(1.0, ...))
-      var origSetValueAtTime = param.setValueAtTime;
-      param.setValueAtTime = function (val, time) {
-        return origSetValueAtTime.call(this, targetGain(), time);
-      };
-    } catch (e) {}
-  }
-
-  function patchContextProto(Proto) {
+  function patchContext(Proto) {
     if (!Proto || typeof Proto.prototype.createGain !== 'function') return;
     var origCreateGain = Proto.prototype.createGain;
 
     Proto.prototype.createGain = function () {
-      var gainNode = origCreateGain.apply(this, arguments);
-      capturedGains.push(gainNode);
+      var node = origCreateGain.apply(this, arguments);
 
-      // Lock down the gain parameter instantly
-      clampGainParam(gainNode.gain, this);
-      
-      // Apply initial gain immediately
+      // Record so we can reach the master gain later.
+      try { capturedGains.push(node); } catch (e) { /* ignore */ }
+
+      // Apply the pending target immediately: this silences early boot audio
+      // before the parent's first volume drive and gives us a lead in the
+      // race against Selkies' initial `gain.value = 1.0`.
+      try { applyToAll(); } catch (e) { /* ignore */ }
+
+      // When this AudioContext reaches "running" the client typically
+      // finalizes its master gain; re-assert right after and arm a short
+      // re-assert window to out-race any subsequent reset.
       try {
-        AudioParam.prototype.setValueAtTime.call(gainNode.gain, targetGain(), this.currentTime || 0);
-      } catch (e) {}
+        if (this && typeof this.addEventListener === 'function' && !this._lpHookInstalled) {
+          this._lpHookInstalled = true;
+          this.addEventListener('statechange', function () {
+            try { applyToAll(); startReassert(); } catch (e) { /* ignore */ }
+          });
+        }
+      } catch (e) { /* ignore */ }
 
-      return gainNode;
+      return node;
     };
   }
 
-  if (window.AudioContext) patchContextProto(window.AudioContext);
-  if (window.webkitAudioContext) patchContextProto(window.webkitAudioContext);
+  if (window.AudioContext) patchContext(window.AudioContext);
+  if (window.webkitAudioContext) patchContext(window.webkitAudioContext);
 
-  // Control channels
+  // ---- Control surface used by the parent portal -----------------------
+  function setVolume(v, m) {
+    pending.volume = (typeof v === 'number' && isFinite(v)) ? Math.min(1, Math.max(0, v)) : 0;
+    pending.muted = !!m;
+    try { applyToAll(); } catch (e) { /* ignore */ }
+    // Arm the bounded re-assert window so we out-race the client's reset.
+    if (capturedGains.length > 0) startReassert();
+  }
+
   window.__lpSetVolume = setVolume;
+
   try {
     window.addEventListener('message', function (ev) {
-      var d = ev.data;
-      if (d && d.type === 'lp-set-volume') setVolume(d.volume, d.muted);
+      var d = ev && ev.data;
+      if (d && typeof d === 'object' && d.type === 'lp-set-volume') {
+        setVolume(d.volume, d.muted);
+      }
     });
-  } catch (e) {}
+  } catch (e) { /* ignore */ }
 })();

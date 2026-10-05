@@ -136,7 +136,7 @@
                 class="w-40 accent-blue-500 cursor-pointer" title="Desktop audio volume" />
             <span class="text-gray-300 text-sm w-10 text-right tabular-nums">{{ Math.round(volume * 100) }}%</span>
         </div>
-        <iframe :src="desktopUrl" id="desktop-frame" class="flex-1 w-full border-0"></iframe>
+        <iframe :src="desktopUrl" id="desktop-frame" class="flex-1 w-full border-0" @load="onDesktopLoad"></iframe>
     </div>
 
 </div>
@@ -504,6 +504,16 @@ createApp({
             persistVolume();
         }
 
+        // Re-apply the saved volume once the client finishes loading. This gives
+        // us a fresh drive against Selkies' final AudioContext state so the saved
+        // level (typically muted at boot, or a user set-point) wins the startup race,
+        // and it re-arms the hook's bounded re-assert window via the injected setter.
+        function onDesktopLoad() {
+            applyDesktopVolume();
+            // Re-arm polling in case the client's audio graph only appears now.
+            if (!volumePollTimer) startVolumePolling();
+        }
+
         function persistVolume() {
             try {
                 localStorage.setItem('lp_volume', String(volume.value));
@@ -531,7 +541,7 @@ createApp({
             canActivateDesktop, activateDesktopButtonText,
             gameStateText, desktopStatusText, lastUpdatedText, desktopUrl,
             playerTextColorClass, clearClipboard,
-            volume, muted, onVolumeInput, toggleMute,
+            volume, muted, onVolumeInput, toggleMute, onDesktopLoad,
             login, focusPassword, toggleDesktop, exitDesktop, logout, confirmReboot
         };
     }
