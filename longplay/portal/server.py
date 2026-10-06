@@ -340,63 +340,106 @@ async def proxy_websocket(websocket: WebSocket):
 
     active_sessions[lp_token] = websocket
 
-    # Forward to Webtop's exact internal websocket endpoint
-    async with websockets.connect(f"{WEBTOP_WS_URL}/websockets") as target_ws:
-        async def client_to_webtop():
-            try:
-                while True:
-                    # Capture text or bytes dynamically
-                    message = await websocket.receive()
-                    if "bytes" in message:
-                        await target_ws.send(message["bytes"])
-                    elif "text" in message:
-                        await target_ws.send(message["text"])
-            except Exception:
-                pass
+    # Forward to Webtop's exact internal websocket endpoint.
+    #
+    # The dict entry above must be removed the moment EITHER direction of the proxy
+    # tears down. The old code used asyncio.gather (only exits when BOTH pumps finish)
+    # and had no cleanup at all, so a browser that simply closed left a stale entry
+    # behind, cleaned only later by the 2s sweeper (and not at all while there's no
+    # current player). We now:
+    #   * run both pumps as tasks and end on FIRST_COMPLETED, cancelling the other,
+    #   * cap the close handshake via close_timeout so an unresponsive client can't
+    #     stall us (the old up-to-10s default let dead sessions linger),
+    #   * ALWAYS pop the session in a finally, so it can never outlive the handler.
+    client_task = webtop_task = None
+    try:
+        async with websockets.connect(f"{WEBTOP_WS_URL}/websockets", close_timeout=0.2) as tws:
+            async def client_to_webtop():
+                try:
+                    while True:
+                        # Capture text or bytes dynamically
+                        message = await websocket.receive()
+                        if "bytes" in message:
+                            await tws.send(message["bytes"])
+                        elif "text" in message:
+                            await tws.send(message["text"])
+                        else:
+                            # Non-data frame (e.g. websocket.disconnect): stop pumping.
+                            # The old loop ignored this and spun forever, which also
+                            # held asyncio.gather open and delayed cleanup.
+                            break
+                except Exception:
+                    pass
 
-        async def webtop_to_client():
-            try:
-                while True:
-                    data = await target_ws.recv()
-                    if isinstance(data, bytes):
-                        await websocket.send_bytes(data)
-                    else:
-                        await websocket.send_text(data)
-            except Exception:
-                pass
+            async def webtop_to_client():
+                try:
+                    while True:
+                        data = await tws.recv()
+                        if isinstance(data, bytes):
+                            await websocket.send_bytes(data)
+                        else:
+                            await websocket.send_text(data)
+                except Exception:
+                    pass
 
-        await asyncio.gather(client_to_webtop(), webtop_to_client())
+            client_task = asyncio.create_task(client_to_webtop())
+            webtop_task = asyncio.create_task(webtop_to_client())
+
+            # End the proxy as soon as either direction is done, rather than waiting
+            # for both pumps to finish as asyncio.gather required.
+            await asyncio.wait([client_task, webtop_task], return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        # Stop any pump that is still running and let it wind down its cancellation.
+        pending_tasks = [t for t in (client_task, webtop_task) if t is not None and not t.done()]
+        for t in pending_tasks:
+            t.cancel()
+        if pending_tasks:
+            try:
+                await asyncio.wait(pending_tasks, timeout=0.5)
+            except BaseException:
+                pass
+        # Deterministic cleanup: drop the session no matter how we got here, so a
+        # stale "active session" can never be reported after the browser is closed.
+        active_sessions.pop(lp_token, None)
 
 async def turn_monitor():
-    """Background task that checks turn changes and kicks disconnected players"""
+    """Background task that refreshes the active-session count, prunes dead sessions
+    (DISCONNECTED or CLOSING), and kicks any player who no longer has their turn."""
     global CURRENT_PLAYER_INDEX
     while True:
         await asyncio.sleep(2)  # Check every 2 seconds
-        
-        current_player = current_gamestate.get("player", None)
-        
-        if current_player is None:
-            continue
+
+        # --- Cleanup + count: always run, even when there's no current player. ---
+        # Previously these lived behind the `current_player is None: continue` guard,
+        # so dead sessions and a stale count persisted whenever the game was idle or
+        # between turns. The websocket handler now cleans up inline (in its finally),
+        # but this is a second safety net that also prunes connections already closed
+        # or mid-close on the client side.
+        dead_states = {"DISCONNECTED", "CLOSING"}
+        for pid in [p for p, ws in active_sessions.items()
+                    if getattr(ws, "client_state", None) and ws.client_state.name in dead_states]:
+            del active_sessions[pid]
 
         print(f"ws active sessions: {len(active_sessions)}")
         current_gamestate["activeSessions"] = len(active_sessions)
+
+        # --- Turn enforcement: requires a known current player. ---
+        current_player = current_gamestate.get("player", None)
+        if current_player is None:
+            continue
 
         # Close sessions for players who no longer have their turn (admins are never kicked)
         for player_id, ws in list(active_sessions.items()):
             # Extract username from token (format: username:password)
             session_username = player_id.split(":")[0] if ":" in player_id else player_id
             if session_username != current_player and session_username not in ADMIN_CREDENTIALS:
+                # Remove the session first so a failing close() can't leave it behind.
+                active_sessions.pop(player_id, None)
                 try:
                     await ws.close(code=4001, reason="Your turn has ended")
-                    del active_sessions[player_id]
                     print(f"Kicked {session_username}, it's now {current_player}'s turn")
                 except Exception as e:
                     print(f"Error closing session for {player_id}: {e}")
-        
-        # Clean up any already-closed sessions
-        dead_sessions = [pid for pid, ws in active_sessions.items() if ws.client_state.name == 'DISCONNECTED']
-        for pid in dead_sessions:
-            del active_sessions[pid]
 
 @app.on_event("startup")
 async def startup_event():
