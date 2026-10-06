@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import asyncio
 import httpx
 import websockets
-import requests
+import random
 import docker
 
 app = FastAPI(title="VCMI Portal")
@@ -37,24 +37,63 @@ active_sessions: dict[str, WebSocket] = {}
 current_gamestate = {}
 
 def send_telegram_message(message):
+    """send a telegram alert with bounded retries (non-blocking).
+
+    Fire-and-forget: works at import time (no running loop -> asyncio.run) and from
+    inside the FastAPI app (loop running -> asyncio.create_task). Retries transient
+    transport errors and 429/5xx responses with exponential backoff + jitter, up to
+    3 attempts. Stops immediately on success, 409 (conflict / already sent), or any
+    other non-retryable 4xx client error so we do not hammer the API.
+    """
     if TELEGRAM_BOT_CHANNEL_ID == "" or TELEGRAM_BOT_TOKEN == "":
         return
-    
-    TOKEN = TELEGRAM_BOT_TOKEN
-    CHAT_ID = TELEGRAM_BOT_CHANNEL_ID
-    
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    payload = {
-        "chat_id": CHAT_ID,
-        "text": message,
-        "parse_mode": "Markdown"
-    }
-    
+
+    async def _send():
+        max_attempts = 3
+        base_delay = 0.5
+        max_delay = 4.0
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": TELEGRAM_BOT_CHANNEL_ID,
+            "text": message,
+            "parse_mode": "Markdown"
+        }
+        timeout = httpx.Timeout(connect=5.0, read=10.0, write=10.0, pool=5.0)
+        last_error = None
+
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    response = await client.post(url, json=payload)
+                except httpx.TransportError as e:
+                    last_error = e
+                    print(f"Telegram send attempt {attempt}/{max_attempts} failed (transport): {e}")
+                else:
+                    status = response.status_code
+                    if status < 400:
+                        return
+                    if status == 409:
+                        print(f"Telegram send conflict (409), not retrying: {response.text[:200]}")
+                        return
+                    if 400 <= status < 500 and status != 429:
+                        print(f"Telegram send failed (HTTP {status}), not retrying: {response.text[:200]}")
+                        return
+                    # retryable: HTTP 429 or 5xx
+                    last_error = f"HTTP {status}: {response.text[:200]}"
+                    print(f"Telegram send attempt {attempt}/{max_attempts} failed (HTTP {status})")
+
+                if attempt < max_attempts:
+                    delay = min(max_delay, base_delay * (2 ** (attempt - 1)))
+                    await asyncio.sleep(delay + random.uniform(0, 0.25))
+
+        print(f"Failed to send Telegram alert after {max_attempts} attempts: {last_error}")
+
     try:
-        response = requests.post(url, json=payload)
-        return response.json()
-    except Exception as e:
-        print(f"Failed to send Telegram alert: {e}")
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.run(_send())
+    else:
+        loop.create_task(_send())
 
 
 send_telegram_message("Turnbot initialized!")
