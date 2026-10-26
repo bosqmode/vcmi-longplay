@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: vcmi-portal
     # ports:
-    #   - "8000:8000" (nginx, see the container below) uncomment this if you just want to run this locally and expose the portal service to :8000
+    #   - "8000:8000" #(nginx, see the container below) uncomment this if you just want to run this locally and expose the portal service to :8000
     restart: unless-stopped
     networks:
       - vcmi-longplay
@@ -13,6 +13,7 @@ services:
       - env.conf
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - replay-storage:/replay
     logging:
       driver: json-file
       options:
@@ -80,6 +81,7 @@ services:
 
 volumes:
   host-data:
+  replay-storage:        # survives container recreates
 
 networks:
   vcmi-longplay:

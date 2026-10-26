@@ -1,0 +1,45 @@
+#!/bin/bash
+# replayservice — record the X desktop (:1) as user abc into a 3 x 10s ring buffer.
+#
+# We must record as user `abc` because the Xwayland server on :1 is owned by
+# `abc` (launched by kwin_wayland via --xwayland-fd) and rejects root's
+# connect with a "Authorization required" error. This mirrors the pattern used
+# by gameservice.sh which runs vcmiclient through `runuser abc -c ...`.
+set -u
+export DISPLAY="${DISPLAY:-:1}"
+
+RING_DIR="${REPLAY_RING_DIR:-/home/abc/replay/ring}"
+SEG_SECONDS="${REPLAY_SEGMENT_SECONDS:-10}"   # each segment
+KEEP="${REPLAY_KEEP_SEGMENTS:-3}"             # segments to retain -> ~30s total
+
+# Ensure the ring dir exists and is writable by `abc` (which records into it).
+mkdir -p "$RING_DIR"
+chown abc:abc "$RING_DIR" 2>/dev/null || true
+chmod 775 "$RING_DIR" 2>/dev/null || true
+
+# Wait until the X socket for :1 exists (kwin-xwayland.py creates it).
+SOCK="/tmp/.X11-unix/X${DISPLAY#:}"
+until [ -S "$SOCK" ]; do
+  sleep 1
+done
+echo "[replayservice] recording $DISPLAY as user abc -> $RING_DIR"
+
+while true; do
+  ts=$(date +%Y%m%d%H%M%S)
+  # 10s of real-time capture; scale + crf30 keeps each segment small (~0.5-1MB).
+  if runuser -u abc -- ffmpeg -hide_banner -loglevel error -y \
+       -f x11grab -framerate 10 -i "$DISPLAY" \
+       -vf "scale=640:-2" \
+       -t "$SEG_SECONDS" \
+       -c:v libx264 -preset veryfast -crf 30 -pix_fmt yuv420p \
+       -an -movflags +faststart \
+       "$RING_DIR/rec_$ts.mp4" 2>&1; then
+    chown abc:abc "$RING_DIR/rec_$ts.mp4" 2>/dev/null || true
+    # Keep only the newest $KEEP segments; delete the rest.
+    ls -1t "$RING_DIR"/rec_*.mp4 2>/dev/null | tail -n +"$((KEEP+1))" | xargs -r rm -f
+  else
+    echo "[replayservice] segment failed, will retry shortly"
+    sleep 1
+  fi
+done
+
