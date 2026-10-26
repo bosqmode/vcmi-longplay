@@ -2,6 +2,8 @@ import os
 import socket
 import select
 import asyncio
+import glob
+import subprocess
 import aiohttp
 import json
 
@@ -21,6 +23,11 @@ SOCKET_ROUTES = {
 POST_SAVE_URL = "http://portal:8000/saves"
 POST_GAMESTATE_UPDATE = "http://portal:8000/gamestate"
 POST_START = "http://portal:8000/start"
+POST_REPLAY_URL = "http://portal:8000/replays/upload"
+
+# Replay ring buffer (written by replayservice; see /custom-services.d/replayservice)
+RING_DIR = os.environ.get("REPLAY_RING_DIR", "/home/abc/replay/ring")
+_replay_inflight = False   # safety net (single-threaded loop)
 
 # Create all sockets
 sockets = []
@@ -60,16 +67,61 @@ async def upload_save_post(filepath: str):
     except Exception as e:
         print(f"Error uploading save: {e}")
 
+def _build_ring_snapshot():
+    """Concatenate the newest 3 ring segments into one mp4. Returns path or None."""
+    global _replay_inflight
+    if _replay_inflight:
+        return None
+    _replay_inflight = True
+    try:
+        segs = sorted(glob.glob(os.path.join(RING_DIR, "rec_*.mp4")))  # name-sorted == time-ordered
+        if len(segs) < 3:
+            return None  # ring not warmed up yet
+        latest = segs[-3:]
+        out_path = "/tmp/replay_latest.mp4"
+        list_path = "/tmp/replay_concat_list.txt"
+        with open(list_path, "w") as f:
+            for p in latest:
+                f.write("file '%s'\n" % p)
+        subprocess.run([
+            "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+            "-f", "concat", "-safe", "0", "-list", list_path,
+            "-c", "copy", "-movflags", "+faststart", out_path,
+        ], check=True, timeout=30)
+        return out_path
+    except Exception as e:
+        print(f"[replay] snapshot build failed: {e}")
+        return None
+    finally:
+        _replay_inflight = False
+
+
+async def upload_replay(path):
+    files = open(path, "rb")
+    try:
+        data = aiohttp.FormData()
+        data.add_field("file", files)
+        headers = {"X-Portal-Apikey": PORTAL_APIKEY} if PORTAL_APIKEY else {}
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession(timeout=timeout) as s:
+            async with s.post(POST_REPLAY_URL, data=data, headers=headers) as r:
+                print(f"[replay] upload {r.status}: {(await r.text())[:200]}")
+    finally:
+        files.close()
+
+
 def handle_autosave(data: str):
-    """Handle autosave socket messages (file paths)."""
-    filepath = data.strip()
-
-    print(filepath)
-
-    # if filepath:
-    #     asyncio.create_task(upload_save_post(filepath))
-    # else:
-    #     print("Received empty message on autosave socket")
+    """Autosave fires at the turn boundary -> capture + upload the last 30s."""
+    print("autosave signal:", data.strip())
+    snap = _build_ring_snapshot()
+    if snap:
+        try:
+            asyncio.run(upload_replay(snap))     # matches existing asyncio.run pattern
+        except Exception as e:
+            print(f"[replay] upload failed: {e}")
+    else:
+        print("[replay] no snapshot (ring not warmed up or busy)")
+    # NOTE: leave the previously-commented save-upload lines untouched.
 
 async def post_gamestate(data: str):
     try:
