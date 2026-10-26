@@ -48,6 +48,8 @@ services:
       - SELKIES_SECOND_SCREEN=False
       - SELKIES_ENABLE_SHARING=False
       - SELKIES_ENABLE_AUTH=False
+      - PIXELFLUX_RECORDING_SOCKET=/tmp/desktop_recording.sock
+      - RECORDING_SOCKET=/tmp/desktop_recording.sock
     env_file:
       - env.conf
     logging:
