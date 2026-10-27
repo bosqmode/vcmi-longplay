@@ -182,6 +182,44 @@ Traffic Reverse-Proxying: To prevent exposing the Host directly, all remote desk
 
 Session Enforcement: The Portal actively monitors turns. The moment a player's turn ends, the Portal forcefully terminates their remote desktop WebSocket connection and transfers access rights to the next player in line (This happens by Host posting gamestate updates to Portal).
 
+## Turn replay
+
+When the current player's turn ends (the autosave boundary — `CCallback::save()`,
+the same socket that fires the existing autosave), the portal serves a short
+~30 s video of the host desktop right up to that moment. It's shown in the
+Status view and is auto-refreshed whenever the day/turn changes.
+
+Pipeline:
+
+1. `longplay/host/replayservice` (a `custom-services.d` entrypoint) runs in the
+   host container and continuously records `:1` via `ffmpeg x11grab`, writing
+   fixed-size segments into a small **ring buffer**
+   (`$REPLAY_RING_DIR`, default `/home/abc/replay/ring/`). It keeps only the
+   newest `$REPLAY_KEEP_SEGMENTS` (default 3) segments ≈ 30 s of footage, so
+   disk stays bounded and the "last 30 s" is always immediately available.
+2. On the autosave socket, `longplay/host/gamestateservice.py::handle_autosave`
+   concats the newest segments (a cheap re-mux) and POSTs the result to
+   `POST /replays/upload` on the portal using `X-Portal-Apikey`.
+3. The portal writes the upload to `/replay/latest.mp4` on the named
+   `replay-storage` volume (survives container recreates) and archives it
+   under `/replay/history/replay_*.mp4`, pruning older files.
+4. `GET /replays/latest` (lp-token auth) serves the latest recording; the
+   Status view's `<video>` fetches it.
+
+Recorder knobs (set via `env.conf` / `environment:`):
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `REPLAY_SEGMENT_SECONDS` | `10` | Seconds of capture per ring segment |
+| `REPLAY_KEEP_SEGMENTS` | `3` | How many segments to keep (total ≈ `SEG * KEEP` s) |
+| `REPLAY_RING_DIR` | `/home/abc/replay/ring` | Where the ring segments live |
+
+`ffmpeg -framerate 10 -vf scale=640:-2 -crf 30` (in the script) controls
+CPU/disk pressure. Lower `REPLAY_SEGMENT_SECONDS × REPLAY_KEEP_SEGMENTS` or
+the framerate/scale if the host is already CPU-bound by Selkies. The first
+`SEG × KEEP` seconds after the host starts the ring is not yet "warm", so the
+status view will show "No replay yet" until then.
+
 ## NGINX (optional, but required for over-the-internet)
 
 The NGINX service is an optional but highly recommended edge proxy, essential for over-the-internet deployment.

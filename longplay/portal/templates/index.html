@@ -122,6 +122,15 @@
 
                 <!-- Last updated -->
                 <p class="text-gray-500 text-xs">Last updated: {{ lastUpdatedText }}</p>
+
+                <!-- Turn replay: last ~30 s of the host desktop right up to the previous
+                     turn boundary. Fetched from /replays/latest (lp-token cookie). -->
+                <div class="border-t border-gray-700 my-4"></div>
+                <p class="text-gray-400 text-sm mb-2">Last turn replay</p>
+                <div v-if="replayAvailable" class="w-full flex justify-center">
+                    <video id="replay-video" :src="replayUrl" class="max-h-72 rounded-lg" controls autoplay loop preload="metadata"></video>
+                </div>
+                <p v-else class="text-gray-500 text-sm">No replay yet (ends of turn only).</p>
             </div>
 
             <!-- Empty state: waiting for game -->
@@ -156,6 +165,8 @@ createApp({
         const gameState = ref({ player: null, day: 0, playerColor: null });
         const lastUpdatedTimestamp = ref(null);
         const errorMsg = ref('');
+        const prevDay = ref(null);
+        const prevPlayer = ref(null);
         const loggingIn = ref(false);
         const desktopActivated = ref(false);
         const gamestateInterval = ref(null);
@@ -249,6 +260,32 @@ createApp({
             return token.value ? `/desktop/?lp-token=${token.value}` : '';
         });
 
+        // ── Turn replay ───────────────────────────────────────────────────
+        // Server serves the latest concatenated replay (last ~30 s of host
+        // desktop before autosave/turn boundary). The host POSTs a snapshot
+        // to /replays/upload on the autosave socket, and the portal stores
+        // it at /replay/latest.mp4 (replay-storage volume).
+        const replayAvailable = ref(false);
+        const replayUrl = ref(null);
+        async function refreshReplay() {
+            try {
+                const res = await fetch('/replays/latest', { credentials: 'same-origin' });
+                if (res.status === 404) { replayAvailable.value = false; return; }
+                if (!res.ok) return;
+                // Use an absolute, cache-busted URL so the <video> always fetches fresh.
+                const url = res.url.split('?')[0];
+                replayUrl.value = `${url}?_cb=${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                replayAvailable.value = true;
+                // Explicitly reload the video element so Edge re-fetches the new source.
+                requestAnimationFrame(() => {
+                    const v = document.getElementById('replay-video');
+                    if (v) { v.load(); v.play().catch(() => {}); }
+                });
+            } catch (e) {
+                replayAvailable.value = false;
+            }
+        }
+
         // Methods
         async function login() {
             clearClipboard();
@@ -318,6 +355,16 @@ createApp({
                     };
                     // Store timestamp as-is; server now sends ISO format strings
                     lastUpdatedTimestamp.value = data.timestamp || null;
+
+                    // Refresh the turn-replay whenever the turn/day or active player changes.
+                    if (gameState.value.day !== prevDay.value) {
+                        prevDay.value = gameState.value.day;
+                        refreshReplay();
+                    }
+                    if (gameState.value.player !== prevPlayer.value) {
+                        prevPlayer.value = gameState.value.player;
+                        refreshReplay();
+                    }
                 }
             } catch (e) {
                 if(e.name === 'AbortError'){
@@ -567,6 +614,7 @@ createApp({
             gameStateText, desktopStatusText, lastUpdatedText, desktopUrl,
             playerTextColorClass, clearClipboard,
             volume, muted, onVolumeInput, toggleMute, onDesktopLoad,
+            replayAvailable, replayUrl,
             login, focusPassword, toggleDesktop, exitDesktop, logout, confirmReboot
         };
     }

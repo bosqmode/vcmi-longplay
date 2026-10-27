@@ -1,0 +1,70 @@
+#!/bin/bash
+# replayservice — record the game into a 3 x 10s ring buffer.
+#
+# Capture source: Pixelflux (Kasm webtop) H.264 "desktop recording" Unix
+# socket, exposed by setting PIXELFLUX_RECORDING_SOCKET=<path> in the host env.
+# This is a pre-encoded H.264 elementary stream; we consume it with ffmpeg
+# and copy it straight into short MP4 segments (-c:v copy, no re-encode), so
+# there is no CPU cost and quality is exactly what Pixelflux produced.
+#
+# ffmpeg reads the Unix-domain socket with `-f h264 -i unix://<path>`.
+#
+# Known good env facts:
+#   - The socket is owned by the desktop user `abc` (created by selkies/pixelflux
+#     running as that user). So we connect as `abc` via `runuser -u abc --` —
+#     root would have no meaningful permission benefit and running as abc keeps
+#     the recording process in the same session as the socket owner.
+#   - The socket is a live long-lived stream; every ffmpeg run opens a fresh
+#     connection and closes it when `-t <seconds>` elapses, so sequential
+#     10s segments line up end-to-end with no gaps beyond ffmpeg startup.
+set -u
+
+RING_DIR="${REPLAY_RING_DIR:-/home/abc/replay/ring}"
+SEG_SECONDS="${REPLAY_SEGMENT_SECONDS:-10}"   # each segment
+KEEP="${REPLAY_KEEP_SEGMENTS:-3}"             # segments to retain -> ~30s total
+RECORDING_SOCKET="${RECORDING_SOCKET:-/tmp/desktop_recording.sock}"
+
+# Ensure the ring dir exists and is writable (we chown to abc to be safe;
+# the recording process runs as abc).
+mkdir -p "$RING_DIR"
+chown abc:abc "$RING_DIR" 2>/dev/null || true
+chmod 775 "$RING_DIR" 2>/dev/null || true
+
+# Wait until the Pixelflux recording socket actually exists. Selkies may take
+# a few seconds after container start to bring up the encoder + socket.
+echo "[replayservice] waiting for recording socket at $RECORDING_SOCKET ..."
+until [ -S "$RECORDING_SOCKET" ]; do
+  sleep 1
+done
+echo "[replayservice] ready: ring -> $RING_DIR   socket -> $RECORDING_SOCKET"
+
+while true; do
+  # Skip if the recording socket isn't present (e.g. no one is connected).
+  [ -S "$RECORDING_SOCKET" ] || { sleep 2; continue; }
+
+  ts=$(date +%Y%m%d%H%M%S)
+  out="$RING_DIR/rec_$ts.mp4"
+
+  # Grab ~$SEG_SECONDS from the live H.264 socket and copy it into an MP4
+  # segment with -c:v copy (no re-encode). faststart writes the moov atom
+  # up front so browsers can start playback without downloading the whole file.
+  if runuser -u abc -- ffmpeg -hide_banner -loglevel error -nostdin -y \
+       -f h264 -i "unix://$RECORDING_SOCKET" \
+       -t "$SEG_SECONDS" \
+       -c:v copy \
+       -an -movflags +faststart \
+       "$out"; then
+    chown abc:abc "$out" 2>/dev/null || true
+    # Keep only the newest $KEEP segments; delete the rest.
+    ls -1t "$RING_DIR"/rec_*.mp4 2>/dev/null | tail -n +"$((KEEP+1))" | xargs -r rm -f
+  else
+    # ffmpeg exiting non-zero can legitimately happen when the desktop is
+    # static and no new frames arrive within the window, or the socket was
+    # briefly recycled. Sleep a beat and retry so we don't busy-loop.
+    echo "[replayservice] segment capture failed; retrying in 1s"
+    rm -f "$out"
+    sleep 1
+  fi
+done
+
+

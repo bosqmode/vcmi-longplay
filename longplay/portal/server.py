@@ -1,4 +1,5 @@
 import os
+import shutil
 from datetime import datetime, timezone
 from fastapi import FastAPI, UploadFile, File, WebSocket, Request, HTTPException, Header, Depends
 from fastapi.responses import FileResponse, StreamingResponse
@@ -501,6 +502,45 @@ async def download_save(filename: str):
 async def delete_save(filename: str):
     print(f"saveserver.py::delete_save() unimplemented")
     return {"status": "ok"}
+
+
+# ── Replay endpoints ─────────────────────────────────────────────────────
+
+REPLAY_DIR = os.environ.get("REPLAY_DIR", "/replay")
+REPLAY_LATEST = os.path.join(REPLAY_DIR, "latest.mp4")
+REPLAY_HISTORY = os.path.join(REPLAY_DIR, "history")
+REPLAY_KEEP = 5
+
+
+@app.post("/replays/upload", dependencies=[Depends(validate_portal_apikey)])
+async def upload_replay(file: UploadFile = File(...)):
+    """Store a replay mp4 sent by the host. Keeps the most recent REPLAY_KEEP in history."""
+    os.makedirs(REPLAY_DIR, exist_ok=True)
+    os.makedirs(REPLAY_HISTORY, exist_ok=True)
+    tmp = REPLAY_LATEST + ".tmp"
+    with open(tmp, "wb") as f:
+        while chunk := await file.read(1 << 20):
+            f.write(chunk)
+    os.replace(tmp, REPLAY_LATEST)          # atomic for the browser
+
+    hist = os.path.join(REPLAY_HISTORY,
+        "replay_" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + ".mp4")
+    shutil.copy2(REPLAY_LATEST, hist)       # keep a small ring of history (optional)
+    named = sorted(os.listdir(REPLAY_HISTORY))
+    for old in named[:-REPLAY_KEEP]:
+        try: os.remove(os.path.join(REPLAY_HISTORY, old))
+        except OSError: pass
+    return {"status": "ok", "size": os.path.getsize(REPLAY_LATEST)}
+
+
+@app.get("/replays/latest")
+async def get_replay_latest(request: Request, authorization: str | None = Header(default=None)):
+    """Serve the latest replay to any authenticated user."""
+    await verify_token_gamestate(request=request, authorization=authorization)
+    if not os.path.exists(REPLAY_LATEST):
+        raise HTTPException(status_code=404, detail="No replay yet")
+    return FileResponse(REPLAY_LATEST, media_type="video/mp4",
+                        filename="last-turn-replay.mp4")
 
 
 # ── Admin endpoints ─────────────────────────────────────────────────────

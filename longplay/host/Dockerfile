@@ -80,3 +80,6 @@ RUN chmod +x /custom-services.d/gamestateservice
 
 COPY ./longplay/host/gameservice.sh /custom-services.d/gameservice
 RUN chmod +x /custom-services.d/gameservice
+
+COPY ./longplay/host/replayservice /custom-services.d/replayservice
+RUN chmod +x /custom-services.d/replayservice
