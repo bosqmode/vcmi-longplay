@@ -69,7 +69,7 @@ async def upload_save_post(filepath: str):
         print(f"Error uploading save: {e}")
 
 def _build_ring_snapshot():
-    """Concatenate ALL ring segments (oldest -> newest) into one mp4. Returns path or None."""
+    """Concatenate ALL ring segments and re-encode: 640w, 10 fps, CRF 30. Returns path or None."""
     global _replay_inflight
     if _replay_inflight:
         return None
@@ -86,9 +86,13 @@ def _build_ring_snapshot():
                 f.write("file '%s'\n" % p)
         subprocess.run([
             "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-            "-f", "concat", "-safe", "0", "-i", list_path,   # <-- list file as -i input
-            "-c", "copy", "-movflags", "+faststart", out_path,
-        ], check=True, timeout=30)
+            "-f", "concat", "-safe", "0", "-i", list_path,   # all segments, one input
+            "-vf", "scale=640:-2",                            # 640px wide, AR preserved, even height
+            "-r", "10",                                       # cap framerate to 10
+            "-c:v", "libx264", "-crf", "30", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+            "-an",                                            # no audio track
+            "-movflags", "+faststart", out_path,
+        ], check=True, timeout=60)
         return out_path
     except Exception as e:
         print(f"[replay] snapshot build failed: {e}")
