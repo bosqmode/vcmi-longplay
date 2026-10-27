@@ -39,6 +39,9 @@ done
 echo "[replayservice] ready: ring -> $RING_DIR   socket -> $RECORDING_SOCKET"
 
 while true; do
+  # Skip if the recording socket isn't present (e.g. no one is connected).
+  [ -S "$RECORDING_SOCKET" ] || { sleep 2; continue; }
+
   ts=$(date +%Y%m%d%H%M%S)
   out="$RING_DIR/rec_$ts.mp4"
 

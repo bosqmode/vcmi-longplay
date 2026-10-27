@@ -128,8 +128,7 @@
                 <div class="border-t border-gray-700 my-4"></div>
                 <p class="text-gray-400 text-sm mb-2">Last turn replay</p>
                 <div v-if="replayAvailable" class="w-full flex justify-center">
-                    <video id="replay-video" :src="replayUrl" class="max-h-72 rounded-lg" controls preload="metadata"></video>
-                    <button @click="reloadReplay" class="ml-2 self-center py-1.5 px-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200 text-sm">Reset</button>
+                    <video id="replay-video" :src="replayUrl" class="max-h-72 rounded-lg" controls autoplay loop preload="metadata"></video>
                 </div>
                 <p v-else class="text-gray-500 text-sm">No replay yet (ends of turn only).</p>
             </div>
@@ -167,6 +166,7 @@ createApp({
         const lastUpdatedTimestamp = ref(null);
         const errorMsg = ref('');
         const prevDay = ref(null);
+        const prevPlayer = ref(null);
         const loggingIn = ref(false);
         const desktopActivated = ref(false);
         const gamestateInterval = ref(null);
@@ -276,17 +276,14 @@ createApp({
                 const url = res.url.split('?')[0];
                 replayUrl.value = `${url}?_cb=${Date.now()}-${Math.random().toString(16).slice(2)}`;
                 replayAvailable.value = true;
+                // Explicitly reload the video element so Edge re-fetches the new source.
+                requestAnimationFrame(() => {
+                    const v = document.getElementById('replay-video');
+                    if (v) { v.load(); v.play().catch(() => {}); }
+                });
             } catch (e) {
                 replayAvailable.value = false;
             }
-        }
-        function reloadReplay() {
-            // Force a fresh fetch of the file by re-issuing the URL with a cache-buster
-            const v = document.getElementById('replay-video');
-            if (!v) return;
-            const base = replayUrl.value.split(/[\?&\d]/)[0] || '';
-            v.src = `/replays/latest?_cb=${Date.now()}`;
-            v.load();
         }
 
         // Methods
@@ -359,9 +356,13 @@ createApp({
                     // Store timestamp as-is; server now sends ISO format strings
                     lastUpdatedTimestamp.value = data.timestamp || null;
 
-                    // Refresh the turn-replay whenever the turn/day changes (i.e. the previous turn ended).
+                    // Refresh the turn-replay whenever the turn/day or active player changes.
                     if (gameState.value.day !== prevDay.value) {
                         prevDay.value = gameState.value.day;
+                        refreshReplay();
+                    }
+                    if (gameState.value.player !== prevPlayer.value) {
+                        prevPlayer.value = gameState.value.player;
                         refreshReplay();
                     }
                 }
@@ -613,7 +614,7 @@ createApp({
             gameStateText, desktopStatusText, lastUpdatedText, desktopUrl,
             playerTextColorClass, clearClipboard,
             volume, muted, onVolumeInput, toggleMute, onDesktopLoad,
-            replayAvailable, replayUrl, reloadReplay,
+            replayAvailable, replayUrl,
             login, focusPassword, toggleDesktop, exitDesktop, logout, confirmReboot
         };
     }
