@@ -28,6 +28,7 @@ POST_REPLAY_URL = "http://portal:8000/replays/upload"
 # Replay ring buffer (written by replayservice; see /custom-services.d/replayservice)
 RING_DIR = os.environ.get("REPLAY_RING_DIR", "/home/abc/replay/ring")
 _replay_inflight = False   # safety net (single-threaded loop)
+_previous_player = None
 
 # Create all sockets
 sockets = []
@@ -68,24 +69,24 @@ async def upload_save_post(filepath: str):
         print(f"Error uploading save: {e}")
 
 def _build_ring_snapshot():
-    """Concatenate the newest 3 ring segments into one mp4. Returns path or None."""
+    """Concatenate ALL ring segments (oldest -> newest) into one mp4. Returns path or None."""
     global _replay_inflight
     if _replay_inflight:
         return None
     _replay_inflight = True
     try:
-        segs = sorted(glob.glob(os.path.join(RING_DIR, "rec_*.mp4")))  # name-sorted == time-ordered
-        if len(segs) < 3:
+        # rec_<YYYYMMDDHHMMSS>.mp4  ->  name sort == chronological order
+        segs = sorted(glob.glob(os.path.join(RING_DIR, "rec_*.mp4")))
+        if not segs:
             return None  # ring not warmed up yet
-        latest = segs[-3:]
         out_path = "/tmp/replay_latest.mp4"
         list_path = "/tmp/replay_concat_list.txt"
         with open(list_path, "w") as f:
-            for p in latest:
+            for p in segs:
                 f.write("file '%s'\n" % p)
         subprocess.run([
             "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-            "-f", "concat", "-safe", "0", "-list", list_path,
+            "-f", "concat", "-safe", "0", "-i", list_path,   # <-- list file as -i input
             "-c", "copy", "-movflags", "+faststart", out_path,
         ], check=True, timeout=30)
         return out_path
@@ -110,9 +111,9 @@ async def upload_replay(path):
         files.close()
 
 
-def handle_autosave(data: str):
-    """Autosave fires at the turn boundary -> capture + upload the last 30s."""
-    print("autosave signal:", data.strip())
+def build_ring_and_upload_replay():
+    """Capture + upload the last 30s."""
+    print("upload replay called")
     snap = _build_ring_snapshot()
     if snap:
         try:
@@ -121,7 +122,6 @@ def handle_autosave(data: str):
             print(f"[replay] upload failed: {e}")
     else:
         print("[replay] no snapshot (ring not warmed up or busy)")
-    # NOTE: leave the previously-commented save-upload lines untouched.
 
 async def post_gamestate(data: str):
     try:
@@ -142,6 +142,12 @@ def handle_gamestate(data: str):
     data = {"player": player, "day": int(day), "playerColor": color}
     asyncio.run(post_gamestate(data))
 
+    global _previous_player
+    if _previous_player != player:
+        if _previous_player is not None:
+            build_ring_and_upload_replay()
+        _previous_player = player
+
 async def post_start(msg: str):
     try:
         headers = {}
@@ -159,7 +165,6 @@ def handle_start(msg: str):
     asyncio.run(post_start(msg))
 
 SOCKET_HANDLERS = {
-    "autosave": handle_autosave,
     "gamestate": handle_gamestate,
     "start": handle_start
 }

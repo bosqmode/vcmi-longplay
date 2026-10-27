@@ -1,71 +1,65 @@
 #!/bin/bash
 # replayservice — record the game into a 3 x 10s ring buffer.
 #
-# Status: the capture source is currently the X full display (`-i :1`). This
-# WORKS (it produces valid mp4 segments) but the pixels are black + cursor
-# because this desktop is KWin-on-Wayland and the X root window has no
-# composited pixels (Xwayland draws per-client buffers into Wayland, so only
-# the hardware cursor lives in X).
+# Capture source: Pixelflux (Kasm webtop) H.264 "desktop recording" Unix
+# socket, exposed by setting PIXELFLUX_RECORDING_SOCKET=<path> in the host env.
+# This is a pre-encoded H.264 elementary stream; we consume it with ffmpeg
+# and copy it straight into short MP4 segments (-c:v copy, no re-encode), so
+# there is no CPU cost and quality is exactly what Pixelflux produced.
+#
+# ffmpeg reads the Unix-domain socket with `-f h264 -i unix://<path>`.
 #
 # Known good env facts:
-#   1. Xwayland on :1 is owned by user `abc` (spawned by kwin_wayland), so
-#      root can't open the display. We therefore run `runuser -u abc -- ...`.
-#   2. The game process IS running on :1 — Xwininfo shows its window
-#      (e.g. 0xc00009 1280x720+0+0). So it is a valid X client; we just can't
-#      reach its pixels via Xlib-based tools because the pixels are elsewhere.
-#   3. ffmpeg's x11grab has NO per-window option (its read loop in libavdevice/
-#      x11grab.c always calls RootWindow + XShmGetImage). The "DISPLAY.windowid"
-#      form I first tried is not a real syntax — it fails with
-#      "Cannot open display :X.windowid, error 6".
-#
-# Next: run `probe-capture.sh` (see sibling file) inside this container and
-# share its output. It scores candidate capture tools (scrot/import/grim/
-# ffmpeg-x11grab/vnc) by the YAVG brightness of a one-frame capture, which
-# tells us immediately which tool (if any) returns real pixels. That decides
-# what `CAP_INPUT` (or a replacement capture command) below should be.
+#   - The socket is owned by the desktop user `abc` (created by selkies/pixelflux
+#     running as that user). So we connect as `abc` via `runuser -u abc --` —
+#     root would have no meaningful permission benefit and running as abc keeps
+#     the recording process in the same session as the socket owner.
+#   - The socket is a live long-lived stream; every ffmpeg run opens a fresh
+#     connection and closes it when `-t <seconds>` elapses, so sequential
+#     10s segments line up end-to-end with no gaps beyond ffmpeg startup.
 set -u
-export DISPLAY="${DISPLAY:-:1}"
-export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
-export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/config/.XDG}"
 
 RING_DIR="${REPLAY_RING_DIR:-/home/abc/replay/ring}"
 SEG_SECONDS="${REPLAY_SEGMENT_SECONDS:-10}"   # each segment
 KEEP="${REPLAY_KEEP_SEGMENTS:-3}"             # segments to retain -> ~30s total
-CAPTURE_FPS="${REPLAY_FPS:-10}"
-CAPTURE_SCALE="${REPLAY_SCALE:-640:-2}"       # "640:-2" = 640 wide, keep aspect
+RECORDING_SOCKET="${RECORDING_SOCKET:-/tmp/desktop_recording.sock}"
 
-# Ensure the ring dir exists and is writable by `abc` (which records into it).
+# Ensure the ring dir exists and is writable (we chown to abc to be safe;
+# the recording process runs as abc).
 mkdir -p "$RING_DIR"
 chown abc:abc "$RING_DIR" 2>/dev/null || true
 chmod 775 "$RING_DIR" 2>/dev/null || true
 
-# Wait until the X socket for :1 exists (kwin-xwayland.py creates it).
-SOCK="/tmp/.X11-unix/X${DISPLAY#:}"
-until [ -S "$SOCK" ]; do
+# Wait until the Pixelflux recording socket actually exists. Selkies may take
+# a few seconds after container start to bring up the encoder + socket.
+echo "[replayservice] waiting for recording socket at $RECORDING_SOCKET ..."
+until [ -S "$RECORDING_SOCKET" ]; do
   sleep 1
 done
-echo "[replayservice] ready on $DISPLAY as user abc, ring -> $RING_DIR"
-
-# Capture input: fall back to the full display for now. A per-window /
-# Wayland-aware source is preferred if one is proven to return non-black
-# pixels (see probe-capture.sh). See comment block at top of this file.
-CAP_INPUT="${DISPLAY}"
+echo "[replayservice] ready: ring -> $RING_DIR   socket -> $RECORDING_SOCKET"
 
 while true; do
   ts=$(date +%Y%m%d%H%M%S)
-  # 10s of real-time capture; scale + crf30 keeps each segment small (~0.5-1MB).
-  if runuser -u abc -- ffmpeg -hide_banner -loglevel error -y \
-       -f x11grab -framerate "$CAPTURE_FPS" -i "$CAP_INPUT" \
-       -vf "scale=$CAPTURE_SCALE" \
+  out="$RING_DIR/rec_$ts.mp4"
+
+  # Grab ~$SEG_SECONDS from the live H.264 socket and copy it into an MP4
+  # segment with -c:v copy (no re-encode). faststart writes the moov atom
+  # up front so browsers can start playback without downloading the whole file.
+  if runuser -u abc -- ffmpeg -hide_banner -loglevel error -nostdin -y \
+       -f h264 -i "unix://$RECORDING_SOCKET" \
        -t "$SEG_SECONDS" \
-       -c:v libx264 -preset veryfast -crf 30 -pix_fmt yuv420p \
+       -c:v copy \
        -an -movflags +faststart \
-       "$RING_DIR/rec_$ts.mp4" 2>&1; then
-    chown abc:abc "$RING_DIR/rec_$ts.mp4" 2>/dev/null || true
+       "$out"; then
+    chown abc:abc "$out" 2>/dev/null || true
     # Keep only the newest $KEEP segments; delete the rest.
     ls -1t "$RING_DIR"/rec_*.mp4 2>/dev/null | tail -n +"$((KEEP+1))" | xargs -r rm -f
   else
-    echo "[replayservice] segment failed (input=$CAP_INPUT), will retry shortly"
+    # ffmpeg exiting non-zero can legitimately happen when the desktop is
+    # static and no new frames arrive within the window, or the socket was
+    # briefly recycled. Sleep a beat and retry so we don't busy-loop.
+    echo "[replayservice] segment capture failed; retrying in 1s"
+    rm -f "$out"
     sleep 1
   fi
 done
