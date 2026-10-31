@@ -185,40 +185,52 @@ Session Enforcement: The Portal actively monitors turns. The moment a player's t
 ## Turn replay
 
 When the current player's turn ends (the autosave boundary — `CCallback::save()`,
-the same socket that fires the existing autosave), the portal serves a short
-~30 s video of the host desktop right up to that moment. It's shown in the
-Status view and is auto-refreshed whenever the day/turn changes.
+the same socket that fires the existing autosave), the host uploads a short
+~30 s clip of its desktop right up to that moment and the portal serves it.
+It's shown in the Status view and is refreshed client-side whenever the day or
+current player changes.
 
 Pipeline:
 
 1. `longplay/host/replayservice` (a `custom-services.d` entrypoint) runs in the
-   host container and continuously records `:1` via `ffmpeg x11grab`, writing
-   fixed-size segments into a small **ring buffer**
-   (`$REPLAY_RING_DIR`, default `/home/abc/replay/ring/`). It keeps only the
-   newest `$REPLAY_KEEP_SEGMENTS` (default 3) segments ≈ 30 s of footage, so
-   disk stays bounded and the "last 30 s" is always immediately available.
+   host container and continuously pulls from the **Pixelflux (Kasm webtop)
+   H.264 "desktop recording" Unix socket**, writing fixed-size segments into a
+   small **ring buffer** (`$REPLAY_RING_DIR`, default `/home/abc/replay/ring/`).
+   Each segment is a stream copy (`ffmpeg -f h264 -i unix://$RECORDING_SOCKET
+   -t $SEG -c:v copy`) — no re-encode, so it's cheap. It keeps only the newest
+   `$REPLAY_KEEP_SEGMENTS` (default 3) segments ≈ 30 s of footage, so disk stays
+   bounded and the "last 30 s" is always immediately available.
 2. On the autosave socket, `longplay/host/gamestateservice.py::handle_autosave`
-   concats the newest segments (a cheap re-mux) and POSTs the result to
-   `POST /replays/upload` on the portal using `X-Portal-Apikey`.
+   calls `_send_replay_upload()` → `_build_ring_snapshot()`, which concats the
+   newest ring segments and re-encodes them (640 px wide, 10 fps, CRF 30,
+   `libx264 … -preset veryfast`, no audio, `+faststart`) to
+   `/tmp/replay_latest.mp4`, then POSTs the result to `POST /replays/upload`
+   on the portal (`http://portal:8000/replays/upload`) using `X-Portal-Apikey`.
 3. The portal writes the upload to `/replay/latest.mp4` on the named
-   `replay-storage` volume (survives container recreates) and archives it
-   under `/replay/history/replay_*.mp4`, pruning older files.
+   `replay-storage` volume (survives container recreates) and copies it into
+   `/replay/history/replay_*.mp4`, keeping only the newest `REPLAY_KEEP` (5).
 4. `GET /replays/latest` (lp-token auth) serves the latest recording; the
-   Status view's `<video>` fetches it.
+   Status view's `<video>` fetches it, re-loading whenever the day/player flips.
 
 Recorder knobs (set via `env.conf` / `environment:`):
 
 | Variable | Default | Meaning |
 |---|---|---|
+| `PIXELFLUX_RECORDING_SOCKET` | `/tmp/desktop_recording.sock`* | Tells Pixelflux to expose its H.264 desktop-recording socket at this path |
+| `RECORDING_SOCKET` | `/tmp/desktop_recording.sock` | Socket path the recorder reads the stream from (kept in sync with the above) |
 | `REPLAY_SEGMENT_SECONDS` | `10` | Seconds of capture per ring segment |
 | `REPLAY_KEEP_SEGMENTS` | `3` | How many segments to keep (total ≈ `SEG * KEEP` s) |
 | `REPLAY_RING_DIR` | `/home/abc/replay/ring` | Where the ring segments live |
 
-`ffmpeg -framerate 10 -vf scale=640:-2 -crf 30` (in the script) controls
-CPU/disk pressure. Lower `REPLAY_SEGMENT_SECONDS × REPLAY_KEEP_SEGMENTS` or
-the framerate/scale if the host is already CPU-bound by Selkies. The first
-`SEG × KEEP` seconds after the host starts the ring is not yet "warm", so the
-status view will show "No replay yet" until then.
+\* Both socket variables are already set on the `host` service in
+`docker-compose.yml`; the `RECORDING_SOCKET` default in the script matches them.
+
+The framerate/scale/CRF above (10 fps, 640 px, CRF 30) are applied when the
+snapshot is re-encoded in step 2 — the live capture itself is a stream copy.
+Lower `REPLAY_SEGMENT_SECONDS × REPLAY_KEEP_SEGMENTS` or the re-encode settings
+if the host is already CPU-bound by Selkies. The first ~`SEG × KEEP` seconds
+after the host starts (until the ring warms up) will not have a replay, so the
+Status view shows "No replay yet" until then.
 
 ## NGINX (optional, but required for over-the-internet)
 
