@@ -285,11 +285,8 @@ void BattleResultProcessor::endBattle(const CBattleInfoCallback & battle)
 	bool isAttackerHuman = attackerPlayer && attackerPlayer->isHuman();
 	bool onlyOnePlayerHuman = isAttackerHuman != isDefenderHuman;
 
-	// __longplay__ skip "battle casualties" -window if AI attacks a human player on computer's turn, otherwise we will be stuck in the said window as "Computer"
-	bool aiAttackingHuman = !isAttackerHuman && isDefenderHuman;
-
 	// in battles against neutrals attacker can ask to replay battle manually, additionally in battles against AI player human side can also ask for replay
-	if(onlyOnePlayerHuman && !aiAttackingHuman)
+	if(onlyOnePlayerHuman)
 	{
 		auto battleDialogQuery = std::make_shared<CBattleDialogQuery>(gameHandler, battle.getBattle(), typedBattleQuery->result);
 		battleResult->queryID = battleDialogQuery->queryID;
